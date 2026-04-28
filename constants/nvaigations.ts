@@ -5,10 +5,10 @@ type NavItem = {
 };
 
 export const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/", disabled: false },
-  { label: "Modules", href: "/modules", disabled: false },
-  { label: "Team", href: "/team", disabled: false },
-  { label: "Users", href: "/users", disabled: false },
-  { label: "Analytics", href: "/analytics", disabled: false },
-  { label: "Settings", href: "/settings", disabled: false },
+  { label: "Dashboard", href: "/company", disabled: false },
+  { label: "Modules", href: "/company/modules", disabled: false },
+  { label: "Team", href: "/company/team", disabled: false },
+  { label: "Users", href: "/company/users", disabled: false },
+  { label: "Analytics", href: "/company/analytics", disabled: false },
+  { label: "Settings", href: "/company/settings", disabled: false },
 ];
