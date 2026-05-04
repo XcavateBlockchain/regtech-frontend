@@ -31,10 +31,10 @@ import {
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
-  type WritableSignerAccount,
 } from "@solana/kit";
 import {
   getAccountMetaFactory,
@@ -64,7 +64,7 @@ export type RefundQuizzesInstruction<
   InstructionWithAccounts<
     [
       TAccountAdmin extends string
-        ? WritableSignerAccount<TAccountAdmin> &
+        ? ReadonlySignerAccount<TAccountAdmin> &
             AccountSignerMeta<TAccountAdmin>
         : TAccountAdmin,
       TAccountConfig extends string
@@ -154,7 +154,7 @@ export async function getRefundQuizzesInstructionAsync<
 
   // Original accounts.
   const originalAccounts = {
-    admin: { value: input.admin ?? null, isWritable: true },
+    admin: { value: input.admin ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: false },
     partner: { value: input.partner ?? null, isWritable: true },
   };
@@ -221,7 +221,7 @@ export function getRefundQuizzesInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    admin: { value: input.admin ?? null, isWritable: true },
+    admin: { value: input.admin ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: false },
     partner: { value: input.partner ?? null, isWritable: true },
   };

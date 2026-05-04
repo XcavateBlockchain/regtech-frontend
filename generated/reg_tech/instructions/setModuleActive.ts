@@ -31,10 +31,10 @@ import {
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
-  type WritableSignerAccount,
 } from "@solana/kit";
 import {
   getAccountMetaFactory,
@@ -62,7 +62,7 @@ export type SetModuleActiveInstruction<
   InstructionWithAccounts<
     [
       TAccountPartnerAdmin extends string
-        ? WritableSignerAccount<TAccountPartnerAdmin> &
+        ? ReadonlySignerAccount<TAccountPartnerAdmin> &
             AccountSignerMeta<TAccountPartnerAdmin>
         : TAccountPartnerAdmin,
       TAccountPartner extends string
@@ -150,7 +150,7 @@ export function getSetModuleActiveInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: true },
+    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: false },
     partner: { value: input.partner ?? null, isWritable: false },
     module: { value: input.module ?? null, isWritable: true },
   };

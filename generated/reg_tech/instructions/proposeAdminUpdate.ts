@@ -28,10 +28,10 @@ import {
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
-  type WritableSignerAccount,
 } from "@solana/kit";
 import {
   getAccountMetaFactory,
@@ -59,7 +59,7 @@ export type ProposeAdminUpdateInstruction<
   InstructionWithAccounts<
     [
       TAccountAdmin extends string
-        ? WritableSignerAccount<TAccountAdmin> &
+        ? ReadonlySignerAccount<TAccountAdmin> &
             AccountSignerMeta<TAccountAdmin>
         : TAccountAdmin,
       TAccountConfig extends string
@@ -130,7 +130,7 @@ export async function getProposeAdminUpdateInstructionAsync<
 
   // Original accounts.
   const originalAccounts = {
-    admin: { value: input.admin ?? null, isWritable: true },
+    admin: { value: input.admin ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
@@ -189,7 +189,7 @@ export function getProposeAdminUpdateInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    admin: { value: input.admin ?? null, isWritable: true },
+    admin: { value: input.admin ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<

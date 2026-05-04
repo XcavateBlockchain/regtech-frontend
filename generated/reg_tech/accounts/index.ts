@@ -8,6 +8,7 @@
 
 export * from "./attempt";
 export * from "./config";
+export * from "./credential";
 export * from "./enrollment";
 export * from "./module";
 export * from "./partner";

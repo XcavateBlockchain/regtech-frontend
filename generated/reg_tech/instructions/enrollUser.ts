@@ -38,6 +38,7 @@ import {
   getAccountMetaFactory,
   type ResolvedInstructionAccount,
 } from "@solana/program-client-core";
+import { findConfigPda } from "../pdas";
 import { REGTECH_PROGRAM_ADDRESS } from "../programs";
 
 export const ENROLL_USER_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
@@ -52,6 +53,7 @@ export type EnrollUserInstruction<
   TProgram extends string = typeof REGTECH_PROGRAM_ADDRESS,
   TAccountPartnerAdmin extends string | AccountMeta<string> = string,
   TAccountUser extends string | AccountMeta<string> = string,
+  TAccountConfig extends string | AccountMeta<string> = string,
   TAccountPartner extends string | AccountMeta<string> = string,
   TAccountModule extends string | AccountMeta<string> = string,
   TAccountEnrollment extends string | AccountMeta<string> = string,
@@ -69,6 +71,9 @@ export type EnrollUserInstruction<
       TAccountUser extends string
         ? ReadonlyAccount<TAccountUser>
         : TAccountUser,
+      TAccountConfig extends string
+        ? ReadonlyAccount<TAccountConfig>
+        : TAccountConfig,
       TAccountPartner extends string
         ? WritableAccount<TAccountPartner>
         : TAccountPartner,
@@ -119,9 +124,10 @@ export function getEnrollUserInstructionDataCodec(): FixedSizeCodec<
   );
 }
 
-export type EnrollUserInput<
+export type EnrollUserAsyncInput<
   TAccountPartnerAdmin extends string = string,
   TAccountUser extends string = string,
+  TAccountConfig extends string = string,
   TAccountPartner extends string = string,
   TAccountModule extends string = string,
   TAccountEnrollment extends string = string,
@@ -130,6 +136,116 @@ export type EnrollUserInput<
   partnerAdmin: TransactionSigner<TAccountPartnerAdmin>;
   /** Not required to sign. The partner_admin is the authorizing party here. */
   user: Address<TAccountUser>;
+  config?: Address<TAccountConfig>;
+  partner: Address<TAccountPartner>;
+  module: Address<TAccountModule>;
+  enrollment: Address<TAccountEnrollment>;
+  systemProgram?: Address<TAccountSystemProgram>;
+  reasonCode: EnrollUserInstructionDataArgs["reasonCode"];
+};
+
+export async function getEnrollUserInstructionAsync<
+  TAccountPartnerAdmin extends string,
+  TAccountUser extends string,
+  TAccountConfig extends string,
+  TAccountPartner extends string,
+  TAccountModule extends string,
+  TAccountEnrollment extends string,
+  TAccountSystemProgram extends string,
+  TProgramAddress extends Address = typeof REGTECH_PROGRAM_ADDRESS,
+>(
+  input: EnrollUserAsyncInput<
+    TAccountPartnerAdmin,
+    TAccountUser,
+    TAccountConfig,
+    TAccountPartner,
+    TAccountModule,
+    TAccountEnrollment,
+    TAccountSystemProgram
+  >,
+  config?: { programAddress?: TProgramAddress },
+): Promise<
+  EnrollUserInstruction<
+    TProgramAddress,
+    TAccountPartnerAdmin,
+    TAccountUser,
+    TAccountConfig,
+    TAccountPartner,
+    TAccountModule,
+    TAccountEnrollment,
+    TAccountSystemProgram
+  >
+> {
+  // Program address.
+  const programAddress = config?.programAddress ?? REGTECH_PROGRAM_ADDRESS;
+
+  // Original accounts.
+  const originalAccounts = {
+    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: false },
+    user: { value: input.user ?? null, isWritable: false },
+    config: { value: input.config ?? null, isWritable: false },
+    partner: { value: input.partner ?? null, isWritable: true },
+    module: { value: input.module ?? null, isWritable: false },
+    enrollment: { value: input.enrollment ?? null, isWritable: true },
+    systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+  };
+  const accounts = originalAccounts as Record<
+    keyof typeof originalAccounts,
+    ResolvedInstructionAccount
+  >;
+
+  // Original args.
+  const args = { ...input };
+
+  // Resolve default values.
+  if (!accounts.config.value) {
+    accounts.config.value = await findConfigPda();
+  }
+  if (!accounts.systemProgram.value) {
+    accounts.systemProgram.value =
+      "11111111111111111111111111111111" as Address<"11111111111111111111111111111111">;
+  }
+
+  const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
+  return Object.freeze({
+    accounts: [
+      getAccountMeta("partnerAdmin", accounts.partnerAdmin),
+      getAccountMeta("user", accounts.user),
+      getAccountMeta("config", accounts.config),
+      getAccountMeta("partner", accounts.partner),
+      getAccountMeta("module", accounts.module),
+      getAccountMeta("enrollment", accounts.enrollment),
+      getAccountMeta("systemProgram", accounts.systemProgram),
+    ],
+    data: getEnrollUserInstructionDataEncoder().encode(
+      args as EnrollUserInstructionDataArgs,
+    ),
+    programAddress,
+  } as EnrollUserInstruction<
+    TProgramAddress,
+    TAccountPartnerAdmin,
+    TAccountUser,
+    TAccountConfig,
+    TAccountPartner,
+    TAccountModule,
+    TAccountEnrollment,
+    TAccountSystemProgram
+  >);
+}
+
+export type EnrollUserInput<
+  TAccountPartnerAdmin extends string = string,
+  TAccountUser extends string = string,
+  TAccountConfig extends string = string,
+  TAccountPartner extends string = string,
+  TAccountModule extends string = string,
+  TAccountEnrollment extends string = string,
+  TAccountSystemProgram extends string = string,
+> = {
+  partnerAdmin: TransactionSigner<TAccountPartnerAdmin>;
+  /** Not required to sign. The partner_admin is the authorizing party here. */
+  user: Address<TAccountUser>;
+  config: Address<TAccountConfig>;
   partner: Address<TAccountPartner>;
   module: Address<TAccountModule>;
   enrollment: Address<TAccountEnrollment>;
@@ -140,6 +256,7 @@ export type EnrollUserInput<
 export function getEnrollUserInstruction<
   TAccountPartnerAdmin extends string,
   TAccountUser extends string,
+  TAccountConfig extends string,
   TAccountPartner extends string,
   TAccountModule extends string,
   TAccountEnrollment extends string,
@@ -149,6 +266,7 @@ export function getEnrollUserInstruction<
   input: EnrollUserInput<
     TAccountPartnerAdmin,
     TAccountUser,
+    TAccountConfig,
     TAccountPartner,
     TAccountModule,
     TAccountEnrollment,
@@ -159,6 +277,7 @@ export function getEnrollUserInstruction<
   TProgramAddress,
   TAccountPartnerAdmin,
   TAccountUser,
+  TAccountConfig,
   TAccountPartner,
   TAccountModule,
   TAccountEnrollment,
@@ -171,6 +290,7 @@ export function getEnrollUserInstruction<
   const originalAccounts = {
     partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: false },
     user: { value: input.user ?? null, isWritable: false },
+    config: { value: input.config ?? null, isWritable: false },
     partner: { value: input.partner ?? null, isWritable: true },
     module: { value: input.module ?? null, isWritable: false },
     enrollment: { value: input.enrollment ?? null, isWritable: true },
@@ -195,6 +315,7 @@ export function getEnrollUserInstruction<
     accounts: [
       getAccountMeta("partnerAdmin", accounts.partnerAdmin),
       getAccountMeta("user", accounts.user),
+      getAccountMeta("config", accounts.config),
       getAccountMeta("partner", accounts.partner),
       getAccountMeta("module", accounts.module),
       getAccountMeta("enrollment", accounts.enrollment),
@@ -208,6 +329,7 @@ export function getEnrollUserInstruction<
     TProgramAddress,
     TAccountPartnerAdmin,
     TAccountUser,
+    TAccountConfig,
     TAccountPartner,
     TAccountModule,
     TAccountEnrollment,
@@ -224,10 +346,11 @@ export type ParsedEnrollUserInstruction<
     partnerAdmin: TAccountMetas[0];
     /** Not required to sign. The partner_admin is the authorizing party here. */
     user: TAccountMetas[1];
-    partner: TAccountMetas[2];
-    module: TAccountMetas[3];
-    enrollment: TAccountMetas[4];
-    systemProgram: TAccountMetas[5];
+    config: TAccountMetas[2];
+    partner: TAccountMetas[3];
+    module: TAccountMetas[4];
+    enrollment: TAccountMetas[5];
+    systemProgram: TAccountMetas[6];
   };
   data: EnrollUserInstructionData;
 };
@@ -240,12 +363,12 @@ export function parseEnrollUserInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedEnrollUserInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 6) {
+  if (instruction.accounts.length < 7) {
     throw new SolanaError(
       SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
       {
         actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 6,
+        expectedAccountMetas: 7,
       },
     );
   }
@@ -260,6 +383,7 @@ export function parseEnrollUserInstruction<
     accounts: {
       partnerAdmin: getNextAccount(),
       user: getNextAccount(),
+      config: getNextAccount(),
       partner: getNextAccount(),
       module: getNextAccount(),
       enrollment: getNextAccount(),

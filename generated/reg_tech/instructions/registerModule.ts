@@ -41,10 +41,10 @@ import {
   type Option,
   type OptionOrNullable,
   type ReadonlyAccount,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
-  type WritableSignerAccount,
 } from "@solana/kit";
 import {
   getAccountMetaFactory,
@@ -77,14 +77,14 @@ export type RegisterModuleInstruction<
   InstructionWithAccounts<
     [
       TAccountPartnerAdmin extends string
-        ? WritableSignerAccount<TAccountPartnerAdmin> &
+        ? ReadonlySignerAccount<TAccountPartnerAdmin> &
             AccountSignerMeta<TAccountPartnerAdmin>
         : TAccountPartnerAdmin,
       TAccountConfig extends string
         ? ReadonlyAccount<TAccountConfig>
         : TAccountConfig,
       TAccountPartner extends string
-        ? ReadonlyAccount<TAccountPartner>
+        ? WritableAccount<TAccountPartner>
         : TAccountPartner,
       TAccountModule extends string
         ? WritableAccount<TAccountModule>
@@ -203,9 +203,9 @@ export async function getRegisterModuleInstructionAsync<
 
   // Original accounts.
   const originalAccounts = {
-    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: true },
+    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: false },
-    partner: { value: input.partner ?? null, isWritable: false },
+    partner: { value: input.partner ?? null, isWritable: true },
     module: { value: input.module ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
@@ -298,9 +298,9 @@ export function getRegisterModuleInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: true },
+    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: false },
-    partner: { value: input.partner ?? null, isWritable: false },
+    partner: { value: input.partner ?? null, isWritable: true },
     module: { value: input.module ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };

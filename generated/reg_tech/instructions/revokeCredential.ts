@@ -10,12 +10,12 @@ import {
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
-  getAddressDecoder,
-  getAddressEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU8Decoder,
+  getU8Encoder,
   SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
   SolanaError,
   transformEncoder,
@@ -28,6 +28,7 @@ import {
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
+  type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -39,20 +40,20 @@ import {
 } from "@solana/program-client-core";
 import { REGTECH_PROGRAM_ADDRESS } from "../programs";
 
-export const ROTATE_ATTESTOR_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array(
-  [210, 240, 181, 158, 51, 168, 80, 134],
-);
+export const REVOKE_CREDENTIAL_DISCRIMINATOR: ReadonlyUint8Array =
+  new Uint8Array([38, 123, 95, 95, 223, 158, 169, 87]);
 
-export function getRotateAttestorDiscriminatorBytes(): ReadonlyUint8Array {
+export function getRevokeCredentialDiscriminatorBytes(): ReadonlyUint8Array {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    ROTATE_ATTESTOR_DISCRIMINATOR,
+    REVOKE_CREDENTIAL_DISCRIMINATOR,
   );
 }
 
-export type RotateAttestorInstruction<
+export type RevokeCredentialInstruction<
   TProgram extends string = typeof REGTECH_PROGRAM_ADDRESS,
   TAccountPartnerAdmin extends string | AccountMeta<string> = string,
   TAccountPartner extends string | AccountMeta<string> = string,
+  TAccountCredential extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -63,66 +64,77 @@ export type RotateAttestorInstruction<
             AccountSignerMeta<TAccountPartnerAdmin>
         : TAccountPartnerAdmin,
       TAccountPartner extends string
-        ? WritableAccount<TAccountPartner>
+        ? ReadonlyAccount<TAccountPartner>
         : TAccountPartner,
+      TAccountCredential extends string
+        ? WritableAccount<TAccountCredential>
+        : TAccountCredential,
       ...TRemainingAccounts,
     ]
   >;
 
-export type RotateAttestorInstructionData = {
+export type RevokeCredentialInstructionData = {
   discriminator: ReadonlyUint8Array;
-  newAttestor: Address;
+  reasonCode: number;
 };
 
-export type RotateAttestorInstructionDataArgs = { newAttestor: Address };
+export type RevokeCredentialInstructionDataArgs = { reasonCode: number };
 
-export function getRotateAttestorInstructionDataEncoder(): FixedSizeEncoder<RotateAttestorInstructionDataArgs> {
+export function getRevokeCredentialInstructionDataEncoder(): FixedSizeEncoder<RevokeCredentialInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
-      ["newAttestor", getAddressEncoder()],
+      ["reasonCode", getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: ROTATE_ATTESTOR_DISCRIMINATOR }),
+    (value) => ({ ...value, discriminator: REVOKE_CREDENTIAL_DISCRIMINATOR }),
   );
 }
 
-export function getRotateAttestorInstructionDataDecoder(): FixedSizeDecoder<RotateAttestorInstructionData> {
+export function getRevokeCredentialInstructionDataDecoder(): FixedSizeDecoder<RevokeCredentialInstructionData> {
   return getStructDecoder([
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
-    ["newAttestor", getAddressDecoder()],
+    ["reasonCode", getU8Decoder()],
   ]);
 }
 
-export function getRotateAttestorInstructionDataCodec(): FixedSizeCodec<
-  RotateAttestorInstructionDataArgs,
-  RotateAttestorInstructionData
+export function getRevokeCredentialInstructionDataCodec(): FixedSizeCodec<
+  RevokeCredentialInstructionDataArgs,
+  RevokeCredentialInstructionData
 > {
   return combineCodec(
-    getRotateAttestorInstructionDataEncoder(),
-    getRotateAttestorInstructionDataDecoder(),
+    getRevokeCredentialInstructionDataEncoder(),
+    getRevokeCredentialInstructionDataDecoder(),
   );
 }
 
-export type RotateAttestorInput<
+export type RevokeCredentialInput<
   TAccountPartnerAdmin extends string = string,
   TAccountPartner extends string = string,
+  TAccountCredential extends string = string,
 > = {
   partnerAdmin: TransactionSigner<TAccountPartnerAdmin>;
   partner: Address<TAccountPartner>;
-  newAttestor: RotateAttestorInstructionDataArgs["newAttestor"];
+  credential: Address<TAccountCredential>;
+  reasonCode: RevokeCredentialInstructionDataArgs["reasonCode"];
 };
 
-export function getRotateAttestorInstruction<
+export function getRevokeCredentialInstruction<
   TAccountPartnerAdmin extends string,
   TAccountPartner extends string,
+  TAccountCredential extends string,
   TProgramAddress extends Address = typeof REGTECH_PROGRAM_ADDRESS,
 >(
-  input: RotateAttestorInput<TAccountPartnerAdmin, TAccountPartner>,
+  input: RevokeCredentialInput<
+    TAccountPartnerAdmin,
+    TAccountPartner,
+    TAccountCredential
+  >,
   config?: { programAddress?: TProgramAddress },
-): RotateAttestorInstruction<
+): RevokeCredentialInstruction<
   TProgramAddress,
   TAccountPartnerAdmin,
-  TAccountPartner
+  TAccountPartner,
+  TAccountCredential
 > {
   // Program address.
   const programAddress = config?.programAddress ?? REGTECH_PROGRAM_ADDRESS;
@@ -130,7 +142,8 @@ export function getRotateAttestorInstruction<
   // Original accounts.
   const originalAccounts = {
     partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: false },
-    partner: { value: input.partner ?? null, isWritable: true },
+    partner: { value: input.partner ?? null, isWritable: false },
+    credential: { value: input.credential ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -145,19 +158,21 @@ export function getRotateAttestorInstruction<
     accounts: [
       getAccountMeta("partnerAdmin", accounts.partnerAdmin),
       getAccountMeta("partner", accounts.partner),
+      getAccountMeta("credential", accounts.credential),
     ],
-    data: getRotateAttestorInstructionDataEncoder().encode(
-      args as RotateAttestorInstructionDataArgs,
+    data: getRevokeCredentialInstructionDataEncoder().encode(
+      args as RevokeCredentialInstructionDataArgs,
     ),
     programAddress,
-  } as RotateAttestorInstruction<
+  } as RevokeCredentialInstruction<
     TProgramAddress,
     TAccountPartnerAdmin,
-    TAccountPartner
+    TAccountPartner,
+    TAccountCredential
   >);
 }
 
-export type ParsedRotateAttestorInstruction<
+export type ParsedRevokeCredentialInstruction<
   TProgram extends string = typeof REGTECH_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -165,24 +180,25 @@ export type ParsedRotateAttestorInstruction<
   accounts: {
     partnerAdmin: TAccountMetas[0];
     partner: TAccountMetas[1];
+    credential: TAccountMetas[2];
   };
-  data: RotateAttestorInstructionData;
+  data: RevokeCredentialInstructionData;
 };
 
-export function parseRotateAttestorInstruction<
+export function parseRevokeCredentialInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
-): ParsedRotateAttestorInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 2) {
+): ParsedRevokeCredentialInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 3) {
     throw new SolanaError(
       SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
       {
         actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 2,
+        expectedAccountMetas: 3,
       },
     );
   }
@@ -194,7 +210,11 @@ export function parseRotateAttestorInstruction<
   };
   return {
     programAddress: instruction.programAddress,
-    accounts: { partnerAdmin: getNextAccount(), partner: getNextAccount() },
-    data: getRotateAttestorInstructionDataDecoder().decode(instruction.data),
+    accounts: {
+      partnerAdmin: getNextAccount(),
+      partner: getNextAccount(),
+      credential: getNextAccount(),
+    },
+    data: getRevokeCredentialInstructionDataDecoder().decode(instruction.data),
   };
 }

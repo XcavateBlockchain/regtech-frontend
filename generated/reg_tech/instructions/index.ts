@@ -9,6 +9,8 @@
 export * from "./acceptAdminUpdate";
 export * from "./allocateQuizzes";
 export * from "./claimCredential";
+export * from "./closeAttempt";
+export * from "./closeCredential";
 export * from "./enrollUser";
 export * from "./fundPartner";
 export * from "./initializeConfig";
@@ -17,6 +19,7 @@ export * from "./refundPartner";
 export * from "./refundQuizzes";
 export * from "./registerModule";
 export * from "./registerPartner";
+export * from "./revokeCredential";
 export * from "./revokeEnrollment";
 export * from "./rotateAttestor";
 export * from "./setModuleActive";

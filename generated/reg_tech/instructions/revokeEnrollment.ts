@@ -28,10 +28,10 @@ import {
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
-  type WritableSignerAccount,
 } from "@solana/kit";
 import {
   getAccountMetaFactory,
@@ -59,7 +59,7 @@ export type RevokeEnrollmentInstruction<
   InstructionWithAccounts<
     [
       TAccountPartnerAdmin extends string
-        ? WritableSignerAccount<TAccountPartnerAdmin> &
+        ? ReadonlySignerAccount<TAccountPartnerAdmin> &
             AccountSignerMeta<TAccountPartnerAdmin>
         : TAccountPartnerAdmin,
       TAccountPartner extends string
@@ -140,7 +140,7 @@ export function getRevokeEnrollmentInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: true },
+    partnerAdmin: { value: input.partnerAdmin ?? null, isWritable: false },
     partner: { value: input.partner ?? null, isWritable: true },
     enrollment: { value: input.enrollment ?? null, isWritable: true },
   };

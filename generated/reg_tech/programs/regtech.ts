@@ -35,6 +35,7 @@ import {
 import {
   getAttemptCodec,
   getConfigCodec,
+  getCredentialCodec,
   getEnrollmentCodec,
   getModuleCodec,
   getPartnerCodec,
@@ -42,6 +43,8 @@ import {
   type AttemptArgs,
   type Config,
   type ConfigArgs,
+  type Credential,
+  type CredentialArgs,
   type Enrollment,
   type EnrollmentArgs,
   type Module,
@@ -53,7 +56,9 @@ import {
   getAcceptAdminUpdateInstructionAsync,
   getAllocateQuizzesInstructionAsync,
   getClaimCredentialInstructionAsync,
-  getEnrollUserInstruction,
+  getCloseAttemptInstruction,
+  getCloseCredentialInstruction,
+  getEnrollUserInstructionAsync,
   getFundPartnerInstructionAsync,
   getInitializeConfigInstructionAsync,
   getProposeAdminUpdateInstructionAsync,
@@ -61,6 +66,7 @@ import {
   getRefundQuizzesInstructionAsync,
   getRegisterModuleInstructionAsync,
   getRegisterPartnerInstructionAsync,
+  getRevokeCredentialInstruction,
   getRevokeEnrollmentInstruction,
   getRotateAttestorInstruction,
   getSetModuleActiveInstruction,
@@ -71,6 +77,8 @@ import {
   parseAcceptAdminUpdateInstruction,
   parseAllocateQuizzesInstruction,
   parseClaimCredentialInstruction,
+  parseCloseAttemptInstruction,
+  parseCloseCredentialInstruction,
   parseEnrollUserInstruction,
   parseFundPartnerInstruction,
   parseInitializeConfigInstruction,
@@ -79,6 +87,7 @@ import {
   parseRefundQuizzesInstruction,
   parseRegisterModuleInstruction,
   parseRegisterPartnerInstruction,
+  parseRevokeCredentialInstruction,
   parseRevokeEnrollmentInstruction,
   parseRotateAttestorInstruction,
   parseSetModuleActiveInstruction,
@@ -89,12 +98,16 @@ import {
   type AcceptAdminUpdateAsyncInput,
   type AllocateQuizzesAsyncInput,
   type ClaimCredentialAsyncInput,
-  type EnrollUserInput,
+  type CloseAttemptInput,
+  type CloseCredentialInput,
+  type EnrollUserAsyncInput,
   type FundPartnerAsyncInput,
   type InitializeConfigAsyncInput,
   type ParsedAcceptAdminUpdateInstruction,
   type ParsedAllocateQuizzesInstruction,
   type ParsedClaimCredentialInstruction,
+  type ParsedCloseAttemptInstruction,
+  type ParsedCloseCredentialInstruction,
   type ParsedEnrollUserInstruction,
   type ParsedFundPartnerInstruction,
   type ParsedInitializeConfigInstruction,
@@ -103,6 +116,7 @@ import {
   type ParsedRefundQuizzesInstruction,
   type ParsedRegisterModuleInstruction,
   type ParsedRegisterPartnerInstruction,
+  type ParsedRevokeCredentialInstruction,
   type ParsedRevokeEnrollmentInstruction,
   type ParsedRotateAttestorInstruction,
   type ParsedSetModuleActiveInstruction,
@@ -115,6 +129,7 @@ import {
   type RefundQuizzesAsyncInput,
   type RegisterModuleAsyncInput,
   type RegisterPartnerAsyncInput,
+  type RevokeCredentialInput,
   type RevokeEnrollmentInput,
   type RotateAttestorInput,
   type SetModuleActiveInput,
@@ -131,6 +146,7 @@ export const REGTECH_PROGRAM_ADDRESS =
 export enum RegtechAccount {
   Attempt,
   Config,
+  Credential,
   Enrollment,
   Module,
   Partner,
@@ -161,6 +177,17 @@ export function identifyRegtechAccount(
     )
   ) {
     return RegtechAccount.Config;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([145, 44, 68, 220, 67, 46, 100, 135]),
+      ),
+      0,
+    )
+  ) {
+    return RegtechAccount.Credential;
   }
   if (
     containsBytes(
@@ -205,6 +232,8 @@ export enum RegtechInstruction {
   AcceptAdminUpdate,
   AllocateQuizzes,
   ClaimCredential,
+  CloseAttempt,
+  CloseCredential,
   EnrollUser,
   FundPartner,
   InitializeConfig,
@@ -213,6 +242,7 @@ export enum RegtechInstruction {
   RefundQuizzes,
   RegisterModule,
   RegisterPartner,
+  RevokeCredential,
   RevokeEnrollment,
   RotateAttestor,
   SetModuleActive,
@@ -258,6 +288,28 @@ export function identifyRegtechInstruction(
     )
   ) {
     return RegtechInstruction.ClaimCredential;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([15, 235, 105, 98, 23, 12, 151, 216]),
+      ),
+      0,
+    )
+  ) {
+    return RegtechInstruction.CloseAttempt;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([213, 210, 242, 210, 169, 79, 220, 112]),
+      ),
+      0,
+    )
+  ) {
+    return RegtechInstruction.CloseCredential;
   }
   if (
     containsBytes(
@@ -346,6 +398,17 @@ export function identifyRegtechInstruction(
     )
   ) {
     return RegtechInstruction.RegisterPartner;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([38, 123, 95, 95, 223, 158, 169, 87]),
+      ),
+      0,
+    )
+  ) {
+    return RegtechInstruction.RevokeCredential;
   }
   if (
     containsBytes(
@@ -443,6 +506,12 @@ export type ParsedRegtechInstruction<
       instructionType: RegtechInstruction.ClaimCredential;
     } & ParsedClaimCredentialInstruction<TProgram>)
   | ({
+      instructionType: RegtechInstruction.CloseAttempt;
+    } & ParsedCloseAttemptInstruction<TProgram>)
+  | ({
+      instructionType: RegtechInstruction.CloseCredential;
+    } & ParsedCloseCredentialInstruction<TProgram>)
+  | ({
       instructionType: RegtechInstruction.EnrollUser;
     } & ParsedEnrollUserInstruction<TProgram>)
   | ({
@@ -466,6 +535,9 @@ export type ParsedRegtechInstruction<
   | ({
       instructionType: RegtechInstruction.RegisterPartner;
     } & ParsedRegisterPartnerInstruction<TProgram>)
+  | ({
+      instructionType: RegtechInstruction.RevokeCredential;
+    } & ParsedRevokeCredentialInstruction<TProgram>)
   | ({
       instructionType: RegtechInstruction.RevokeEnrollment;
     } & ParsedRevokeEnrollmentInstruction<TProgram>)
@@ -512,6 +584,20 @@ export function parseRegtechInstruction<TProgram extends string>(
       return {
         instructionType: RegtechInstruction.ClaimCredential,
         ...parseClaimCredentialInstruction(instruction),
+      };
+    }
+    case RegtechInstruction.CloseAttempt: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: RegtechInstruction.CloseAttempt,
+        ...parseCloseAttemptInstruction(instruction),
+      };
+    }
+    case RegtechInstruction.CloseCredential: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: RegtechInstruction.CloseCredential,
+        ...parseCloseCredentialInstruction(instruction),
       };
     }
     case RegtechInstruction.EnrollUser: {
@@ -568,6 +654,13 @@ export function parseRegtechInstruction<TProgram extends string>(
       return {
         instructionType: RegtechInstruction.RegisterPartner,
         ...parseRegisterPartnerInstruction(instruction),
+      };
+    }
+    case RegtechInstruction.RevokeCredential: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: RegtechInstruction.RevokeCredential,
+        ...parseRevokeCredentialInstruction(instruction),
       };
     }
     case RegtechInstruction.RevokeEnrollment: {
@@ -638,6 +731,8 @@ export type RegtechPluginAccounts = {
     SelfFetchFunctions<AttemptArgs, Attempt>;
   config: ReturnType<typeof getConfigCodec> &
     SelfFetchFunctions<ConfigArgs, Config>;
+  credential: ReturnType<typeof getCredentialCodec> &
+    SelfFetchFunctions<CredentialArgs, Credential>;
   enrollment: ReturnType<typeof getEnrollmentCodec> &
     SelfFetchFunctions<EnrollmentArgs, Enrollment>;
   module: ReturnType<typeof getModuleCodec> &
@@ -659,9 +754,17 @@ export type RegtechPluginInstructions = {
     input: ClaimCredentialAsyncInput,
   ) => ReturnType<typeof getClaimCredentialInstructionAsync> &
     SelfPlanAndSendFunctions;
+  closeAttempt: (
+    input: CloseAttemptInput,
+  ) => ReturnType<typeof getCloseAttemptInstruction> & SelfPlanAndSendFunctions;
+  closeCredential: (
+    input: CloseCredentialInput,
+  ) => ReturnType<typeof getCloseCredentialInstruction> &
+    SelfPlanAndSendFunctions;
   enrollUser: (
-    input: EnrollUserInput,
-  ) => ReturnType<typeof getEnrollUserInstruction> & SelfPlanAndSendFunctions;
+    input: EnrollUserAsyncInput,
+  ) => ReturnType<typeof getEnrollUserInstructionAsync> &
+    SelfPlanAndSendFunctions;
   fundPartner: (
     input: FundPartnerAsyncInput,
   ) => ReturnType<typeof getFundPartnerInstructionAsync> &
@@ -689,6 +792,10 @@ export type RegtechPluginInstructions = {
   registerPartner: (
     input: RegisterPartnerAsyncInput,
   ) => ReturnType<typeof getRegisterPartnerInstructionAsync> &
+    SelfPlanAndSendFunctions;
+  revokeCredential: (
+    input: RevokeCredentialInput,
+  ) => ReturnType<typeof getRevokeCredentialInstruction> &
     SelfPlanAndSendFunctions;
   revokeEnrollment: (
     input: RevokeEnrollmentInput,
@@ -740,6 +847,7 @@ export function regtechProgram() {
         accounts: {
           attempt: addSelfFetchFunctions(client, getAttemptCodec()),
           config: addSelfFetchFunctions(client, getConfigCodec()),
+          credential: addSelfFetchFunctions(client, getCredentialCodec()),
           enrollment: addSelfFetchFunctions(client, getEnrollmentCodec()),
           module: addSelfFetchFunctions(client, getModuleCodec()),
           partner: addSelfFetchFunctions(client, getPartnerCodec()),
@@ -760,10 +868,20 @@ export function regtechProgram() {
               client,
               getClaimCredentialInstructionAsync(input),
             ),
+          closeAttempt: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getCloseAttemptInstruction(input),
+            ),
+          closeCredential: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getCloseCredentialInstruction(input),
+            ),
           enrollUser: (input) =>
             addSelfPlanAndSendFunctions(
               client,
-              getEnrollUserInstruction(input),
+              getEnrollUserInstructionAsync(input),
             ),
           fundPartner: (input) =>
             addSelfPlanAndSendFunctions(
@@ -799,6 +917,11 @@ export function regtechProgram() {
             addSelfPlanAndSendFunctions(
               client,
               getRegisterPartnerInstructionAsync(input),
+            ),
+          revokeCredential: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getRevokeCredentialInstruction(input),
             ),
           revokeEnrollment: (input) =>
             addSelfPlanAndSendFunctions(

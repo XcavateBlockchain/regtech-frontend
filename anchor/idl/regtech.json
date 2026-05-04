@@ -22,7 +22,6 @@
       "accounts": [
         {
           "name": "new_admin",
-          "writable": true,
           "signer": true
         },
         {
@@ -62,7 +61,6 @@
       "accounts": [
         {
           "name": "admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "config"
@@ -166,6 +164,78 @@
       ]
     },
     {
+      "name": "close_attempt",
+      "discriminator": [
+        15,
+        235,
+        105,
+        98,
+        23,
+        12,
+        151,
+        216
+      ],
+      "accounts": [
+        {
+          "name": "partner_admin",
+          "signer": true,
+          "relations": [
+            "partner"
+          ]
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "attempt",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "reason_code",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "close_credential",
+      "discriminator": [
+        213,
+        210,
+        242,
+        210,
+        169,
+        79,
+        220,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "partner_admin",
+          "signer": true,
+          "relations": [
+            "partner"
+          ]
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "credential",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "reason_code",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "enroll_user",
       "discriminator": [
         118,
@@ -190,6 +260,24 @@
           "docs": [
             "Not required to sign. The partner_admin is the authorizing party here."
           ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "partner",
@@ -337,7 +425,6 @@
       "accounts": [
         {
           "name": "admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "config"
@@ -436,7 +523,6 @@
       "accounts": [
         {
           "name": "admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "config"
@@ -491,7 +577,6 @@
       "accounts": [
         {
           "name": "partner_admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "partner"
@@ -516,7 +601,8 @@
           }
         },
         {
-          "name": "partner"
+          "name": "partner",
+          "writable": true
         },
         {
           "name": "module",
@@ -678,6 +764,41 @@
       ]
     },
     {
+      "name": "revoke_credential",
+      "discriminator": [
+        38,
+        123,
+        95,
+        95,
+        223,
+        158,
+        169,
+        87
+      ],
+      "accounts": [
+        {
+          "name": "partner_admin",
+          "signer": true,
+          "relations": [
+            "partner"
+          ]
+        },
+        {
+          "name": "partner"
+        },
+        {
+          "name": "credential",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "reason_code",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "revoke_enrollment",
       "discriminator": [
         153,
@@ -692,7 +813,6 @@
       "accounts": [
         {
           "name": "partner_admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "partner"
@@ -729,7 +849,6 @@
       "accounts": [
         {
           "name": "partner_admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "partner"
@@ -762,7 +881,6 @@
       "accounts": [
         {
           "name": "partner_admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "partner"
@@ -802,7 +920,6 @@
       "accounts": [
         {
           "name": "admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "config"
@@ -857,7 +974,6 @@
       "accounts": [
         {
           "name": "admin",
-          "writable": true,
           "signer": true,
           "relations": [
             "config"
@@ -1058,6 +1174,19 @@
       ]
     },
     {
+      "name": "Credential",
+      "discriminator": [
+        145,
+        44,
+        68,
+        220,
+        67,
+        46,
+        100,
+        135
+      ]
+    },
+    {
       "name": "Enrollment",
       "discriminator": [
         249,
@@ -1122,6 +1251,19 @@
         3,
         80,
         161
+      ]
+    },
+    {
+      "name": "AttemptClosed",
+      "discriminator": [
+        254,
+        22,
+        130,
+        171,
+        253,
+        141,
+        55,
+        117
       ]
     },
     {
@@ -1190,6 +1332,19 @@
       ]
     },
     {
+      "name": "CredentialClosed",
+      "discriminator": [
+        254,
+        228,
+        89,
+        76,
+        212,
+        4,
+        103,
+        159
+      ]
+    },
+    {
       "name": "CredentialIssued",
       "discriminator": [
         194,
@@ -1200,6 +1355,19 @@
         29,
         72,
         177
+      ]
+    },
+    {
+      "name": "CredentialRevoked",
+      "discriminator": [
+        127,
+        131,
+        241,
+        234,
+        50,
+        139,
+        145,
+        204
       ]
     },
     {
@@ -1448,6 +1616,21 @@
       "code": 6022,
       "name": "InvalidAmount",
       "msg": "Amount is invalid for this operation"
+    },
+    {
+      "code": 6023,
+      "name": "AlreadyInitialized",
+      "msg": "Account is already initialized"
+    },
+    {
+      "code": 6024,
+      "name": "AlreadyRevoked",
+      "msg": "Credential has already been revoked"
+    },
+    {
+      "code": 6025,
+      "name": "NotRevoked",
+      "msg": "Credential must be revoked before closing"
     }
   ],
   "types": [
@@ -1545,6 +1728,48 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttemptClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "actor",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_id",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "module_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reason_code",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1745,6 +1970,116 @@
       }
     },
     {
+      "name": "Credential",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_id",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "module_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "score_bps",
+            "type": "u16"
+          },
+          {
+            "name": "issued_at",
+            "type": "i64"
+          },
+          {
+            "name": "issued_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "revoked_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "credential_asset",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CredentialClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "actor",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_id",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "module_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reason_code",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "CredentialIssued",
       "type": {
         "kind": "struct",
@@ -1788,6 +2123,48 @@
             "type": {
               "option": "i64"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CredentialRevoked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "actor",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_id",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "module_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reason_code",
+            "type": "u8"
+          },
+          {
+            "name": "revoked_at",
+            "type": "i64"
           }
         ]
       }

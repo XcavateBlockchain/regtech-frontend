@@ -60,9 +60,17 @@ export const REGTECH_ERROR__VAULT_INSUFFICIENT = 0x1784; // 6020
 export const REGTECH_ERROR__QUIZ_QUOTA_EXHAUSTED = 0x1785; // 6021
 /** InvalidAmount: Amount is invalid for this operation */
 export const REGTECH_ERROR__INVALID_AMOUNT = 0x1786; // 6022
+/** AlreadyInitialized: Account is already initialized */
+export const REGTECH_ERROR__ALREADY_INITIALIZED = 0x1787; // 6023
+/** AlreadyRevoked: Credential has already been revoked */
+export const REGTECH_ERROR__ALREADY_REVOKED = 0x1788; // 6024
+/** NotRevoked: Credential must be revoked before closing */
+export const REGTECH_ERROR__NOT_REVOKED = 0x1789; // 6025
 
 export type RegtechError =
+  | typeof REGTECH_ERROR__ALREADY_INITIALIZED
   | typeof REGTECH_ERROR__ALREADY_PASSED
+  | typeof REGTECH_ERROR__ALREADY_REVOKED
   | typeof REGTECH_ERROR__ARITHMETIC_OVERFLOW
   | typeof REGTECH_ERROR__ATTEMPT_NOT_PASSED
   | typeof REGTECH_ERROR__COLLECTION_AUTHORITY_MISMATCH
@@ -79,6 +87,7 @@ export type RegtechError =
   | typeof REGTECH_ERROR__MODULE_INACTIVE
   | typeof REGTECH_ERROR__NO_PENDING_ADMIN
   | typeof REGTECH_ERROR__NOT_AUTHORIZED
+  | typeof REGTECH_ERROR__NOT_REVOKED
   | typeof REGTECH_ERROR__PARTNER_INACTIVE
   | typeof REGTECH_ERROR__PAUSED
   | typeof REGTECH_ERROR__PENDING_ADMIN_MISMATCH
@@ -89,7 +98,9 @@ export type RegtechError =
 let regtechErrorMessages: Record<RegtechError, string> | undefined;
 if (process.env["NODE_ENV"] !== "production") {
   regtechErrorMessages = {
+    [REGTECH_ERROR__ALREADY_INITIALIZED]: `Account is already initialized`,
     [REGTECH_ERROR__ALREADY_PASSED]: `User has already passed this module`,
+    [REGTECH_ERROR__ALREADY_REVOKED]: `Credential has already been revoked`,
     [REGTECH_ERROR__ARITHMETIC_OVERFLOW]: `Arithmetic overflow`,
     [REGTECH_ERROR__ATTEMPT_NOT_PASSED]: `Attempt has not passed`,
     [REGTECH_ERROR__COLLECTION_AUTHORITY_MISMATCH]: `Collection update authority does not match Partner PDA`,
@@ -106,6 +117,7 @@ if (process.env["NODE_ENV"] !== "production") {
     [REGTECH_ERROR__MODULE_INACTIVE]: `Module is inactive`,
     [REGTECH_ERROR__NO_PENDING_ADMIN]: `No admin rotation is pending`,
     [REGTECH_ERROR__NOT_AUTHORIZED]: `Caller is not authorized`,
+    [REGTECH_ERROR__NOT_REVOKED]: `Credential must be revoked before closing`,
     [REGTECH_ERROR__PARTNER_INACTIVE]: `Partner is inactive`,
     [REGTECH_ERROR__PAUSED]: `Program is paused`,
     [REGTECH_ERROR__PENDING_ADMIN_MISMATCH]: `Signer does not match the pending admin proposal`,
