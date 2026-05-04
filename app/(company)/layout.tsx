@@ -1,4 +1,4 @@
-import CompanyNavHeader from "@/components/layouts/company-nav-header";
+import SiteHeader from "@/components/layouts/site-header";
 
 export default function CompanyLayout({
   children,
@@ -7,7 +7,7 @@ export default function CompanyLayout({
 }) {
   return (
     <div className="flex flex-1 min-h-screen flex-col">
-      <CompanyNavHeader />
+      <SiteHeader />
       {children}
     </div>
   );

@@ -1,4 +1,7 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
 type StepTone = "info" | "brand" | "success";
@@ -63,6 +66,7 @@ export function LandingPage() {
 --------------------------------------------------------------- */
 
 function Hero() {
+  const walletKit = useWalletKit();
   return (
     <section className="flex w-full max-w-[626px] flex-col items-center gap-6 text-center">
       <div className="flex flex-col items-center gap-4">
@@ -70,9 +74,11 @@ function Hero() {
           Regulatory Compliance Reimagined
         </span>
         <h1 className="text-[#545454] text-[32px] font-extrabold leading-tight">
-          Learn compliance.
+          {/* Learn compliance.
           <br />
-          Unlock opportunities.
+          Unlock opportunities. */}
+          On-chain Regulatory Technology <br /> credential built on Solana using{" "}
+          <br /> Anchor.
         </h1>
       </div>
 
@@ -81,7 +87,9 @@ function Hero() {
         for $1 to gain verified access to exclusive investment opportunities.
       </p>
 
-      <Button className="px-9">Connect Wallet</Button>
+      <Button onClick={walletKit.toggleModal} className="px-9">
+        Get Started
+      </Button>
     </section>
   );
 }

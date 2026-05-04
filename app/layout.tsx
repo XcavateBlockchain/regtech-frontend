@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import Providers from "@/providers";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -30,7 +30,7 @@ export default function RootLayout({
       lang="en"
     >
       <body className="min-h-full flex flex-col">
-        <TooltipProvider delay={0}>{children}</TooltipProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
