@@ -11,6 +11,7 @@
     "format:check": "biome format --check",
     "format:fix": "biome check --fix --unsafe",
     "check": "bun run lint && bun run typecheck",
+    "codama:js": "codama run js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -18,6 +19,8 @@
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",
     "@solana/client": "^1.7.0",
+    "@solana/kit": "^6.8.0",
+    "@solana/program-client-core": "^6.4.0",
     "@solana/react-hooks": "^1.4.1",
     "@swig-wallet/kit": "^1.9.1",
     "class-variance-authority": "^0.7.1",
@@ -35,11 +38,14 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
+    "@codama/nodes-from-anchor": "^1.4.1",
+    "@codama/renderers-js": "^2.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "codama": "^1.6.0",
     "lint-staged": "^16.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
