@@ -51,5 +51,8 @@ bun.lock.json
 bun.lock.yaml
 bun.lock.json
 
+# Generated files
+generated/prisma
+
 AGENTS.md
 CLAUDE.md

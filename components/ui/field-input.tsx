@@ -24,6 +24,7 @@ interface FieldInputProps extends React.ComponentProps<"input"> {
   error?: FieldInputError;
   tooltip?: string;
   tooltipDescription?: string;
+  addOn?: React.ReactNode;
 }
 
 export function FieldInput({
@@ -32,6 +33,7 @@ export function FieldInput({
   error,
   tooltip,
   tooltipDescription,
+  addOn,
   ...props
 }: FieldInputProps) {
   return (
@@ -45,7 +47,14 @@ export function FieldInput({
           )}
         </Label>
       )}
-      <Input className={cn(className)} {...props} />
+      <div className="relative">
+        <Input className={cn(className)} {...props} />
+        {addOn && (
+          <span className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-muted-foreground text-sm peer-disabled:opacity-50">
+            {addOn}
+          </span>
+        )}
+      </div>
       {error && <FieldError errors={[error]} />}
     </div>
   );

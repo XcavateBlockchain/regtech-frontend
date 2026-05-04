@@ -87,7 +87,7 @@ function Hero() {
         for $1 to gain verified access to exclusive investment opportunities.
       </p>
 
-      <Button onClick={walletKit.toggleModal} className="px-9">
+      <Button onClick={walletKit.open} className="px-9">
         Get Started
       </Button>
     </section>

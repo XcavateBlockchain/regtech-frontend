@@ -1,6 +1,6 @@
 "use client";
 
-import { useBalance, useWalletConnection } from "@solana/react-hooks";
+import { useDisconnect } from "@phantom/react-sdk";
 import { Check, Copy } from "lucide-react";
 import * as React from "react";
 import {
@@ -10,32 +10,23 @@ import {
   ModalTitle,
 } from "@/components/modal";
 import { Button } from "@/components/ui/button";
+import { useSolBalance } from "@/hooks/use-sol-balance";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
-import { useWalletContext } from "@/providers/wallet-provider";
 
-export function WalletAccount() {
-  const { MODAL_CLOSE_DURATION, LAMPORTS_PER_SOL } = useWalletKit();
+const MODAL_CLOSE_DURATION = 320;
 
-  const { wallet, disconnect } = useWalletConnection();
+export function WalletAccount(props: { onClose: () => void }) {
+  const { disconnect } = useDisconnect();
+  const { address: solanaAddress, formattedAddress } = useWalletKit();
 
-  const balance = useBalance(wallet?.account.address);
-  const context = useWalletContext();
-
-  const address = wallet?.account.address;
-  const formattedAddress = address
-    ? `${address.slice(0, 6)}•••${address.slice(-4)}`
-    : "";
-
-  const lamports = balance.lamports;
-  const formattedBalance =
-    lamports !== undefined && lamports !== null
-      ? (Number(lamports) / Number(LAMPORTS_PER_SOL)).toFixed(4)
-      : undefined;
+  const balance = useSolBalance(solanaAddress);
 
   function handleDisconnect() {
-    context.setOpen(false);
+    props.onClose();
+    // Wait for the close animation before tearing down the session so the
+    // modal doesn't visibly snap to "Connect Wallet" mid-fade.
     setTimeout(() => {
-      void Promise.resolve(disconnect()).catch(() => undefined);
+      void disconnect().catch(() => undefined);
     }, MODAL_CLOSE_DURATION);
   }
 
@@ -54,7 +45,7 @@ export function WalletAccount() {
             {/** biome-ignore lint/performance/noImgElement: avatar image */}
             <img
               className="rounded-full"
-              src={`https://avatar.vercel.sh/${address}?size=150`}
+              src={`https://avatar.vercel.sh/${solanaAddress}?size=150`}
               alt="User gradient avatar"
             />
           </div>
@@ -67,7 +58,7 @@ export function WalletAccount() {
               <CopyAddressButton />
             </div>
             <p className="text-balance text-sm text-muted-foreground">
-              {`${formattedBalance ?? "0.00"} SOL`}
+              {`${balance ?? "0.00"} SOL`}
             </p>
           </div>
 
@@ -81,7 +72,7 @@ export function WalletAccount() {
 }
 
 function CopyAddressButton() {
-  const { wallet } = useWalletConnection();
+  const { address: solanaAddress } = useWalletKit();
   const [copied, setCopied] = React.useState(false);
 
   React.useEffect(() => {
@@ -92,9 +83,9 @@ function CopyAddressButton() {
   }, [copied]);
 
   async function handleCopy() {
-    if (!wallet) return;
+    if (!solanaAddress) return;
     setCopied(true);
-    await navigator.clipboard.writeText(wallet.account.address);
+    await navigator.clipboard.writeText(solanaAddress);
   }
 
   return (

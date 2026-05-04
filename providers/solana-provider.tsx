@@ -1,47 +1,51 @@
 "use client";
 
-import { autoDiscover, type ClientLogger, createClient } from "@solana/client";
-import { SolanaProvider } from "@solana/react-hooks";
+import {
+  AddressType,
+  PhantomProvider,
+  type PhantomTheme,
+} from "@phantom/react-sdk";
 import type { PropsWithChildren } from "react";
+import { appEnv } from "@/constants/app-env";
 
-const RPC_ENDPOINT = "https://api.devnet.solana.com";
-const WS_ENDPOINT = "wss://api.devnet.solana.com";
-
-// Routes @solana/client logs without escalating handled wallet failures
-// (e.g. user cancellation) to console.error, which Next 16 surfaces as a
-// Console Error overlay even when our app handles the rejection in-flow.
-const logger: ClientLogger = ({ data, level, message }) => {
-  if (message.includes("wallet connection failed")) {
-    return;
-  }
-  const tagged = `[solana-client] ${message}`;
-  switch (level) {
-    case "error":
-      console.warn(tagged, data);
-      break;
-    case "warn":
-      console.warn(tagged, data);
-      break;
-    case "info":
-      console.info(tagged, data);
-      break;
-    default:
-      console.debug(tagged, data);
-  }
+const customTheme: PhantomTheme = {
+  background: "#ffffff", // matches our --background dark mode
+  text: "#09090b", // matches --foreground dark mode
+  secondary: "#71717A", // muted-foreground, hex required
+  brand: "#624781", // primary action; light on dark for contrast
+  error: "#ef4444", // red-500
+  success: "#22c55e", // green-500
+  borderRadius: "10px", // matches SimpleKit's 1rem rounded modal
+  overlay: "rgba(9, 9, 11, 0.5)", // matches our Dialog overlay
 };
 
-const client = createClient({
-  endpoint: RPC_ENDPOINT,
-  websocketEndpoint: WS_ENDPOINT,
-  walletConnectors: autoDiscover(),
-  commitment: "confirmed",
-  logger,
-});
+const APP_ID = appEnv.PHANTOM_APP_ID;
+// const _RPC_ENDPOINT = appEnv.SOLANA_RPC_URL;
+// const _WS_ENDPOINT = appEnv.SOLANA_WS_URL;
+
+if (typeof window !== "undefined" && !APP_ID) {
+  console.warn(
+    "[SimpleKit] NEXT_PUBLIC_PHANTOM_APP_ID is not set. Get one at https://phantom.com/portal and add it to .env.local.",
+  );
+}
 
 export default function SolanaWalletProvider({ children }: PropsWithChildren) {
+  const redirectUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback`
+      : "";
   return (
-    <SolanaProvider client={client} query={{ config: {}, suspense: false }}>
+    <PhantomProvider
+      config={{
+        providers: ["google", "phantom", "injected"],
+        appId: APP_ID ?? "",
+        addressTypes: [AddressType.solana],
+        authOptions: { redirectUrl },
+      }}
+      theme={customTheme}
+      appName="Regtech"
+    >
       {children}
-    </SolanaProvider>
+    </PhantomProvider>
   );
 }
