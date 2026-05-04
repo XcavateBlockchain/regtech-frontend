@@ -1,23 +1,18 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 /*
- * Hook used to calculate the width of the screen using the
- * MediaQueryListEvent.
+ * Subscribes to matchMedia; uses useSyncExternalStore so SSR + the first
+ * hydrated client render stay aligned (via getServerSnapshot), then the
+ * real viewport is read without waiting for useEffect.
  */
 export function useMediaQuery(query: string) {
-  const [value, setValue] = useState(false);
-
-  useEffect(() => {
-    function onChange(event: MediaQueryListEvent) {
-      setValue(event.matches);
-    }
-
-    const result = matchMedia(query);
-    result.addEventListener("change", onChange);
-    setValue(result.matches);
-
-    return () => result.removeEventListener("change", onChange);
-  }, [query]);
-
-  return value;
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const mq = window.matchMedia(query);
+      mq.addEventListener("change", onStoreChange);
+      return () => mq.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 }
