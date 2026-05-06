@@ -1,27 +1,98 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 type TeamStat = { value: string; label: string };
 type TeamLog = { label: string; time: string };
 
-const teamStats: TeamStat[] = [
-  { value: "8", label: "Active employees" },
-  { value: "2", label: "Modules this week" },
-];
+type ApiLog = {
+  id: string;
+  type: string;
+  metadata: unknown;
+  createdAt: string;
+};
 
-const teamLog: TeamLog[] = [
-  { label: "2 modules created", time: "This week" },
-  { label: "1 quiz updated", time: "Yesterday" },
-  { label: "3 investors invited", time: "Apr 21" },
-];
+function timeAgo(iso: string) {
+  const then = new Date(iso).getTime();
+  const diff = Math.max(0, Date.now() - then);
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
 
 export function TeamActivity() {
+  const { address } = useWalletKit();
+  const [stats, setStats] = useState<{
+    activeEmployees: number;
+    modulesThisWeek: number;
+    logs: ApiLog[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetch(
+      `/api/company/team-activity?walletAddress=${encodeURIComponent(address)}`,
+    )
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<{
+          activeEmployees: number;
+          modulesThisWeek: number;
+          logs: ApiLog[];
+        }>;
+      })
+      .then((data) => {
+        if (!cancelled && data) setStats(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStats(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
+
+  const teamStats: TeamStat[] = useMemo(
+    () => [
+      { value: String(stats?.activeEmployees ?? 0), label: "Active employees" },
+      {
+        value: String(stats?.modulesThisWeek ?? 0),
+        label: "Modules this week",
+      },
+    ],
+    [stats],
+  );
+
+  const teamLog: TeamLog[] = useMemo(() => {
+    const logs = stats?.logs ?? [];
+    return logs.map((l) => {
+      const meta = (l.metadata ?? {}) as Record<string, unknown>;
+      const moduleName = (meta.moduleName as string | undefined) ?? "—";
+      const label =
+        l.type === "MODULE_PUBLISHED"
+          ? `Published ${moduleName}`
+          : l.type === "MODULE_CREATED"
+            ? `Created ${moduleName}`
+            : l.type;
+      return { label, time: timeAgo(l.createdAt) };
+    });
+  }, [stats]);
+
   return (
     <Card className="flex flex-col gap-[54px] px-6 py-4">
       <div className="flex flex-col gap-4">
         <div className="flex items-center font-sans text-[#545454] justify-between">
           <h2 className="text-base font-semibold leading-6 font-sans text-[#545454]">
-            Team activity
+            Recent activity
           </h2>
           <button
             type="button"

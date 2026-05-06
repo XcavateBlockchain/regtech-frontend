@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
 type Delta = {
@@ -38,29 +42,64 @@ function StatCard({ label, value, unit, delta }: StatCardProps) {
 }
 
 export function CompanyStats() {
+  const { address } = useWalletKit();
+  const [stats, setStats] = useState<{
+    activeModules: number;
+    credentialsIssued: number;
+    employees: number;
+    publicEnrolled: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetch(`/api/company/stats?walletAddress=${encodeURIComponent(address)}`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<{
+          activeModules: number;
+          credentialsIssued: number;
+          employees: number;
+          publicEnrolled: number;
+        }>;
+      })
+      .then((data) => {
+        if (!cancelled && data) setStats(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStats(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
+
+  const valueOrDash = (v: number | undefined) =>
+    typeof v === "number" ? String(v) : "—";
+
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        label="Total Investors Tested"
-        value="92%"
-        delta={{ value: "+120 this week", tone: "success" }}
-      />
-      <StatCard
-        label="Verification Pass Rate"
-        value="78%"
-        unit="Pass"
-        delta={{ value: "3% Last month", tone: "success" }}
-      />
-      <StatCard
-        label="Failed Assessments"
-        value="14"
-        delta={{ value: "2% Requires attention", tone: "muted" }}
-      />
-      <StatCard
         label="Active Modules"
-        value="12"
+        value={valueOrDash(stats?.activeModules)}
         unit="Modules"
-        delta={{ value: "+2 Created this month", tone: "success" }}
+        delta={{ value: "Live", tone: "muted" }}
+      />
+      <StatCard
+        label="Credentials issued"
+        value={valueOrDash(stats?.credentialsIssued)}
+        delta={{ value: "Live", tone: "muted" }}
+      />
+      <StatCard
+        label="Employees"
+        value={valueOrDash(stats?.employees)}
+        delta={{ value: "Live", tone: "muted" }}
+      />
+      <StatCard
+        label="Public enrolled"
+        value={valueOrDash(stats?.publicEnrolled)}
+        delta={{ value: "Live", tone: "muted" }}
       />
     </div>
   );

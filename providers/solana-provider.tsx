@@ -37,7 +37,7 @@ export default function SolanaWalletProvider({ children }: PropsWithChildren) {
   return (
     <PhantomProvider
       config={{
-        providers: ["google", "phantom", "injected"],
+        providers: ["injected"],
         appId: APP_ID ?? "",
         addressTypes: [AddressType.solana],
         authOptions: { redirectUrl },

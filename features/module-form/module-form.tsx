@@ -7,12 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CATEGORY_OPTIONS,
   LANGUAGE_OPTIONS,
-  type ModuleInput,
+  MODULE_TYPE_OPTIONS,
+  type ModuleWithQuizInput,
   TIME_OPTIONS,
 } from "@/lib/validations/module-schema";
 
 interface IForm {
-  form: UseFormReturn<ModuleInput>;
+  form: UseFormReturn<ModuleWithQuizInput>;
 }
 
 export default function ModuleForm({ form }: IForm) {
@@ -35,6 +36,13 @@ export default function ModuleForm({ form }: IForm) {
         )}
       </div>
       <NativeSelect
+        name="moduleType"
+        label="Module Type"
+        options={MODULE_TYPE_OPTIONS}
+        placeholder="Select Module Type"
+        required
+      />
+      <NativeSelect
         name="category"
         label="Category"
         options={CATEGORY_OPTIONS}
@@ -43,14 +51,14 @@ export default function ModuleForm({ form }: IForm) {
       />
       <div className="grid-cols-1 gap-x-2.5 gap-y-6 md:grid-cols-2 grid">
         <NativeSelect
-          name="Est completion time"
+          name="completionTime"
           label="Est completion time"
           options={TIME_OPTIONS}
           placeholder="Select Est completion time"
           required
         />
         <NativeSelect
-          name="Language"
+          name="language"
           label="Language"
           options={LANGUAGE_OPTIONS}
           placeholder="Select Language"

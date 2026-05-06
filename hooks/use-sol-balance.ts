@@ -2,7 +2,8 @@ import { type Address, address, createSolanaRpc } from "@solana/kit";
 import { useEffect, useState } from "react";
 import { appEnv } from "@/constants/app-env";
 
-const RPC_URL = appEnv.SOLANA_RPC_URL;
+const { SOLANA_RPC_URL: RPC_URL } = appEnv;
+
 const rpc = createSolanaRpc(RPC_URL);
 
 export const LAMPORTS_PER_SOL = 1_000_000_000;

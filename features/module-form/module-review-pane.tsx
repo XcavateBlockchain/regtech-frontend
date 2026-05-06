@@ -1,20 +1,53 @@
+"use client";
+
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import type { ModuleInput } from "@/lib/validations/module-schema";
-import { CATEGORY_OPTIONS } from "@/lib/validations/module-schema";
+import { appEnv } from "@/constants/app-env";
+import {
+  CATEGORY_OPTIONS,
+  MODULE_TYPE_OPTIONS,
+  type ModuleWithQuizInput,
+} from "@/lib/validations/module-schema";
 
-export default function ModuleReviewPane() {
-  const values = useWatch<ModuleInput>();
-  const { formState } = useFormContext<ModuleInput>();
+interface ModuleReviewPaneProps {
+  onSave?: () => void;
+}
+
+export default function ModuleReviewPane({ onSave }: ModuleReviewPaneProps) {
+  const values = useWatch<ModuleWithQuizInput>();
+  const { formState } = useFormContext<ModuleWithQuizInput>();
 
   const titleDisplay = values.title?.trim() || "—";
   const categoryDisplay =
     CATEGORY_OPTIONS.find((c) => c.value === values.category)?.label ?? "—";
+  const moduleTypeDisplay =
+    MODULE_TYPE_OPTIONS.find((o) => o.value === values.moduleType)?.label ??
+    "—";
   const passingScoreDisplay =
     typeof values.passingScore === "number" &&
     !Number.isNaN(values.passingScore)
       ? `${values.passingScore}%`
       : "—";
+
+  const recipients =
+    typeof values.recipients === "number" && Number.isFinite(values.recipients)
+      ? values.recipients
+      : Number(values.recipients);
+
+  const recipientsCount = Number.isFinite(recipients)
+    ? Math.max(0, recipients)
+    : 0;
+  const usdTotal = recipientsCount * 1;
+  const usdDisplay = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(usdTotal);
+
+  const solUsd = Number(appEnv.SOL_USD);
+  const solTotal =
+    Number.isFinite(solUsd) && solUsd > 0 ? usdTotal / solUsd : null;
+  const solDisplay = solTotal !== null ? `${solTotal.toFixed(4)} SOL` : "— SOL";
 
   return (
     <aside className="flex w-full max-w-[420px] flex-col gap-8">
@@ -31,6 +64,7 @@ export default function ModuleReviewPane() {
         <div className="flex w-full flex-col gap-6 rounded-lg border border-foreground/90 px-3.5 py-4 text-xs text-ink-subtle">
           <div className="flex flex-col gap-5">
             <ReviewRow label="Title" value={titleDisplay} />
+            <ReviewRow label="Module Type" value={moduleTypeDisplay} />
             <ReviewRow label="Category" value={categoryDisplay} />
             <ReviewRow
               label="Completion Time"
@@ -45,7 +79,12 @@ export default function ModuleReviewPane() {
           </div>
           <div className="flex items-center justify-between font-display font-semibold">
             <span>Payment</span>
-            <span>$300</span>
+            <div className="flex flex-col items-end leading-tight">
+              <span>{usdDisplay}</span>
+              <span className="text-[11px] font-light text-ink-mute">
+                ≈ {solDisplay}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -58,7 +97,13 @@ export default function ModuleReviewPane() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" className="flex-1">
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1"
+          onClick={onSave}
+          disabled={formState.isSubmitting}
+        >
           Save
         </Button>
         <Button

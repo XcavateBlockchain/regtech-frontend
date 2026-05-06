@@ -53,12 +53,7 @@ export default function NativeSelect({
             )}
             <Select
               name={field.name}
-              value={
-                (isAdvancedOptions(options)
-                  ? options.flatMap((g) => g.options)
-                  : (options ?? [])
-                ).find((o) => o.value === field.value)?.label ?? ""
-              }
+              value={(field.value as string | undefined) ?? ""}
               onValueChange={field.onChange}
               onOpenChange={(open) => {
                 if (!open) field.onBlur();

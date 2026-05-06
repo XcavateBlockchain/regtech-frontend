@@ -8,6 +8,11 @@ export const CATEGORY_OPTIONS = [
   { value: "tax", label: "Tax & Reporting" },
 ];
 
+export const MODULE_TYPE_OPTIONS = [
+  { value: "employee", label: "Employee Training" },
+  { value: "user", label: "Customer / User" },
+];
+
 export const TIME_OPTIONS = [
   { value: "15", label: "15 min" },
   { value: "30", label: "30 min" },
@@ -24,16 +29,21 @@ export const LANGUAGE_OPTIONS = [
   { value: "zh", label: "Chinese" },
 ];
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_BYTES = 50 * 1024 * 1024; // 50MB
+// const ACCEPTED_IMAGE_TYPES = [
+//   "image/jpeg",
+//   "image/png",
+//   "image/webp",
+//   "image/jpg",
+// ];
 
 const imageFile = z
   .instanceof(File, { message: "An image is required" })
-  .refine((f) => f.size <= MAX_IMAGE_BYTES, "Image must be 5MB or smaller")
-  .refine(
-    (f) => ACCEPTED_IMAGE_TYPES.includes(f.type),
-    "Image must be JPEG, PNG, or WebP",
-  );
+  .refine((f) => f.size <= MAX_IMAGE_BYTES, "Image must be 5MB or smaller");
+// .refine(
+//   (f) => ACCEPTED_IMAGE_TYPES.includes(f.type),
+//   "Image must be JPEG, PNG, or WebP or JPG",
+// );
 
 export const moduleSchema = z.object({
   mode: z.enum(["manual", "ai"]),
@@ -72,3 +82,10 @@ export const moduleSchema = z.object({
 
 export type ModuleInput = z.input<typeof moduleSchema>;
 export type ModuleValues = z.infer<typeof moduleSchema>;
+
+export const moduleWithQuizSchema = moduleSchema.extend({
+  moduleType: z.enum(["employee", "user"], { message: "Select a module type" }),
+});
+
+export type ModuleWithQuizInput = z.input<typeof moduleWithQuizSchema>;
+export type ModuleWithQuizValues = z.infer<typeof moduleWithQuizSchema>;

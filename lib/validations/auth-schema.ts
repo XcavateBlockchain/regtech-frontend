@@ -39,6 +39,12 @@ export const authSchema = userSchema.extend({
   description: z.string().max(2000),
 });
 
+export const loginSchema = z.object({
+  email: userSchema.shape.email,
+});
+
 export type UserInput = z.input<typeof userSchema>;
+export type LoginInput = z.input<typeof loginSchema>;
 export type UserValues = z.infer<typeof userSchema>;
+export type LoginValues = z.infer<typeof loginSchema>;
 export type AuthValues = z.infer<typeof authSchema>;

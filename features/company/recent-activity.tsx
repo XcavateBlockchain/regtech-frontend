@@ -1,11 +1,15 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
-type ActivityStatus = "completed" | "published" | "failed";
+type ActivityStatus = "info" | "success" | "danger";
 
-type Activity = {
+type ActivityRow = {
   initials: string;
   name: string;
   module: string;
@@ -14,48 +18,101 @@ type Activity = {
   time: string;
 };
 
-const statusColors: Record<ActivityStatus, string> = {
-  completed: "text-status-success",
-  published: "text-brand",
-  failed: "text-status-danger",
+type ApiLog = {
+  id: string;
+  type: string;
+  metadata: unknown;
+  createdAt: string;
+  actor: { name: string };
 };
 
-const activities: Activity[] = [
-  {
-    initials: "JL",
-    name: "James Liu",
-    module: "Security 101",
-    status: "completed",
-    statusLabel: "Completed",
-    time: "2 mins ago",
-  },
-  {
-    initials: "ST",
-    name: "Sarah Torgov",
-    module: "Insider Trading",
-    status: "published",
-    statusLabel: "Published",
-    time: "18 min ago",
-  },
-  {
-    initials: "DK",
-    name: "David Kim",
-    module: "AML quiz - 2nd attempt",
-    status: "failed",
-    statusLabel: "Failed",
-    time: "2 mins ago",
-  },
-  {
-    initials: "ST",
-    name: "Sarah Torgov",
-    module: "Insider Trading",
-    status: "published",
-    statusLabel: "Published",
-    time: "18 min ago",
-  },
-];
+const statusColors: Record<ActivityStatus, string> = {
+  info: "text-ink-mute",
+  success: "text-status-success",
+  danger: "text-status-danger",
+};
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((p) => p[0]?.toUpperCase()).join("") || "—";
+}
+
+function timeAgo(iso: string) {
+  const then = new Date(iso).getTime();
+  const diff = Math.max(0, Date.now() - then);
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
 
 export function RecentActivities() {
+  const { address } = useWalletKit();
+  const [logs, setLogs] = useState<ApiLog[]>([]);
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetch(`/api/company/activity?walletAddress=${encodeURIComponent(address)}`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<{ logs: ApiLog[] }>;
+      })
+      .then((data) => {
+        if (!cancelled && data) setLogs(data.logs);
+      })
+      .catch(() => {
+        if (!cancelled) setLogs([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
+
+  const activities = useMemo<ActivityRow[]>(() => {
+    return logs.map((log) => {
+      const meta = (log.metadata ?? {}) as Record<string, unknown>;
+      const moduleName =
+        (meta.moduleName as string | undefined) ??
+        (meta.moduleTitle as string | undefined) ??
+        "—";
+
+      const actorName = log.actor?.name ?? "—";
+      if (log.type === "MODULE_PUBLISHED") {
+        return {
+          initials: initials(actorName),
+          name: actorName,
+          module: moduleName,
+          status: "success",
+          statusLabel: "Published",
+          time: timeAgo(log.createdAt),
+        };
+      }
+      if (log.type === "MODULE_CREATED") {
+        return {
+          initials: initials(actorName),
+          name: actorName,
+          module: moduleName,
+          status: "info",
+          statusLabel: "Draft created",
+          time: timeAgo(log.createdAt),
+        };
+      }
+      return {
+        initials: initials(actorName),
+        name: actorName,
+        module: moduleName,
+        status: "info",
+        statusLabel: log.type,
+        time: timeAgo(log.createdAt),
+      };
+    });
+  }, [logs]);
+
   return (
     <Card className="flex flex-col gap-4 px-6 py-4 rounded-[10px]">
       <div className="flex items-center font-sans  text-[#545454] justify-between">
@@ -78,11 +135,6 @@ export function RecentActivities() {
             className="flex items-center justify-between py-2.5"
           >
             <div className="flex items-center gap-2.5">
-              {/* <div className="flex size-12 items-center justify-center rounded-full bg-accent-purple-soft">
-                <span className="text-base font-semibold text-accent-purple">
-                  {activity.initials}
-                </span>
-              </div> */}
               <Avatar className={"size-12"}>
                 <AvatarFallback>{activity.initials}</AvatarFallback>
               </Avatar>

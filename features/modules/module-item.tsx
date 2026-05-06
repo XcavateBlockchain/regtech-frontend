@@ -83,19 +83,26 @@ export function ModuleItem(props: ModuleCardData) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col gap-3.5 px-3 py-4">
-        <h3 className="text-sm font-semibold leading-6 text-ink-subtle">
-          {title}
-        </h3>
+        <h3 className="text-sm font-semibold leading-6">{title}</h3>
 
         {props.mode === "edit" ? (
           <Button
             variant="outline"
+            nativeButton={false}
             className="border-[#4b27c8] text-[#4b27c8] hover:bg-[#4b27c8]/5 hover:text-[#4b27c8]"
-            render={<Link href={`/modules/${slug}`}>Edit</Link>}
+            render={<Link href={`/company/module/${slug}/edit`}>Edit</Link>}
           />
         ) : (
           <StatsGrid stats={props.stats} />
         )}
+        <div className="flex items-center w-full justify-end gap-2">
+          <Button size={"lg"}>
+            <Link href={`/company/module/${slug}`}>View</Link>
+          </Button>
+          <Button variant="outline" size={"lg"}>
+            Share
+          </Button>
+        </div>
       </div>
     </article>
   );

@@ -96,12 +96,12 @@ const ModalContent = ({ className, children, ...props }: ModalProps) => {
   const { showCloseButton } = props;
   const Content = isDesktop ? DialogContent : DrawerContent;
   const focusProps = isDesktop
-    ? { initialFocus: false as const, showCloseButton }
+    ? { initialFocus: false as const, showCloseButton: showCloseButton }
     : { onOpenAutoFocus: (e: Event) => e.preventDefault() };
   return (
     <Content
       className={cn(
-        "rounded-t-3xl sm:rounded-[10px] md:max-w-[360px] [&>button]:right-[26px] [&>button]:top-[26px]",
+        "rounded-t-3xl sm:rounded-[10px] md:max-w-[360px] [&>button]:right-[16px] [&>button]:top-[16px]",
         className,
       )}
       {...focusProps}

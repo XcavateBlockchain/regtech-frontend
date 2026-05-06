@@ -3,44 +3,96 @@
 import type { useWalletConnection } from "@solana/react-hooks";
 import * as React from "react";
 import { Modal, ModalContent } from "@/components/modal";
-import { RegisterForm } from "@/features/user-auth/register-form";
 import { WalletAccount } from "@/features/wallet/wallet-accout";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
+import { getUserByWallet } from "@/lib/actions/user";
 
 export type Connector = ReturnType<
   typeof useWalletConnection
 >["connectors"][number];
 
-export type AuthContextType = {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
 const WalletContext = React.createContext<{
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  auth: AuthContextType;
+  accountLoading: boolean;
+  setAccountLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  companyModal: boolean;
+  setCompanyModal: React.Dispatch<React.SetStateAction<boolean>>;
+  userModal: boolean;
+  setUserModal: React.Dispatch<React.SetStateAction<boolean>>;
 }>({
   open: false,
   setOpen: () => false,
-  auth: {
-    open: false,
-    setOpen: () => false,
-  },
+  accountLoading: false,
+  setAccountLoading: () => false,
+  companyModal: false,
+  setCompanyModal: () => false,
+  userModal: false,
+  setUserModal: () => false,
 });
+
+const storageKeys = {
+  role: "ROLE",
+  user: "USER_ID",
+  company: "COMPANY_ID",
+};
 
 export default function WalletProvider(props: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
-  const [authModalOpen, setAuthModalOpen] = React.useState(true);
+  const [accountLoading, setAccountLoading] = React.useState(false);
+  const [companyModalOpen, setCompanyModalOpen] = React.useState(false);
+  const [userModalOpen, setUserModalOpen] = React.useState(false);
+  const { isConnected, address } = useWalletKit();
+
+  React.useEffect(() => {
+    if (isConnected && address) {
+      const user = localStorage.getItem(storageKeys.user);
+      if (!user) {
+        const timeout = setTimeout(() => {
+          setAccountLoading(true);
+          localStorage.setItem(storageKeys.role, "OWNER");
+        }, 320);
+
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [isConnected, address]);
+
+  React.useEffect(() => {
+    if (accountLoading && address) {
+      let ignore = false;
+      const checkUser = async () => {
+        const role = localStorage.getItem(storageKeys.role);
+        const user = await getUserByWallet(address ?? "");
+        if (ignore) return;
+        if (!user && role === "OWNER") {
+          setCompanyModalOpen(true);
+          setAccountLoading(false);
+          return;
+        }
+        localStorage.setItem(storageKeys.role, user?.role ?? "");
+        localStorage.setItem(storageKeys.user, user?.userId ?? "");
+        localStorage.setItem(storageKeys.company, user?.companyId ?? "");
+        setAccountLoading(false);
+      };
+      checkUser();
+      return () => {
+        ignore = true;
+      };
+    }
+  }, [accountLoading, address]);
 
   return (
     <WalletContext.Provider
       value={{
         open,
         setOpen,
-        auth: {
-          open: authModalOpen,
-          setOpen: setAuthModalOpen,
-        },
+        accountLoading,
+        setAccountLoading,
+        companyModal: companyModalOpen,
+        setCompanyModal: setCompanyModalOpen,
+        userModal: userModalOpen,
+        setUserModal: setUserModalOpen,
       }}
     >
       {props.children}
@@ -48,9 +100,6 @@ export default function WalletProvider(props: { children: React.ReactNode }) {
         <ModalContent>
           <WalletAccount onClose={() => setOpen(false)} />
         </ModalContent>
-      </Modal>
-      <Modal open={authModalOpen} onOpenChange={setAuthModalOpen}>
-        <RegisterForm />
       </Modal>
     </WalletContext.Provider>
   );

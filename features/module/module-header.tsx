@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,8 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ModuleCardData } from "../modules/module-item";
 
-export function ModuleHeader() {
+export function ModuleHeader({
+  module,
+}: {
+  module: {
+    id: string;
+    title: string;
+    status: string;
+    description: string;
+  };
+}) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex flex-col gap-3.5">
@@ -17,15 +28,15 @@ export function ModuleHeader() {
             AML
           </Badge>
           <Badge variant="default" className="bg-primary/10 text-primary">
-            Published
+            {module.status}
           </Badge>
         </div>
         <div className="flex flex-col gap-0.5">
           <h1 className="text-xl font-semibold leading-none text-foreground">
-            SEC Disclosure Requirements
+            {module.title}
           </h1>
-          <p className="text-base leading-none text-muted-foreground">
-            Set title, category make payment
+          <p className="text-base truncate w-[500px] leading-none text-muted-foreground">
+            {module?.description || "No description"}
           </p>
         </div>
       </div>
@@ -42,7 +53,12 @@ export function ModuleHeader() {
             <SelectItem value="v1">Version 1</SelectItem>
           </SelectContent>
         </Select>
-        <Button>Edit module</Button>
+
+        {module.status === "DRAFT" && (
+          <Link href={`/company/module/${module.id}/edit`}>
+            <Button>Edit module</Button>
+          </Link>
+        )}
       </div>
     </div>
   );
