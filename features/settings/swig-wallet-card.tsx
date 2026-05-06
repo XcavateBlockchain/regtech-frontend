@@ -14,8 +14,10 @@ const LAMPORTS_PER_SOL = BigInt(1_000_000_000);
 type SwigWalletCardProps = {
   companyId: string;
   walletAddress: string;
-  swigAddress: string;
+  swigWalletAddress: string;
   solBalance: number;
+  partnerVaultAddress: string | null;
+  partnerVaultSolBalance: number;
   onAllocated?: () => void;
   onFunded?: () => void;
 };
@@ -27,8 +29,10 @@ function truncate(addr: string) {
 export function SwigWalletCard({
   companyId,
   walletAddress,
-  swigAddress,
+  swigWalletAddress,
   solBalance,
+  partnerVaultAddress,
+  partnerVaultSolBalance,
   onAllocated,
   onFunded,
 }: SwigWalletCardProps) {
@@ -126,6 +130,7 @@ export function SwigWalletCard({
 
   async function handleFund() {
     setError(null);
+    const targetVaultAddress = partnerVaultAddress ?? swigWalletAddress;
     const sol = parseFloat(fundAmount);
     if (!sol || sol <= 0) {
       setError("Enter a valid SOL amount");
@@ -133,7 +138,11 @@ export function SwigWalletCard({
     }
     try {
       const lamports = BigInt(Math.round(sol * Number(LAMPORTS_PER_SOL)));
-      await fund(walletAddress as Address, swigAddress as Address, lamports);
+      await fund(
+        walletAddress as Address,
+        targetVaultAddress as Address,
+        lamports,
+      );
       setFundAmount("");
       onFunded?.();
     } catch (e) {
@@ -146,10 +155,10 @@ export function SwigWalletCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Wallet className="size-4 text-primary" />
-          <p className="text-sm font-medium">Company Wallet</p>
+          <p className="text-sm font-medium">Company Vault (Swig)</p>
         </div>
         <Badge variant="outline" className="font-mono text-xs">
-          {truncate(swigAddress)}
+          {truncate(swigWalletAddress)}
         </Badge>
       </div>
 
@@ -160,8 +169,30 @@ export function SwigWalletCard({
             SOL
           </span>
         </p>
-        <p className="text-xs text-muted-foreground font-mono">{swigAddress}</p>
+        <p className="text-xs text-muted-foreground font-mono">
+          {swigWalletAddress}
+        </p>
       </div>
+
+      {partnerVaultAddress ? (
+        <div className="rounded-md border border-border px-3 py-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-muted-foreground">
+              Partner vault (Partner PDA)
+            </p>
+            <Badge variant="outline" className="font-mono text-xs">
+              {truncate(partnerVaultAddress)}
+            </Badge>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground font-mono">
+            {partnerVaultAddress}
+          </p>
+          <p className="mt-1 text-sm">
+            {partnerVaultSolBalance.toFixed(4)}{" "}
+            <span className="text-xs text-muted-foreground">SOL</span>
+          </p>
+        </div>
+      ) : null}
 
       {error && <p className="text-xs text-destructive">{error}</p>}
 
@@ -211,7 +242,36 @@ export function SwigWalletCard({
           disabled={funding || !fundAmount}
         >
           <ArrowDownToLine className="size-3.5" />
-          {funding ? "Funding…" : "Fund wallet"}
+          {funding ? "Funding…" : "Fund vault"}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1.5"
+          onClick={async () => {
+            setError(null);
+            const sol = parseFloat(fundAmount);
+            if (!sol || sol <= 0) {
+              setError("Enter a valid SOL amount");
+              return;
+            }
+            try {
+              const lamports = BigInt(Math.round(sol * Number(LAMPORTS_PER_SOL)));
+              await fund(
+                walletAddress as Address,
+                swigWalletAddress as Address,
+                lamports,
+              );
+              setFundAmount("");
+              onFunded?.();
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "Something went wrong");
+            }
+          }}
+          disabled={funding || !fundAmount}
+        >
+          <ArrowDownToLine className="size-3.5" />
+          {funding ? "Funding…" : "Fund Swig vault"}
         </Button>
         <Button
           size="sm"

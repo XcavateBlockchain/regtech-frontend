@@ -249,7 +249,7 @@ function buildSolTransferInstruction(
 type UseFundSwigReturn = {
   fund: (
     ownerAddress: Address,
-    swigAddress: Address,
+    vaultAddress: Address,
     lamports: bigint,
   ) => Promise<string>;
   loading: boolean;
@@ -264,7 +264,7 @@ export function useFundSwig(): UseFundSwigReturn {
   const fund = useCallback(
     async (
       ownerAddress: Address,
-      swigAddress: Address,
+      vaultAddress: Address,
       lamports: bigint,
     ): Promise<string> => {
       setLoading(true);
@@ -272,7 +272,7 @@ export function useFundSwig(): UseFundSwigReturn {
       try {
         const ix = buildSolTransferInstruction(
           ownerAddress,
-          swigAddress,
+          vaultAddress,
           lamports,
         );
         return await sendViaPhantomTx(solana, ownerAddress, [ix]);

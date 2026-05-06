@@ -1,7 +1,9 @@
 import { createSolanaRpc } from "@solana/kit";
 import { NextResponse } from "next/server";
 import { appEnv } from "@/constants/app-env";
+import { findPartnerPda } from "@/generated/reg_tech";
 import { prisma } from "@/lib/prisma";
+import { getPartnerAdminAddress, uuidToBytes } from "@/lib/solana/admin";
 
 const { SOLANA_RPC_URL: RPC_URL } = appEnv;
 
@@ -41,17 +43,41 @@ export async function GET(req: Request) {
   }
 
   let swigSolBalance = 0;
+  let swigWalletAddress: string | null = null;
+  let partnerVaultAddress: string | null = null;
+  let partnerVaultSolBalance = 0;
   if (company.swigAddress) {
     try {
       const rpc = createSolanaRpc(RPC_URL);
+      swigWalletAddress = String(
+        await getPartnerAdminAddress(
+          company.swigAddress as Parameters<typeof getPartnerAdminAddress>[0],
+        ),
+      );
       const { value: lamports } = await rpc
-        .getBalance(company.swigAddress as Parameters<typeof rpc.getBalance>[0])
+        .getBalance(swigWalletAddress as Parameters<typeof rpc.getBalance>[0])
         .send();
       swigSolBalance = Number(lamports) / LAMPORTS_PER_SOL;
+
+      // Many regtech instructions pay rent from the Partner PDA itself (program-signed),
+      // so we expose its balance as the "partner vault".
+      const partnerIdBytes = uuidToBytes(company.partnerId);
+      const [partnerPda] = await findPartnerPda({ partnerId: partnerIdBytes });
+      partnerVaultAddress = String(partnerPda);
+      const { value: partnerLamports } = await rpc
+        .getBalance(partnerPda as Parameters<typeof rpc.getBalance>[0])
+        .send();
+      partnerVaultSolBalance = Number(partnerLamports) / LAMPORTS_PER_SOL;
     } catch {
       // non-fatal — return 0 if RPC fails
     }
   }
 
-  return NextResponse.json({ company, swigSolBalance });
+  return NextResponse.json({
+    company,
+    swigSolBalance,
+    swigWalletAddress,
+    partnerVaultAddress,
+    partnerVaultSolBalance,
+  });
 }

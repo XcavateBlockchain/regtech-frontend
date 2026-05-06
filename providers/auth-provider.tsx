@@ -40,11 +40,13 @@ const AuthContext = createContext<{
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   activePage: number;
   setActivePage: React.Dispatch<React.SetStateAction<AuthPage>>;
+  accountLoading: boolean;
 }>({
   open: false,
   setOpen: () => false,
   activePage: 0,
   setActivePage: () => 0,
+  accountLoading: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setOpen(true);
       const checkUser = async () => {
         const user = await getUserByWallet(address ?? "");
+        console.log(user);
         if (ignore) return;
         if (!user) {
           setActivePage(2);
@@ -97,11 +100,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ open, setOpen, activePage, setActivePage }}>
+    <AuthContext.Provider
+      value={{ open, setOpen, activePage, setActivePage, accountLoading }}
+    >
       {children}
       <Modal
         open={open}
         onOpenChange={setOpen}
+        // biome-ignore lint/complexity/noUselessTernary: disable pointer dismissal for create company page
         disablePointerDismissal={pages[activePage] === 2 ? true : false}
       >
         <ModalContent

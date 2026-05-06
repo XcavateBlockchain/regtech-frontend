@@ -12,6 +12,7 @@ const sampleModules: ModuleCardData[] = [
     title: "SEC Disclosure Requirements",
     category: "Securities",
     mode: "stats",
+    shareToken: "sample-share-token-sec",
     stats: {
       enrolled: 321,
       completed: 32,
@@ -24,6 +25,7 @@ const sampleModules: ModuleCardData[] = [
     title: "Anti-Money Laundering 101",
     category: "AML",
     mode: "stats",
+    shareToken: "sample-share-token-aml",
     stats: {
       enrolled: 247,
       completed: 198,
@@ -36,6 +38,7 @@ const sampleModules: ModuleCardData[] = [
     title: "KYC Fundamentals",
     category: "KYC",
     mode: "stats",
+    shareToken: "sample-share-token-kyc",
     stats: {
       enrolled: 188,
       completed: 149,
@@ -54,6 +57,7 @@ const sampleModules: ModuleCardData[] = [
     title: "Tax Reporting Essentials",
     category: "Securities",
     mode: "stats",
+    shareToken: "sample-share-token-tax",
     stats: {
       enrolled: 412,
       completed: 387,

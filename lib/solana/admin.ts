@@ -23,7 +23,12 @@ import {
 } from "@solana/signers";
 import { getBase64EncodedWireTransaction } from "@solana/transactions";
 import { Keypair } from "@solana/web3.js";
-import { fetchSwig, getSignInstructions, type Swig } from "@swig-wallet/kit";
+import {
+  fetchSwig,
+  getSignInstructions,
+  getSwigWalletAddress,
+  type Swig,
+} from "@swig-wallet/kit";
 import { appEnv } from "@/constants/app-env";
 import { getAttestor } from "@/lib/attestor";
 
@@ -190,6 +195,14 @@ export async function executeViaSwigDelegate(
   const delegateSigner = await getDelegateSigner();
 
   const swigAccount = await fetchSwig(rpc, swigAddress);
+  if (process.env.NODE_ENV !== "production") {
+    const swigWalletAddress = await getSwigWalletAddress(swigAccount);
+    console.log("[swig] delegate execution", {
+      swigAddress: String(swigAddress),
+      swigVersion: swigAccount.accountVersion(),
+      swigWalletAddress: String(swigWalletAddress),
+    });
+  }
   const roleId = await findDelegateRoleId(swigAccount);
 
   // getSignInstructions returns KitInstruction[] (swig v2 types) — same runtime shape as v6 Instruction
@@ -198,6 +211,20 @@ export async function executeViaSwigDelegate(
   ])) as unknown as Instruction[];
 
   return sendServerTransaction(delegateSigner, signIxs);
+}
+
+/**
+ * In Swig v2, the program signs CPIs as the Swig "system wallet" PDA (not the
+ * Swig account PDA). In v1, the Swig account PDA is the wallet.
+ *
+ * Use this helper whenever passing a `partner_admin` account to the regtech program.
+ */
+export async function getPartnerAdminAddress(
+  swigAddress: Address,
+): Promise<Address> {
+  const rpc = createSolanaRpc(RPC_URL) as never;
+  const swigAccount = await fetchSwig(rpc, swigAddress);
+  return (await getSwigWalletAddress(swigAccount)) as Address;
 }
 
 // ─── mpl-core collection creation ────────────────────────────────────────────

@@ -14,6 +14,7 @@ import { s3 } from "@/lib/s3";
 import {
   executeViaSwigDelegate,
   getAttestorSigner,
+  getPartnerAdminAddress,
   sendServerTransaction,
   uuidToBytes,
 } from "@/lib/solana/admin";
@@ -193,8 +194,11 @@ export async function POST(
         );
         const metadataUri = `https://${appEnv.AWS_S3_BUCKET_NAME}.s3.${appEnv.XCAV_AWS_REGION}.amazonaws.com/${metadataKey}`;
 
+        const partnerAdminWallet = await getPartnerAdminAddress(
+          company.swigAddress as Address,
+        );
         const claimIx = await getClaimCredentialInstructionAsync({
-          partnerAdmin: createNoopSigner(company.swigAddress as Address),
+          partnerAdmin: createNoopSigner(partnerAdminWallet),
           partner: partnerPda,
           module: modulePda,
           enrollment: enrollment.onChainEnrollmentAddress as Address,

@@ -14,6 +14,7 @@ type ApiModule = {
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   thumbnailUrl: string;
   txConfirmed: boolean;
+  shareToken: string;
 };
 
 function toCategoryLabel(raw: string): ModuleCardData["category"] {
@@ -76,6 +77,7 @@ export function CompanyModules() {
           category: toCategoryLabel(m.category),
           coverImageUrl: m.thumbnailUrl,
           mode: "stats",
+          shareToken: m.shareToken,
           stats: {
             enrolled: 0,
             completed: 0,

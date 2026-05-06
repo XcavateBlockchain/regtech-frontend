@@ -83,6 +83,7 @@ export async function GET(req: Request) {
         status: true,
         thumbnailUrl: true,
         txConfirmed: true,
+        shareToken: true,
       },
     });
 

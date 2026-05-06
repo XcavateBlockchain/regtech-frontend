@@ -8,10 +8,16 @@ import {
   findPartnerPda,
   getRegisterModuleInstructionAsync,
 } from "@/generated/reg_tech";
+import { REGTECH_ERROR__VAULT_INSUFFICIENT } from "@/generated/reg_tech/errors/regtech";
 import { prisma } from "@/lib/prisma";
 import { s3 } from "@/lib/s3";
-import { executeViaSwigDelegate, uuidToBytes } from "@/lib/solana/admin";
+import {
+  executeViaSwigDelegate,
+  getPartnerAdminAddress,
+  uuidToBytes,
+} from "@/lib/solana/admin";
 import { findModulePda } from "@/lib/solana/pda";
+import { createSolanaRpc } from "@solana/kit";
 
 const bodySchema = z.object({
   companyId: z.string().min(1),
@@ -22,6 +28,8 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ moduleId: string }> },
 ) {
+  let partnerAdminWalletForDebug: Address | null = null;
+  let partnerIdForDebug: string | null = null;
   try {
     const { moduleId } = await params;
     const body = await req.json();
@@ -50,6 +58,7 @@ export async function POST(
         { status: 400 },
       );
     }
+    partnerIdForDebug = company.partnerId;
     if (company.owner.walletAddress !== walletAddress) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
@@ -89,8 +98,12 @@ export async function POST(
       module.moduleIdHash,
     );
 
+    const partnerAdminWallet = await getPartnerAdminAddress(
+      company.swigAddress as Address,
+    );
+    partnerAdminWalletForDebug = partnerAdminWallet;
     const ix = await getRegisterModuleInstructionAsync({
-      partnerAdmin: createNoopSigner(company.swigAddress as Address),
+      partnerAdmin: createNoopSigner(partnerAdminWallet),
       partner: partnerPda,
       module: modulePda,
       moduleIdHash: new Uint8Array(Buffer.from(module.moduleIdHash, "hex")),
@@ -139,6 +152,67 @@ export async function POST(
         { status: 400 },
       );
     }
+
+    const anyErr = e as
+      | { context?: { code?: number }; cause?: { context?: { code?: number } } }
+      | null;
+    const code = anyErr?.context?.code ?? anyErr?.cause?.context?.code;
+    if (code === REGTECH_ERROR__VAULT_INSUFFICIENT || code === 6020) {
+      // Best-effort: return vault address + current SOL balance so the UI/user
+      // can fund the correct account (Swig v2 uses the Swig system wallet PDA).
+      const swigWalletAddress = partnerAdminWalletForDebug
+        ? String(partnerAdminWalletForDebug)
+        : null;
+      let swigWalletSolBalance: number | null = null;
+      let partnerPdaAddress: string | null = null;
+      let partnerPdaSolBalance: number | null = null;
+      const rpcUrl = appEnv.SOLANA_RPC_URL;
+      try {
+        if (partnerAdminWalletForDebug) {
+          const rpc = createSolanaRpc(rpcUrl);
+          const { value: lamports } = await rpc
+            .getBalance(
+              partnerAdminWalletForDebug as Parameters<typeof rpc.getBalance>[0],
+            )
+            .send();
+          swigWalletSolBalance = Number(lamports) / 1_000_000_000;
+        }
+        // Partner PDA is frequently the actual "vault" payer inside the regtech program.
+        if (partnerIdForDebug) {
+          const partnerIdBytes = uuidToBytes(partnerIdForDebug);
+          const [partnerPda] = await findPartnerPda({ partnerId: partnerIdBytes });
+          partnerPdaAddress = String(partnerPda);
+          const rpc = createSolanaRpc(rpcUrl);
+          const { value: partnerLamports } = await rpc
+            .getBalance(partnerPda as Parameters<typeof rpc.getBalance>[0])
+            .send();
+          partnerPdaSolBalance = Number(partnerLamports) / 1_000_000_000;
+        }
+      } catch {
+        // ignore
+      }
+      console.warn("[publish] VaultInsufficient", {
+        rpcUrl,
+        swigWalletAddress,
+        swigWalletSolBalance,
+        partnerPdaAddress,
+        partnerPdaSolBalance,
+      });
+      return NextResponse.json(
+        {
+          error:
+            "Company vault has insufficient SOL. Fund the Swig wallet/vault address and retry.",
+          code,
+          rpcUrl,
+          swigWalletAddress,
+          swigWalletSolBalance,
+          partnerPdaAddress,
+          partnerPdaSolBalance,
+        },
+        { status: 402 },
+      );
+    }
+
     console.error("[POST /api/company/modules/:moduleId/publish]", e);
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Internal server error" },

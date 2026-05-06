@@ -5,10 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { navItems } from "@/constants/nvaigations";
+import { ProfileButton } from "@/features/wallet/profile-button";
 import { WalletButton } from "@/features/wallet/wallet-button";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 import Icon from "@/public/icons";
+import Notifications from "./notification";
 
 export default function CompanyNavHeader() {
   const pathname = usePathname();
@@ -62,13 +64,12 @@ export default function CompanyNavHeader() {
           )}
         </div>
         {/* Actions */}
-        <div className="flex items-center gap-4 md:gap-6">
-          {isConnected && (
-            <button type="button" className="hover:text-foreground">
-              <Icon.bell className="size-6" strokeWidth={1.5} />
-            </button>
-          )}
-          <WalletButton />
+        <div className="flex items-center gap-4 md:gap-4">
+          {isConnected && <Notifications />}
+          <div className="flex gap-1 items-center">
+            <WalletButton />
+            <ProfileButton />
+          </div>
         </div>
       </div>
       {/* Mobile nav dropdown */}

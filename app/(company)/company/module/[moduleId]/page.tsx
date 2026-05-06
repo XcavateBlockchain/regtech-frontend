@@ -7,6 +7,7 @@ import {
   ModuleHeader,
   ResultsTable,
 } from "@/features/module";
+import { AssignToEmployeesPanel } from "@/features/modules/assign-to-employees-panel";
 import { prisma } from "@/lib/prisma";
 
 export default async function ModuleDetailsPage({
@@ -23,6 +24,7 @@ export default async function ModuleDetailsPage({
       status: true,
       description: true,
       thumbnailUrl: true,
+      moduleType: true,
       files: { select: { id: true, fileName: true, fileUrl: true } },
     },
   });
@@ -102,6 +104,10 @@ export default async function ModuleDetailsPage({
           )}
         </div>
       </section>
+
+      {module.moduleType === "EMPLOYEE" ? (
+        <AssignToEmployeesPanel moduleId={module.id} />
+      ) : null}
       <KpiStats />
       <ModuleDetails text={module.description} />
       <ResultsTable />

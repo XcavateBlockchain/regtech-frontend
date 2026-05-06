@@ -1,6 +1,6 @@
 "use client";
 
-import { useDisconnect } from "@phantom/react-sdk";
+// import { useDisconnect } from "@phantom/react-sdk";
 import { Check, Copy } from "lucide-react";
 import * as React from "react";
 import {
@@ -16,29 +16,28 @@ import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 // import { formatAddress } from "@/lib/utils";
 
-const MODAL_CLOSE_DURATION = 320;
+// const MODAL_CLOSE_DURATION = 320;
 
 function truncate(addr: string) {
   return `${addr.slice(0, 4)}…${addr.slice(-4)}`;
 }
 
 export function WalletAccount(props: { onClose: () => void }) {
-  const { disconnect } = useDisconnect();
-  const { address: solanaAddress } = useWalletKit();
+  const { address: solanaAddress, handleDisconnect } = useWalletKit();
 
   const balance = useSolBalance(solanaAddress);
   const { company } = useCompany(solanaAddress);
   const swigAddress = company?.swigAddress ?? null;
   const swigBalance = useSolBalance(swigAddress);
 
-  function handleDisconnect() {
-    props.onClose();
-    // Wait for the close animation before tearing down the session so the
-    // modal doesn't visibly snap to "Connect Wallet" mid-fade.
-    setTimeout(() => {
-      void disconnect().catch(() => undefined);
-    }, MODAL_CLOSE_DURATION);
-  }
+  // function handleDisconnect() {
+  //   props.onClose();
+  //   // Wait for the close animation before tearing down the session so the
+  //   // modal doesn't visibly snap to "Connect Wallet" mid-fade.
+  //   setTimeout(() => {
+  //     void disconnect().catch(() => undefined);
+  //   }, MODAL_CLOSE_DURATION);
+  // }
 
   return (
     <>

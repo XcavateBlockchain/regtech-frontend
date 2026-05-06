@@ -10,6 +10,7 @@ import { addAttestor } from "@/lib/attestor";
 import { prisma } from "@/lib/prisma";
 import {
   createCredentialCollection,
+  getPartnerAdminAddress,
   getAdminSigner,
   getAttestorSigner,
   sendServerTransaction,
@@ -79,11 +80,14 @@ export async function POST(req: Request) {
     );
 
     // Build register_partner instruction
+    const partnerAdminWallet = await getPartnerAdminAddress(
+      company.swigAddress as Address,
+    );
     const registerIx = await getRegisterPartnerInstructionAsync({
       admin: adminSigner,
       partner: partnerPda,
       collection: collectionAddress,
-      partnerAdmin: company.swigAddress as Address,
+      partnerAdmin: partnerAdminWallet,
       attestor: attestorAddress as Address,
       partnerId: partnerIdBytes,
       name: company.name,

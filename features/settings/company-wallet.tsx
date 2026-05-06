@@ -41,19 +41,35 @@ function WalletSectionSkeleton() {
 
 export function CompanyWalletSection() {
   const { address } = useWalletKit();
-  const { company, swigSolBalance, loading, error, refetch } =
+  const {
+    company,
+    swigSolBalance,
+    partnerVaultAddress,
+    partnerVaultSolBalance,
+    loading,
+    error,
+    refetch,
+  } =
     useCompany(address);
 
   if (!address || loading) return <WalletSectionSkeleton />;
-  if (error || !company?.swigAddress || !company.txConfirmed) return null;
+  if (
+    error ||
+    !company?.swigAddress ||
+    !company.txConfirmed ||
+    !company.swigWalletAddress
+  )
+    return null;
 
   return (
     <div className="w-full grid grid-cols-1 gap-10">
       <SwigWalletCard
         companyId={company.id}
         walletAddress={address}
-        swigAddress={company.swigAddress}
+        swigWalletAddress={company.swigWalletAddress}
         solBalance={swigSolBalance}
+        partnerVaultAddress={partnerVaultAddress}
+        partnerVaultSolBalance={partnerVaultSolBalance}
         onAllocated={refetch}
       />
       <RegtechTransactions />

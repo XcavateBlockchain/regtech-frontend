@@ -9,6 +9,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import {
   executeViaSwigDelegate,
+  getPartnerAdminAddress,
   mintCredentialNft,
   uuidToBytes,
 } from "@/lib/solana/admin";
@@ -118,8 +119,11 @@ export async function POST(req: Request) {
     );
 
     // ── Build + send instruction via Swig delegate ───────────────────────────
+    const partnerAdminWallet = await getPartnerAdminAddress(
+      company.swigAddress as Address,
+    );
     const ix = await getClaimCredentialInstructionAsync({
-      partnerAdmin: createNoopSigner(company.swigAddress as Address),
+      partnerAdmin: createNoopSigner(partnerAdminWallet),
       partner: partnerPda,
       module: modulePda,
       enrollment: assignment.onChainEnrollmentAddress as Address,

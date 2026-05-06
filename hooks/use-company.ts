@@ -7,6 +7,7 @@ export type CompanyData = {
   name: string;
   slug: string;
   swigAddress: string | null;
+  swigWalletAddress?: string | null;
   txConfirmed: boolean;
   collectionAddress: string | null;
   partnerId: string;
@@ -24,6 +25,8 @@ export type CompanyData = {
 type UseCompanyReturn = {
   company: CompanyData | null;
   swigSolBalance: number;
+  partnerVaultAddress: string | null;
+  partnerVaultSolBalance: number;
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -32,6 +35,10 @@ type UseCompanyReturn = {
 export function useCompany(walletAddress: string | null): UseCompanyReturn {
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [swigSolBalance, setSwigSolBalance] = useState(0);
+  const [partnerVaultAddress, setPartnerVaultAddress] = useState<string | null>(
+    null,
+  );
+  const [partnerVaultSolBalance, setPartnerVaultSolBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -52,14 +59,27 @@ export function useCompany(walletAddress: string | null): UseCompanyReturn {
         return res.json() as Promise<{
           company: CompanyData;
           swigSolBalance: number;
+          swigWalletAddress: string | null;
+          partnerVaultAddress: string | null;
+          partnerVaultSolBalance: number;
         }>;
       })
-      .then(({ company, swigSolBalance }) => {
+      .then(
+        ({
+          company,
+          swigSolBalance,
+          swigWalletAddress,
+          partnerVaultAddress,
+          partnerVaultSolBalance,
+        }) => {
         if (!cancelled) {
-          setCompany(company);
+          setCompany({ ...company, swigWalletAddress });
           setSwigSolBalance(swigSolBalance);
+          setPartnerVaultAddress(partnerVaultAddress);
+          setPartnerVaultSolBalance(partnerVaultSolBalance);
         }
-      })
+      },
+      )
       .catch((e) => {
         if (!cancelled)
           setError(e instanceof Error ? e.message : "Unknown error");
@@ -76,6 +96,8 @@ export function useCompany(walletAddress: string | null): UseCompanyReturn {
   return {
     company,
     swigSolBalance,
+    partnerVaultAddress,
+    partnerVaultSolBalance,
     loading,
     error,
     refetch: () => setTick((t) => t + 1),

@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import {
   executeViaSwigDelegate,
   getAttestorSigner,
+  getPartnerAdminAddress,
   sendServerTransaction,
   uuidToBytes,
 } from "@/lib/solana/admin";
@@ -93,8 +94,11 @@ export async function POST(
     });
 
     if (!enrollment) {
+      const partnerAdminWallet = await getPartnerAdminAddress(
+        company.swigAddress as Address,
+      );
       const enrollIx = await getEnrollUserInstructionAsync({
-        partnerAdmin: createNoopSigner(company.swigAddress as Address),
+        partnerAdmin: createNoopSigner(partnerAdminWallet),
         user: walletAddress as Address,
         partner: partnerPda,
         module: modulePda,
