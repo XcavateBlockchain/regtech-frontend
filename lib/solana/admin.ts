@@ -33,6 +33,11 @@ import { appEnv } from "@/constants/app-env";
 import { getAttestor } from "@/lib/attestor";
 
 const { SOLANA_RPC_URL: RPC_URL } = appEnv;
+if (!RPC_URL) {
+  throw new Error(
+    "Missing NEXT_PUBLIC_SOLANA_RPC_URL (Solana RPC URL). Set it in .env.local to a working RPC endpoint.",
+  );
+}
 
 // ─── Keypair loading ──────────────────────────────────────────────────────────
 
@@ -130,13 +135,36 @@ async function waitForConfirmation(
   throw new Error(`Transaction ${signature} not confirmed within 30s`);
 }
 
+async function withRetries<T>(
+  fn: () => Promise<T>,
+  opts: { label: string; attempts: number; delayMs: number },
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < opts.attempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      if (i < opts.attempts - 1) {
+        await new Promise((r) => setTimeout(r, opts.delayMs));
+      }
+    }
+  }
+  throw lastErr instanceof Error
+    ? new Error(`${opts.label} failed after ${opts.attempts} attempts: ${lastErr.message}`)
+    : new Error(`${opts.label} failed after ${opts.attempts} attempts`);
+}
+
 /** Build, sign, send, and confirm a transaction. Returns the signature string. */
 export async function sendServerTransaction(
   signer: KeyPairSigner,
   instructions: Instruction[],
 ): Promise<string> {
   const rpc = createSolanaRpc(RPC_URL);
-  const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+  const { value: latestBlockhash } = await withRetries(
+    async () => await rpc.getLatestBlockhash().send(),
+    { label: "getLatestBlockhash", attempts: 3, delayMs: 750 },
+  );
 
   const signedTx = await pipe(
     createTransactionMessage({ version: 0 }),

@@ -45,27 +45,55 @@ export async function GET(
     if (walletAddress) {
       const user = await prisma.user.findUnique({
         where: { walletAddress },
-        select: { id: true },
+        select: {
+          id: true,
+          role: true,
+          employment: { select: { id: true } },
+        },
       });
       if (user) {
-        const enroll = await prisma.moduleEnrollment.findUnique({
-          where: { moduleId_userId: { moduleId, userId: user.id } },
-          select: { status: true },
-        });
-        if (enroll) {
-          const attempt = await prisma.assessmentAttempt.findFirst({
+        if (user.role === "EMPLOYEE" && user.employment?.id) {
+          const assignment = await prisma.moduleAssignment.findUnique({
             where: {
-              assessment: { moduleId },
-              userId: user.id,
-              submittedAt: null,
+              moduleId_employeeId: { moduleId, employeeId: user.employment.id },
             },
-            select: { id: true },
-            orderBy: { startedAt: "desc" },
+            select: { status: true },
           });
-          enrollment = {
-            status: enroll.status,
-            activeAttemptId: attempt?.id ?? null,
-          };
+          if (assignment) {
+            const attempt = await prisma.assessmentAttempt.findFirst({
+              where: {
+                assessment: { moduleId },
+                employeeId: user.employment.id,
+                submittedAt: null,
+              },
+              select: { id: true },
+              orderBy: { startedAt: "desc" },
+            });
+            enrollment = {
+              status: assignment.status,
+              activeAttemptId: attempt?.id ?? null,
+            };
+          }
+        } else {
+          const enroll = await prisma.moduleEnrollment.findUnique({
+            where: { moduleId_userId: { moduleId, userId: user.id } },
+            select: { status: true },
+          });
+          if (enroll) {
+            const attempt = await prisma.assessmentAttempt.findFirst({
+              where: {
+                assessment: { moduleId },
+                userId: user.id,
+                submittedAt: null,
+              },
+              select: { id: true },
+              orderBy: { startedAt: "desc" },
+            });
+            enrollment = {
+              status: enroll.status,
+              activeAttemptId: attempt?.id ?? null,
+            };
+          }
         }
       }
     }

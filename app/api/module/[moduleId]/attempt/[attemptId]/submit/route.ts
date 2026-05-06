@@ -15,6 +15,7 @@ import {
   executeViaSwigDelegate,
   getAttestorSigner,
   getPartnerAdminAddress,
+  mintCredentialNft,
   sendServerTransaction,
   uuidToBytes,
 } from "@/lib/solana/admin";
@@ -42,15 +43,24 @@ export async function POST(
     // ── Load user ────────────────────────────────────────────────────────────
     const user = await prisma.user.findUnique({
       where: { walletAddress },
-      select: { id: true },
+      select: { id: true, role: true, employment: { select: { id: true } } },
     });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
     }
+    const userId = user.id;
 
-    // ── Load attempt (must belong to user, not yet submitted) ────────────────
+    const employeeId =
+      user.role === "EMPLOYEE" ? (user.employment?.id ?? null) : null;
+    const isEmployee = employeeId !== null;
+
+    // ── Load attempt (must belong to learner, not yet submitted) ─────────────
     const attempt = await prisma.assessmentAttempt.findFirst({
-      where: { id: attemptId, userId: user.id, submittedAt: null },
+      where: {
+        id: attemptId,
+        submittedAt: null,
+        OR: isEmployee ? [{ employeeId }, { userId }] : [{ userId }],
+      },
       include: {
         batch: {
           include: {
@@ -129,6 +139,8 @@ export async function POST(
       totalPoints > 0 ? Math.round((correctPoints / totalPoints) * 10000) : 0;
     const passed = scoreBps >= module.passThreshold;
     const score = Math.round(scoreBps / 100);
+    const totalCount = attempt.batch.questions.length;
+    const correctCount = answerRows.filter((r) => r.isCorrect).length;
 
     // ── Save answers to DB ────────────────────────────────────────────────────
     await prisma.attemptAnswer.createMany({ data: answerRows });
@@ -164,19 +176,39 @@ export async function POST(
 
     // ── Issue credential if passed ────────────────────────────────────────────
     let credentialId: string | null = null;
-    if (passed && company.collectionAddress) {
+    let credentialResult: null | {
+      id: string;
+      metadataUri: string;
+      asset: string | null;
+      onChainAddress: string;
+      txSignature: string;
+    } = null;
+
+    async function resolveEnrollmentAddress(): Promise<string | null> {
+      if (isEmployee) {
+        const assignment = await prisma.moduleAssignment.findUnique({
+          where: { moduleId_employeeId: { moduleId, employeeId } },
+          select: { onChainEnrollmentAddress: true },
+        });
+        return assignment?.onChainEnrollmentAddress ?? null;
+      }
       const enrollment = await prisma.moduleEnrollment.findUnique({
-        where: { moduleId_userId: { moduleId, userId: user.id } },
+        where: { moduleId_userId: { moduleId, userId } },
         select: { onChainEnrollmentAddress: true },
       });
-      if (enrollment?.onChainEnrollmentAddress) {
+      return enrollment?.onChainEnrollmentAddress ?? null;
+    }
+
+    if (passed && company.collectionAddress) {
+      const enrollmentAddress = await resolveEnrollmentAddress();
+      if (enrollmentAddress) {
         const [credentialPda] = await findCredentialPda(
           walletAddress as Address,
           partnerIdBytes,
           module.moduleIdHash,
         );
 
-        const metadataKey = `credentials/${module.moduleIdHash}/${user.id}.json`;
+        const metadataKey = `credentials/${module.moduleIdHash}/${userId}.json`;
         const metadataBody = JSON.stringify({
           name: module.name,
           description: `Credential for ${module.name}`,
@@ -201,7 +233,7 @@ export async function POST(
           partnerAdmin: createNoopSigner(partnerAdminWallet),
           partner: partnerPda,
           module: modulePda,
-          enrollment: enrollment.onChainEnrollmentAddress as Address,
+          enrollment: enrollmentAddress as Address,
           attempt: attempt.onChainAttemptAddress as Address,
           credential: credentialPda,
           metadataUri,
@@ -211,9 +243,16 @@ export async function POST(
           claimIx as never,
         );
 
+        const asset = await mintCredentialNft(
+          company.collectionAddress as Address,
+          walletAddress as Address,
+          module.name,
+          metadataUri,
+        );
+
         const credential = await prisma.credential.create({
           data: {
-            recipientId: user.id,
+            recipientId: userId,
             issuingCompanyId: company.id,
             issuedByUserId: company.ownerId,
             moduleId,
@@ -224,28 +263,65 @@ export async function POST(
             scoreBps,
             onChainAddress: credentialPda,
             txSignature: txHash,
+            credentialAsset: String(asset),
           },
         });
         credentialId = credential.id;
+        credentialResult = {
+          id: credential.id,
+          metadataUri,
+          asset: String(asset),
+          onChainAddress: String(credentialPda),
+          txSignature: txHash,
+        };
 
-        await prisma.moduleEnrollment.update({
-          where: { moduleId_userId: { moduleId, userId: user.id } },
-          data: {
-            status: "COMPLETED",
-            finalScoreBps: scoreBps,
-            completedAt: new Date(),
-            credentialId,
-          },
-        });
+        if (isEmployee) {
+          await prisma.moduleAssignment.update({
+            where: { moduleId_employeeId: { moduleId, employeeId } },
+            data: {
+              status: "COMPLETED",
+              finalScoreBps: scoreBps,
+              completedAt: new Date(),
+              credentialId,
+            },
+          });
+        } else {
+          await prisma.moduleEnrollment.update({
+            where: { moduleId_userId: { moduleId, userId } },
+            data: {
+              status: "COMPLETED",
+              finalScoreBps: scoreBps,
+              completedAt: new Date(),
+              credentialId,
+            },
+          });
+        }
       }
     } else if (!passed) {
-      await prisma.moduleEnrollment.update({
-        where: { moduleId_userId: { moduleId, userId: user.id } },
-        data: { status: "FAILED" },
-      });
+      if (isEmployee) {
+        await prisma.moduleAssignment.update({
+          where: { moduleId_employeeId: { moduleId, employeeId } },
+          data: { status: "FAILED" },
+        });
+      } else {
+        await prisma.moduleEnrollment.update({
+          where: { moduleId_userId: { moduleId, userId } },
+          data: { status: "FAILED" },
+        });
+      }
     }
 
-    return NextResponse.json({ passed, score, scoreBps, credentialId });
+    return NextResponse.json({
+      passed,
+      score,
+      scoreBps,
+      correctCount,
+      totalCount,
+      startedAt: attempt.startedAt.toISOString(),
+      submittedAt: new Date().toISOString(),
+      credentialId,
+      credential: credentialResult,
+    });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json(

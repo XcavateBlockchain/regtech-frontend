@@ -11,10 +11,20 @@ import { useUser } from "@/hooks/use-user";
 
 export function ProfileButton() {
   const { user, loading, openAuthModal } = useUser();
-  console.log(user);
   if (!loading && !user) {
     return <Button onClick={openAuthModal}>Sign in</Button>;
   }
+
+  const orgName =
+    user?.company?.name ?? user?.employment?.company?.name ?? "Dashboard";
+  const roleLabel =
+    user?.role === "OWNER"
+      ? "Owner"
+      : user?.role === "EMPLOYEE"
+        ? "Employee"
+        : user?.role === "USER"
+          ? "User"
+          : "";
 
   return (
     <Popover>
@@ -29,13 +39,10 @@ export function ProfileButton() {
 
           <div className="flex items-start justify-center flex-col">
             <p className="text-sm font-medium">
-              {user?.companyId
-                ? user?.company?.name
-                : user?.employment?.company.name}
+              {orgName}
             </p>
             <p className="text-xs text-muted-foreground capitalize -mt-0.5">
-              {user?.employmentId || user?.companyId ? user.name : user?.email}{" "}
-              {user?.companyId && "Owner"} {user?.employmentId && "Employee"}
+              {user?.name ?? user?.email} {roleLabel ? roleLabel : null}
             </p>
           </div>
         </div>

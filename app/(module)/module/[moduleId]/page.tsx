@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useWalletKit } from "@/hooks/use-wallet-kit";
+import { useUser } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
 
 type Option = { id: string; text: string; sortOrder: number };
@@ -31,7 +32,17 @@ type Result = {
   passed: boolean;
   score: number;
   scoreBps: number;
-  credentialId: string | null;
+  correctCount: number;
+  totalCount: number;
+  startedAt: string;
+  submittedAt: string;
+  credential: null | {
+    id: string;
+    metadataUri: string;
+    asset: string | null;
+    onChainAddress: string;
+    txSignature: string;
+  };
 };
 
 type Phase = "intro" | "quiz" | "result";
@@ -40,7 +51,7 @@ export default function ModulePage() {
   const params = useParams<{ moduleId: string }>();
   const router = useRouter();
   const groupId = useId();
-  const { address } = useWalletKit();
+  const { user, openAuthModal } = useUser();
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [moduleData, setModuleData] = useState<ModuleData | null>(null);
@@ -49,14 +60,15 @@ export default function ModulePage() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [result, setResult] = useState<Result | null>(null);
+  const [quizStartedAtMs, setQuizStartedAtMs] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const moduleId = params.moduleId;
 
   async function handleBegin() {
-    if (!address) {
-      setError("Connect your wallet to begin");
+    if (!user) {
+      openAuthModal();
       return;
     }
     setLoading(true);
@@ -65,7 +77,7 @@ export default function ModulePage() {
       const res = await fetch(`/api/module/${moduleId}/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletAddress: address }),
+        body: JSON.stringify({ walletAddress: user.walletAddress }),
       });
       const json = (await res.json()) as {
         attemptId?: string;
@@ -78,6 +90,7 @@ export default function ModulePage() {
       setAttemptId(json.attemptId);
       setQuestions(json.questions);
       setCurrentIdx(0);
+      setQuizStartedAtMs(Date.now());
       setPhase("quiz");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -88,8 +101,9 @@ export default function ModulePage() {
 
   const handleLoadModule = useCallback(async () => {
     try {
+      const walletAddress = user?.walletAddress ?? null;
       const res = await fetch(
-        `/api/module/${moduleId}${address ? `?walletAddress=${encodeURIComponent(address)}` : ""}`,
+        `/api/module/${moduleId}${walletAddress ? `?walletAddress=${encodeURIComponent(walletAddress)}` : ""}`,
       );
       const json = (await res.json()) as {
         module?: ModuleData;
@@ -100,7 +114,7 @@ export default function ModulePage() {
     } catch {
       // silently ignore — module data used for intro display only
     }
-  }, [moduleId, address]);
+  }, [moduleId, user?.walletAddress]);
 
   useEffect(() => {
     void handleLoadModule();
@@ -122,7 +136,7 @@ export default function ModulePage() {
   }
 
   async function handleSubmit() {
-    if (!address || !attemptId) return;
+    if (!user || !attemptId) return;
     setLoading(true);
     setError(null);
     try {
@@ -136,7 +150,7 @@ export default function ModulePage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            walletAddress: address,
+            walletAddress: user.walletAddress,
             answers: answersPayload,
           }),
         },
@@ -162,15 +176,19 @@ export default function ModulePage() {
   if (phase === "result" && result) {
     return (
       <ResultScreen
-        passed={result.passed}
-        score={result.score}
-        credentialId={result.credentialId}
+        result={result}
+        questions={questions}
+        answers={answers}
+        quizStartedAtMs={quizStartedAtMs}
+        moduleId={moduleId}
         onRetry={() => {
           setPhase("intro");
           setAnswers({});
           setAttemptId(null);
           setCurrentIdx(0);
           setResult(null);
+          setQuestions([]);
+          setQuizStartedAtMs(null);
         }}
         onDashboard={() => router.push("/dashboard")}
       />
@@ -351,19 +369,54 @@ export default function ModulePage() {
   );
 }
 
+function formatDurationMs(ms: number) {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 function ResultScreen({
-  passed,
-  score,
-  credentialId,
+  result,
+  questions,
+  answers,
+  quizStartedAtMs,
+  moduleId,
   onRetry,
   onDashboard,
 }: {
-  passed: boolean;
-  score: number;
-  credentialId: string | null;
+  result: Result;
+  questions: Question[];
+  answers: Record<string, string[]>;
+  quizStartedAtMs: number | null;
+  moduleId: string;
   onRetry: () => void;
   onDashboard: () => void;
 }) {
+  const passed = result.passed;
+  const elapsedMs =
+    quizStartedAtMs != null ? Date.now() - quizStartedAtMs : null;
+
+  const walletAddress =
+    result.credential?.asset ?? result.credential?.onChainAddress ?? null;
+  const cluster = process.env.NEXT_PUBLIC_SOLANA_CLUSTER ?? "devnet";
+  const explorerHref = walletAddress
+    ? `https://explorer.solana.com/address/${walletAddress}?cluster=${encodeURIComponent(cluster)}`
+    : null;
+
+  async function handleShare() {
+    const url = `${window.location.origin}/module/${encodeURIComponent(moduleId)}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ url });
+        return;
+      }
+    } catch {
+      // ignore — fallback to clipboard
+    }
+    await navigator.clipboard.writeText(url);
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div
@@ -372,40 +425,122 @@ function ResultScreen({
       >
         <div className="absolute top-[38%] left-[-18%] h-24 w-[min(90vw,38rem)] -rotate-6 bg-linear-to-r from-[#B273FF] to-[#624781] opacity-[0.28] blur-[120px]" />
       </div>
-      <main className="relative mx-auto w-full max-w-[626px] px-4 py-12 text-center md:py-20">
-        <div
-          className={cn(
-            "inline-flex h-16 w-16 items-center justify-center rounded-full text-2xl",
-            passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600",
-          )}
-        >
-          {passed ? "✓" : "✗"}
-        </div>
-        <h1 className="mt-6 text-2xl font-semibold text-primary md:text-3xl">
-          {passed ? "You passed!" : "Not quite"}
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Your score:{" "}
-          <span className="font-semibold text-foreground">{score}%</span>
-        </p>
-        {passed && credentialId && (
-          <p className="mt-3 text-sm text-green-600">
-            Credential issued to your wallet
+      <main className="relative mx-auto w-full max-w-[626px] px-4 py-10 md:py-16">
+        <div className="text-center">
+          <Badge variant={passed ? "default" : "destructive"}>
+            {passed ? "Passed" : "Failed"}
+          </Badge>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-primary md:text-4xl">
+            {result.score}%
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {result.correctCount}/{result.totalCount} correct
+            {elapsedMs != null ? ` · ${formatDurationMs(elapsedMs)} elapsed` : ""}
           </p>
-        )}
-        <div className="mt-8 flex justify-center gap-3">
-          {!passed && (
-            <Button variant="outline" onClick={onRetry}>
-              Try again
-            </Button>
-          )}
-          <Button
-            className="bg-[#624781] text-white hover:bg-[#624781]/90"
-            onClick={onDashboard}
-          >
-            {passed ? "View credentials" : "Back to dashboard"}
-          </Button>
         </div>
+
+        <section className="mt-8 rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Your answers
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Review what you selected for each question.
+          </p>
+
+          <div className="mt-4 max-h-[420px] overflow-auto pr-2">
+            <ol className="space-y-3">
+              {questions.map((q, idx) => {
+                const selectedIds = new Set(answers[q.id] ?? []);
+                const selected = q.options
+                  .filter((o) => selectedIds.has(o.id))
+                  .map((o) => o.text);
+
+                return (
+                  <li key={q.id} className="rounded-lg border border-border p-3">
+                    <p className="text-sm font-medium text-foreground">
+                      {idx + 1}. {q.text}
+                    </p>
+                    {selected.length ? (
+                      <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
+                        {selected.map((t) => (
+                          <li key={t}>{t}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        No answer selected.
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </section>
+
+        {passed && result.credential ? (
+          <section className="mt-6 rounded-lg border border-border bg-card p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-foreground">
+                  Credential issued
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  mpl-core asset:{" "}
+                  <span className="font-mono">
+                    {result.credential.asset ?? "pending"}
+                  </span>
+                </p>
+                <div className="mt-2 flex flex-col gap-1 text-xs">
+                  <a
+                    className="text-primary hover:underline"
+                    href={result.credential.metadataUri}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open metadata
+                  </a>
+                  {explorerHref ? (
+                    <a
+                      className="text-primary hover:underline"
+                      href={explorerHref}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View on explorer
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex gap-2 sm:justify-end">
+                <Button type="button" variant="outline" onClick={handleShare}>
+                  Share
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-[#624781] text-white hover:bg-[#624781]/90"
+                  onClick={onDashboard}
+                >
+                  View credentials
+                </Button>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <div className="mt-8 flex justify-center gap-3">
+            {!passed && (
+              <Button variant="outline" onClick={onRetry}>
+                Try again
+              </Button>
+            )}
+            <Button
+              className="bg-[#624781] text-white hover:bg-[#624781]/90"
+              onClick={onDashboard}
+            >
+              Back to dashboard
+            </Button>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -31,7 +31,7 @@ type UseUserReturn = {
 };
 
 export function useUser(): UseUserReturn {
-  const { isConnected, address } = useWalletKit();
+  const { address } = useWalletKit();
   const { accountLoading: authAccountLoading, setOpen: setAuthOpen } =
     useAuthContext();
   const { accountLoading: walletAccountLoading } = useWalletContext();
@@ -43,13 +43,6 @@ export function useUser(): UseUserReturn {
 
   useEffect(() => {
     void tick;
-
-    if (!isConnected) {
-      setUser(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
 
     const storedUserId = localStorage.getItem(storageKeys.user);
     if (!storedUserId) {
@@ -99,7 +92,7 @@ export function useUser(): UseUserReturn {
     return () => {
       cancelled = true;
     };
-  }, [isConnected, address, sessionLoading, tick]);
+  }, [address, sessionLoading, tick]);
 
   function openAuthModal() {
     setAuthOpen(true);

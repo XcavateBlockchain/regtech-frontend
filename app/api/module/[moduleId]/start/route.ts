@@ -37,7 +37,7 @@ export async function POST(
     // ── Load user ────────────────────────────────────────────────────────────
     const user = await prisma.user.findUnique({
       where: { walletAddress },
-      select: { id: true },
+      select: { id: true, role: true, employment: { select: { id: true } } },
     });
     if (!user) {
       return NextResponse.json(
@@ -88,53 +88,88 @@ export async function POST(
       module.moduleIdHash,
     );
 
-    // ── Enroll user if not yet enrolled ──────────────────────────────────────
-    let enrollment = await prisma.moduleEnrollment.findUnique({
-      where: { moduleId_userId: { moduleId, userId: user.id } },
-    });
+    const employeeId =
+      user.role === "EMPLOYEE" ? (user.employment?.id ?? null) : null;
+    const isEmployee = employeeId !== null;
 
-    if (!enrollment) {
-      const partnerAdminWallet = await getPartnerAdminAddress(
-        company.swigAddress as Address,
-      );
-      const enrollIx = await getEnrollUserInstructionAsync({
-        partnerAdmin: createNoopSigner(partnerAdminWallet),
-        user: walletAddress as Address,
-        partner: partnerPda,
-        module: modulePda,
-        enrollment: enrollmentPda,
-        reasonCode: 0,
-      });
-      await executeViaSwigDelegate(
-        company.swigAddress as Address,
-        enrollIx as never,
-      );
+    // ── Resolve enrollment address (USER vs EMPLOYEE) ────────────────────────
+    let onChainEnrollmentAddress: Address;
 
-      enrollment = await prisma.moduleEnrollment.create({
-        data: {
-          moduleId,
-          userId: user.id,
-          status: "IN_PROGRESS",
-          onChainEnrollmentAddress: enrollmentPda,
+    if (isEmployee) {
+      const assignment = await prisma.moduleAssignment.findUnique({
+        where: {
+          moduleId_employeeId: { moduleId, employeeId },
         },
+        select: { onChainEnrollmentAddress: true },
       });
-    } else if (!enrollment.onChainEnrollmentAddress) {
-      await prisma.moduleEnrollment.update({
+      if (!assignment) {
+        return NextResponse.json({ error: "Not assigned" }, { status: 403 });
+      }
+      if (!assignment.onChainEnrollmentAddress) {
+        return NextResponse.json(
+          { error: "Assignment not yet enrolled on-chain" },
+          { status: 409 },
+        );
+      }
+      onChainEnrollmentAddress = assignment.onChainEnrollmentAddress as Address;
+    } else {
+      // ── Enroll user if not yet enrolled ────────────────────────────────────
+      let enrollment = await prisma.moduleEnrollment.findUnique({
         where: { moduleId_userId: { moduleId, userId: user.id } },
-        data: {
-          onChainEnrollmentAddress: enrollmentPda,
-          status: "IN_PROGRESS",
-        },
       });
+
+      if (!enrollment) {
+        const partnerAdminWallet = await getPartnerAdminAddress(
+          company.swigAddress as Address,
+        );
+        const enrollIx = await getEnrollUserInstructionAsync({
+          partnerAdmin: createNoopSigner(partnerAdminWallet),
+          user: walletAddress as Address,
+          partner: partnerPda,
+          module: modulePda,
+          enrollment: enrollmentPda,
+          reasonCode: 0,
+        });
+        await executeViaSwigDelegate(
+          company.swigAddress as Address,
+          enrollIx as never,
+        );
+
+        enrollment = await prisma.moduleEnrollment.create({
+          data: {
+            moduleId,
+            userId: user.id,
+            status: "IN_PROGRESS",
+            onChainEnrollmentAddress: enrollmentPda,
+          },
+        });
+      } else if (!enrollment.onChainEnrollmentAddress) {
+        await prisma.moduleEnrollment.update({
+          where: { moduleId_userId: { moduleId, userId: user.id } },
+          data: {
+            onChainEnrollmentAddress: enrollmentPda,
+            status: "IN_PROGRESS",
+          },
+        });
+      }
+
+      onChainEnrollmentAddress = (enrollment?.onChainEnrollmentAddress ??
+        enrollmentPda) as Address;
     }
 
     // ── Resume existing unsubmitted attempt if any ───────────────────────────
     const existing = await prisma.assessmentAttempt.findFirst({
-      where: {
-        assessmentId: module.assessment.id,
-        userId: user.id,
-        submittedAt: null,
-      },
+      where: isEmployee
+        ? {
+            assessmentId: module.assessment.id,
+            employeeId,
+            submittedAt: null,
+          }
+        : {
+            assessmentId: module.assessment.id,
+            userId: user.id,
+            submittedAt: null,
+          },
       select: { id: true, batchId: true },
       orderBy: { startedAt: "desc" },
     });
@@ -176,7 +211,9 @@ export async function POST(
 
     // ── Count previous attempts to set attempt number ────────────────────────
     const attemptCount = await prisma.assessmentAttempt.count({
-      where: { assessmentId: module.assessment.id, userId: user.id },
+      where: isEmployee
+        ? { assessmentId: module.assessment.id, employeeId }
+        : { assessmentId: module.assessment.id, userId: user.id },
     });
     const attemptNumber = attemptCount + 1;
 
@@ -193,8 +230,7 @@ export async function POST(
       user: walletAddress as Address,
       partner: partnerPda,
       module: modulePda,
-      enrollment: (enrollment.onChainEnrollmentAddress ??
-        enrollmentPda) as Address,
+      enrollment: onChainEnrollmentAddress,
       attempt: attemptPda,
     });
     await sendServerTransaction(attestorSigner, [startIx]);
@@ -212,7 +248,8 @@ export async function POST(
     const attempt = await prisma.assessmentAttempt.create({
       data: {
         assessmentId: module.assessment.id,
-        userId: user.id,
+        userId: isEmployee ? null : user.id,
+        employeeId,
         attemptNumber,
         onChainAttemptAddress: attemptPda,
         batchId: randomBatch.id,
