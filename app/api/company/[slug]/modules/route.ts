@@ -3,8 +3,12 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appEnv } from "@/constants/app-env";
-import { batches as customersBatches } from "@/constants/customers-batch";
-import { batches as regulatorsBatches } from "@/constants/regulators.batch";
+import {
+  fcaInvestmentBatches,
+  fcaRegulatedBatches,
+  secFrameworkBatches,
+} from "@/constants/regulatory-batches";
+import type { ModuleType } from "@/generated/prisma/client";
 import { getCompanyAccessBySlug } from "@/lib/company-access";
 import { prisma } from "@/lib/prisma";
 import { s3 } from "@/lib/s3";
@@ -39,7 +43,7 @@ const dataSchema = z.object({
   language: z.enum(["en", "es", "fr", "de", "zh"]),
   passingScore: z.coerce.number().int().min(1).max(100),
   recipients: z.coerce.number().int().min(1).max(10000),
-  moduleType: z.enum(["employee", "user"]),
+  moduleType: z.enum(["fca_investment", "fca_regulated", "sec_framework"]),
   quizTimeLimitMinutes: z.coerce.number().int().min(0).max(180).optional(),
   cooldownHours: z.coerce
     .number()
@@ -49,6 +53,20 @@ const dataSchema = z.object({
     .default(24),
   credentialExpiryMonths: z.coerce.number().int().min(0).max(120).optional(),
 });
+
+function resolveBank(moduleType: z.infer<typeof dataSchema>["moduleType"]): {
+  bank: typeof fcaInvestmentBatches;
+  prismaType: ModuleType;
+} {
+  switch (moduleType) {
+    case "fca_investment":
+      return { bank: fcaInvestmentBatches, prismaType: "FCA_INVESTMENT" };
+    case "fca_regulated":
+      return { bank: fcaRegulatedBatches, prismaType: "FCA_REGULATED" };
+    case "sec_framework":
+      return { bank: secFrameworkBatches, prismaType: "SEC_FRAMEWORK" };
+  }
+}
 
 async function uploadToS3(key: string, file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -288,8 +306,7 @@ export async function POST(
       fileUrls.push({ url, file: f });
     }
 
-    const bank =
-      data.moduleType === "employee" ? regulatorsBatches : customersBatches;
+    const { bank, prismaType } = resolveBank(data.moduleType);
     const bankValidation = validateEqualBatchPoints(bank);
     if (!bankValidation.ok) {
       return NextResponse.json(
@@ -314,7 +331,7 @@ export async function POST(
         thumbnailUrl,
         moduleCode,
         moduleIdHash,
-        moduleType: data.moduleType === "employee" ? "EMPLOYEE" : "USER",
+        moduleType: prismaType,
         passThreshold: data.passingScore * 100,
         coolDownSeconds: data.cooldownHours * 3600,
         expiresInSeconds: data.credentialExpiryMonths

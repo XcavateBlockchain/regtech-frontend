@@ -40,9 +40,14 @@ export default async function EditModulePage({
     language: module.language as "en" | "es" | "fr" | "de" | "zh",
     passingScore: module.passThreshold / 100,
     recipients: module.maxRecipients,
-    moduleType: (module.moduleType === "EMPLOYEE" ? "employee" : "user") as
-      | "employee"
-      | "user",
+    moduleType: (module.moduleType === "FCA_INVESTMENT"
+      ? "fca_investment"
+      : module.moduleType === "FCA_REGULATED"
+        ? "fca_regulated"
+        : "sec_framework") as
+      | "fca_investment"
+      | "fca_regulated"
+      | "sec_framework",
     cooldownHours: Math.round(module.coolDownSeconds / 3600),
     quizTimeLimitMinutes: module.assessment?.timeLimit
       ? Math.round(module.assessment.timeLimit / 60)

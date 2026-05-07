@@ -202,9 +202,7 @@ export default async function ModuleDetailsPage({
         </div>
       </section>
 
-      {module.moduleType === "EMPLOYEE" ? (
-        <AssignToEmployeesPanel moduleId={module.id} />
-      ) : null}
+      <AssignToEmployeesPanel moduleId={module.id} />
       <KpiStats
         moduleId={module.id}
         moduleName={module.name}

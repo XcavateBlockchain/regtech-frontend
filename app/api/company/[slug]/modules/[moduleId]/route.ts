@@ -14,7 +14,9 @@ const dataSchema = z.object({
   language: z.enum(["en", "es", "fr", "de", "zh"]).optional(),
   passingScore: z.coerce.number().int().min(1).max(100).optional(),
   recipients: z.coerce.number().int().min(1).max(10000).optional(),
-  moduleType: z.enum(["employee", "user"]).optional(),
+  moduleType: z
+    .enum(["fca_investment", "fca_regulated", "sec_framework"])
+    .optional(),
   quizTimeLimitMinutes: z.coerce.number().int().min(0).max(180).optional(),
   cooldownHours: z.coerce
     .number()
@@ -106,7 +108,11 @@ export async function PATCH(
       updateData.maxRecipients = data.recipients;
     if (data.moduleType !== undefined)
       updateData.moduleType =
-        data.moduleType === "employee" ? "EMPLOYEE" : "USER";
+        data.moduleType === "fca_investment"
+          ? "FCA_INVESTMENT"
+          : data.moduleType === "fca_regulated"
+            ? "FCA_REGULATED"
+            : "SEC_FRAMEWORK";
     if (data.cooldownHours !== undefined)
       updateData.coolDownSeconds = data.cooldownHours * 3600;
     if (data.credentialExpiryMonths !== undefined)

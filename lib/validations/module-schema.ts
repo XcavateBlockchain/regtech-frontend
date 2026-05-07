@@ -9,8 +9,9 @@ export const CATEGORY_OPTIONS = [
 ];
 
 export const MODULE_TYPE_OPTIONS = [
-  { value: "employee", label: "Employee Training" },
-  { value: "user", label: "Customer / User" },
+  { value: "fca_investment", label: "FCA Investment" },
+  { value: "fca_regulated", label: "FCA Regulated" },
+  { value: "sec_framework", label: "SEC Framework" },
 ];
 
 export const TIME_OPTIONS = [
@@ -133,7 +134,7 @@ export type ModuleValues = z.infer<typeof moduleSchema>;
 
 export const moduleWithQuizSchema = coreModuleObjectSchema
   .extend({
-    moduleType: z.enum(["employee", "user"], {
+    moduleType: z.enum(["fca_investment", "fca_regulated", "sec_framework"], {
       message: "Select a module type",
     }),
   })
