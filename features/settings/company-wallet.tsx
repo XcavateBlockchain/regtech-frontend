@@ -49,8 +49,7 @@ export function CompanyWalletSection() {
     loading,
     error,
     refetch,
-  } =
-    useCompany(address);
+  } = useCompany(address);
 
   if (!address || loading) return <WalletSectionSkeleton />;
   if (
@@ -71,6 +70,7 @@ export function CompanyWalletSection() {
         partnerVaultAddress={partnerVaultAddress}
         partnerVaultSolBalance={partnerVaultSolBalance}
         onAllocated={refetch}
+        onFunded={refetch}
       />
       <RegtechTransactions />
     </div>

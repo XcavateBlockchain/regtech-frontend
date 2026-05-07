@@ -1,4 +1,5 @@
 import type { UseFormReturn } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import FileUpload from "@/components/file-upload";
 import ImageUpload from "@/components/image-upload";
 import NativeSelect from "@/components/native-select";
@@ -17,6 +18,11 @@ interface IForm {
 }
 
 export default function ModuleForm({ form }: IForm) {
+  const existingThumbnailUrl = useWatch({
+    control: form.control,
+    name: "existingThumbnailUrl",
+  });
+
   return (
     <>
       <FieldInput
@@ -94,11 +100,31 @@ export default function ModuleForm({ form }: IForm) {
             <FieldError errors={[form.formState.errors.thumbnailImage]} />
           )}
           <ImageUpload
-            handleFileChange={(files) => {
-              form.setValue("thumbnailImage", files[0], {
+            remotePreviewUrl={existingThumbnailUrl || undefined}
+            onRemoteClear={() => {
+              form.setValue("existingThumbnailUrl", undefined, {
                 shouldValidate: true,
-                shouldDirty: true,
               });
+              form.setValue("thumbnailImage", undefined, {
+                shouldValidate: true,
+              });
+            }}
+            handleFileChange={(files) => {
+              const f = files[0];
+              if (f) {
+                form.setValue("thumbnailImage", f, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+                form.setValue("existingThumbnailUrl", undefined, {
+                  shouldValidate: true,
+                });
+              } else {
+                form.setValue("thumbnailImage", undefined, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+              }
             }}
           />
         </div>

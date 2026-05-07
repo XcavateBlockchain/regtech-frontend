@@ -1,6 +1,5 @@
 "use client";
 
-import type { Address } from "@solana/kit";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,7 +10,6 @@ import { FieldInput } from "@/components/ui/field-input";
 import Form, { useZodForm } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateAndDelegateSwig } from "@/hooks/use-swig";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 import { type AuthValues, authSchema } from "@/lib/validations/auth-schema";
@@ -22,13 +20,13 @@ type Step = 0 | 1 | 2;
 const STEP_LABELS: Record<Step, string> = {
   0: "Sign up",
   1: "Create account",
-  2: "Setting up wallet…",
+  2: "Setting up company…",
 };
 
 const STEP_DESCRIPTIONS: Record<Step, string> = {
   0: "Your profile as the company owner.",
   1: "Your organization — you can change details later.",
-  2: "Two signatures needed from your wallet.",
+  2: "Creating your company wallet on-chain.",
 };
 
 export function CreateCompanyForm() {
@@ -38,8 +36,6 @@ export function CreateCompanyForm() {
   const [error, setError] = useState<string | null>(null);
   const { handleDisconnect } = useWalletKit();
   const { setOpen, setActivePage } = useAuthContext();
-  const { execute: createAndDelegateSwig, loading: swigLoading } =
-    useCreateAndDelegateSwig();
 
   const form = useZodForm({
     schema: authSchema,
@@ -54,7 +50,7 @@ export function CreateCompanyForm() {
     },
   });
 
-  const isLoading = swigLoading || page === 2;
+  const isLoading = page === 2;
 
   async function handleSubmit(values: AuthValues) {
     if (!address || !isConnected) return;
@@ -62,11 +58,6 @@ export function CreateCompanyForm() {
     setPage(2);
 
     try {
-      // Tx1 + Tx2: create Swig, add server delegate (2 Phantom signatures)
-      const { swigAddress, swigId } = await createAndDelegateSwig(
-        address as Address,
-      );
-
       // Create user + company in DB
       const registerRes = await fetch("/api/auth/register", {
         method: "POST",
@@ -79,8 +70,6 @@ export function CreateCompanyForm() {
           companySlug: values.companySlug,
           industry: values.industry,
           description: values.description ?? "",
-          swigAddress,
-          swigId,
         }),
       });
 
@@ -93,18 +82,6 @@ export function CreateCompanyForm() {
         userId: string;
         companyId: string;
       };
-
-      // Register partner on-chain (server-signed with admin keypair)
-      const partnerRes = await fetch("/api/company/register-partner", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyId, walletAddress: address }),
-      });
-
-      if (!partnerRes.ok) {
-        const body = (await partnerRes.json()) as { error: string };
-        throw new Error(body.error ?? "On-chain registration failed");
-      }
 
       setOpen(false);
       setActivePage(0);
@@ -288,11 +265,10 @@ export function CreateCompanyForm() {
 
             <div className="space-y-3.5 px-3.5 text-center sm:px-0">
               <h1 className="text-xl font-semibold">
-                {"Setting up wallet..."}
+                {"Setting up company..."}
               </h1>
               <p className="text-balance text-sm text-muted-foreground">
-                Please sign both prompts in your wallet to set up your company
-                wallet.
+                Setting up your company wallet on-chain. This can take a moment.
               </p>
             </div>
           </div>

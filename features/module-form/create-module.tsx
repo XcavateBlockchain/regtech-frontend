@@ -27,9 +27,17 @@ function buildFormData(
   const fd = new FormData();
   fd.append("companyId", companyId);
   fd.append("walletAddress", walletAddress);
-  const { thumbnailImage, contents, ...rest } = values;
-  fd.append("data", JSON.stringify(rest));
-  fd.append("thumbnail", thumbnailImage);
+  const {
+    thumbnailImage,
+    existingThumbnailUrl: _omitExistingThumb,
+    contents,
+    ...jsonPayload
+  } = values;
+  void _omitExistingThumb;
+  fd.append("data", JSON.stringify(jsonPayload));
+  if (thumbnailImage instanceof File && thumbnailImage.size > 0) {
+    fd.append("thumbnail", thumbnailImage);
+  }
   for (const file of contents) {
     fd.append("contents", file);
   }
@@ -96,6 +104,8 @@ export default function CreateModuleFrom({
     },
   });
 
+  const resolveModuleId = () => moduleId ?? existingModuleId ?? null;
+
   async function saveAsDraft(values: ModuleWithQuizValues) {
     if (!company || !address) {
       toast.error("Wallet not connected or company not loaded");
@@ -104,8 +114,9 @@ export default function CreateModuleFrom({
     const tid = toast.loading("Saving draft…");
     try {
       const fd = buildFormData(values, company.id, address);
-      if (moduleId) {
-        const res = await fetch(`/api/company/modules/${moduleId}`, {
+      const id = resolveModuleId();
+      if (id) {
+        const res = await fetch(`/api/company/modules/${id}`, {
           method: "PATCH",
           body: fd,
         });
@@ -136,7 +147,7 @@ export default function CreateModuleFrom({
       toast.error("Wallet not connected or company not loaded");
       return;
     }
-    let id = moduleId;
+    let id = resolveModuleId();
     const tid = toast.loading("Publishing module…");
     try {
       const fd = buildFormData(values, company.id, address);

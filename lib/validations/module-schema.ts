@@ -45,7 +45,9 @@ const imageFile = z
 //   "Image must be JPEG, PNG, or WebP or JPG",
 // );
 
-export const moduleSchema = z.object({
+const optionalThumbnailFile = imageFile.optional();
+
+const coreModuleObjectSchema = z.object({
   mode: z.enum(["manual", "ai"]),
   title: z
     .string()
@@ -55,8 +57,6 @@ export const moduleSchema = z.object({
     .string()
     .min(3, "Title must be at least 3 characters")
     .max(500, "Description must be 500 characters or fewer"),
-  // .optional()
-  // .or(z.literal("")),
   category: z.enum(["securities", "aml", "kyc", "defi", "tax"], {
     message: "Please select a category",
   }),
@@ -76,16 +76,47 @@ export const moduleSchema = z.object({
     .int("Recipients must be a whole number")
     .min(1, "Add at least one recipient")
     .max(10000, "Maximum is 10,000 recipients"),
-  thumbnailImage: imageFile,
+  /** Set when editing a draft that already has a thumbnail in storage */
+  existingThumbnailUrl: z.string().url().optional(),
+  thumbnailImage: optionalThumbnailFile,
   contents: z.array(imageFile),
 });
+
+function requireThumbnailOrExisting(
+  data: {
+    thumbnailImage?: File | undefined;
+    existingThumbnailUrl?: string | undefined;
+  },
+  ctx: z.RefinementCtx,
+) {
+  const hasNewThumb =
+    data.thumbnailImage instanceof File && data.thumbnailImage.size > 0;
+  const hasExistingThumb =
+    typeof data.existingThumbnailUrl === "string" &&
+    data.existingThumbnailUrl.length > 0;
+  if (!hasNewThumb && !hasExistingThumb) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "An image is required",
+      path: ["thumbnailImage"],
+    });
+  }
+}
+
+export const moduleSchema = coreModuleObjectSchema.superRefine(
+  requireThumbnailOrExisting,
+);
 
 export type ModuleInput = z.input<typeof moduleSchema>;
 export type ModuleValues = z.infer<typeof moduleSchema>;
 
-export const moduleWithQuizSchema = moduleSchema.extend({
-  moduleType: z.enum(["employee", "user"], { message: "Select a module type" }),
-});
+export const moduleWithQuizSchema = coreModuleObjectSchema
+  .extend({
+    moduleType: z.enum(["employee", "user"], {
+      message: "Select a module type",
+    }),
+  })
+  .superRefine(requireThumbnailOrExisting);
 
 export type ModuleWithQuizInput = z.input<typeof moduleWithQuizSchema>;
 export type ModuleWithQuizValues = z.infer<typeof moduleWithQuizSchema>;

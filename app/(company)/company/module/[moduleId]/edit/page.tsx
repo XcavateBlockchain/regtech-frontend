@@ -22,6 +22,7 @@ export default async function EditModulePage({
       passThreshold: true,
       maxRecipients: true,
       moduleType: true,
+      thumbnailUrl: true,
     },
   });
 
@@ -39,6 +40,9 @@ export default async function EditModulePage({
     moduleType: (module.moduleType === "EMPLOYEE" ? "employee" : "user") as
       | "employee"
       | "user",
+    ...(module.thumbnailUrl
+      ? { existingThumbnailUrl: module.thumbnailUrl }
+      : {}),
   };
 
   return (

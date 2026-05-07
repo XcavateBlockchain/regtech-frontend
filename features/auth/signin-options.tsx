@@ -55,7 +55,7 @@ export function SigninOptions() {
             </svg>
           </div>
           <div className="flex flex-col items-start text-sm leading-tight">
-            <span className="font-medium">Continue with email</span>
+            <span className="font-medium">Continue with Google (wallet)</span>
           </div>
           <svg
             className="text-text-secondary ml-auto"
@@ -105,7 +105,7 @@ export function SigninOptions() {
             ></path>
           </svg>
         </div>
-        <span className="text-sm font-medium">Continue with wallet</span>
+        <span className="text-sm font-medium">Continue with wallet (advanced)</span>
         <svg
           className="text-text-secondary ml-auto"
           aria-hidden="true"
