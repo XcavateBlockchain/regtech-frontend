@@ -2,13 +2,19 @@
 
 import { useMemo, useState } from "react";
 import NativeSelect from "@/components/native-select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FieldInput } from "@/components/ui/field-input";
 import Form, { useZodForm } from "@/components/ui/form";
-import { inviteCreateSchema } from "@/lib/validations/invite-schema";
-import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { useCompany } from "@/hooks/use-company";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
+import { inviteCreateSchema } from "@/lib/validations/invite-schema";
 
 export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
   const { address } = useWalletKit();
@@ -109,7 +115,10 @@ export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
               >
                 Close
               </Button>
-              <Button type="submit" disabled={!company || !address || submitting}>
+              <Button
+                type="submit"
+                disabled={!company || !address || submitting}
+              >
                 {submitting ? "Creating…" : "Create invite"}
               </Button>
             </div>
@@ -144,4 +153,3 @@ export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
     </>
   );
 }
-

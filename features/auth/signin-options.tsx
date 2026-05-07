@@ -7,7 +7,7 @@ import { useAuthContext } from "@/providers/auth-provider";
 
 export function SigninOptions() {
   const { open: openWalletModal } = useWalletKit();
-  const { setActivePage } = useAuthContext();
+  const { setActivePage, setIntent } = useAuthContext();
   return (
     <div className="flex flex-col gap-6 w-full">
       <ModalHeader className="text-center flex items-center flex-col gap-0 md:pb-0 md:pt-4">
@@ -32,7 +32,10 @@ export function SigninOptions() {
           type="button"
           className="bg-secondary hover:border-primary hover:bg-primary/10 flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm text-foreground transition-all duration-150 hover:-translate-y-px"
           data-testid="email-or-socials-button"
-          onClick={() => setActivePage(1)}
+          onClick={() => {
+            setIntent("login");
+            setActivePage(1);
+          }}
         >
           <div className="bg-primary border-border-secondary/60 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border">
             <svg
@@ -86,7 +89,10 @@ export function SigninOptions() {
         type="button"
         data-testid="show-all-wallets-button"
         className="bg-secondary hover:border-primary hover:text-white hover:bg-primary flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-150 hover:-translate-y-px"
-        onClick={openWalletModal}
+        onClick={() => {
+          setIntent("register-owner");
+          openWalletModal();
+        }}
       >
         <div className="bg-white border-primary text-primary flex h-7 w-7 items-center justify-center rounded-lg border">
           <svg
@@ -105,7 +111,9 @@ export function SigninOptions() {
             ></path>
           </svg>
         </div>
-        <span className="text-sm font-medium">Continue with wallet (advanced)</span>
+        <span className="text-sm font-medium">
+          Continue with wallet (advanced)
+        </span>
         <svg
           className="text-text-secondary ml-auto"
           aria-hidden="true"

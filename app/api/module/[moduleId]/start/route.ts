@@ -228,7 +228,7 @@ export async function POST(
             userId: user.id,
             submittedAt: null,
           },
-      select: { id: true, batchId: true },
+      select: { id: true, batchId: true, startedAt: true },
       orderBy: { startedAt: "desc" },
     });
     if (existing) {
@@ -261,7 +261,12 @@ export async function POST(
         return NextResponse.json({ error: "Batch not found" }, { status: 404 });
       }
       const questions = batch.questions;
-      return NextResponse.json({ attemptId: existing.id, questions });
+      return NextResponse.json({
+        attemptId: existing.id,
+        questions,
+        startedAtIso: existing.startedAt.toISOString(),
+        timeLimitSeconds: module.assessment.timeLimit ?? null,
+      });
     }
 
     // ── Count previous attempts to set attempt number ────────────────────────
@@ -334,7 +339,12 @@ export async function POST(
     }
     const questions = batch.questions;
 
-    return NextResponse.json({ attemptId: attempt.id, questions });
+    return NextResponse.json({
+      attemptId: attempt.id,
+      questions,
+      startedAtIso: attempt.startedAt.toISOString(),
+      timeLimitSeconds: module.assessment.timeLimit ?? null,
+    });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json(

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Form, { useZodForm } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCompany } from "@/hooks/use-company";
+import { useQuizBalance } from "@/hooks/use-quiz-balance";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import {
   type ModuleWithQuizValues,
@@ -88,6 +89,10 @@ export default function CreateModuleFrom({
   const router = useRouter();
   const { address } = useWalletKit();
   const { company } = useCompany(address);
+  const { balance: quizBalance, loading: quizBalanceLoading } = useQuizBalance(
+    company?.id ?? null,
+    address ?? null,
+  );
   const [moduleId, setModuleId] = useState<string | null>(
     existingModuleId ?? null,
   );
@@ -233,6 +238,8 @@ export default function CreateModuleFrom({
       />
       <ModuleReviewPane
         onSave={form.handleSubmit(saveAsDraft, onValidationError)}
+        quizBalance={quizBalance}
+        quizBalanceLoading={quizBalanceLoading}
       />
     </Form>
   );

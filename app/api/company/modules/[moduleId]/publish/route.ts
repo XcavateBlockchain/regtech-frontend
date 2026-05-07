@@ -1,5 +1,6 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import type { Address } from "@solana/kit";
+import { createSolanaRpc } from "@solana/kit";
 import { createNoopSigner } from "@solana/signers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -17,7 +18,6 @@ import {
   uuidToBytes,
 } from "@/lib/solana/admin";
 import { findModulePda } from "@/lib/solana/pda";
-import { createSolanaRpc } from "@solana/kit";
 
 const bodySchema = z.object({
   companyId: z.string().min(1),
@@ -110,8 +110,10 @@ export async function POST(
       moduleCode: module.moduleCode,
       metadataUri,
       passThresholdBpsOverride: module.passThreshold,
-      cooldownSecondsOverride: null,
-      expiresInSeconds: module.expiresInSeconds ?? null,
+      cooldownSecondsOverride: BigInt(module.coolDownSeconds),
+      expiresInSeconds: module.expiresInSeconds
+        ? BigInt(module.expiresInSeconds)
+        : null,
     });
 
     const txHash = await executeViaSwigDelegate(
@@ -153,9 +155,10 @@ export async function POST(
       );
     }
 
-    const anyErr = e as
-      | { context?: { code?: number }; cause?: { context?: { code?: number } } }
-      | null;
+    const anyErr = e as {
+      context?: { code?: number };
+      cause?: { context?: { code?: number } };
+    } | null;
     const code = anyErr?.context?.code ?? anyErr?.cause?.context?.code;
     if (code === REGTECH_ERROR__VAULT_INSUFFICIENT || code === 6020) {
       // Best-effort: return vault address + current SOL balance so the UI/user
@@ -172,7 +175,9 @@ export async function POST(
           const rpc = createSolanaRpc(rpcUrl);
           const { value: lamports } = await rpc
             .getBalance(
-              partnerAdminWalletForDebug as Parameters<typeof rpc.getBalance>[0],
+              partnerAdminWalletForDebug as Parameters<
+                typeof rpc.getBalance
+              >[0],
             )
             .send();
           swigWalletSolBalance = Number(lamports) / 1_000_000_000;
@@ -180,7 +185,9 @@ export async function POST(
         // Partner PDA is frequently the actual "vault" payer inside the regtech program.
         if (partnerIdForDebug) {
           const partnerIdBytes = uuidToBytes(partnerIdForDebug);
-          const [partnerPda] = await findPartnerPda({ partnerId: partnerIdBytes });
+          const [partnerPda] = await findPartnerPda({
+            partnerId: partnerIdBytes,
+          });
           partnerPdaAddress = String(partnerPda);
           const rpc = createSolanaRpc(rpcUrl);
           const { value: partnerLamports } = await rpc

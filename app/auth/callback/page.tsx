@@ -1,8 +1,6 @@
 "use client";
 
-import { ConnectBox, usePhantom } from "@phantom/react-sdk";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { ConnectBox } from "@phantom/react-sdk";
 
 export default function PhantomAuthCallbackPage() {
   // const { isConnected, isLoading } = usePhantom();

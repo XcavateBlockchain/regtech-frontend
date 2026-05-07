@@ -9,6 +9,7 @@ import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { getUserByWallet } from "@/lib/actions/user";
 
 type AuthPage = 0 | 1 | 2;
+type AuthIntent = "login" | "register-owner";
 
 const CloseIcon = () => (
   <svg
@@ -41,17 +42,24 @@ const AuthContext = createContext<{
   activePage: number;
   setActivePage: React.Dispatch<React.SetStateAction<AuthPage>>;
   accountLoading: boolean;
+  setAccountLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  intent: AuthIntent;
+  setIntent: React.Dispatch<React.SetStateAction<AuthIntent>>;
 }>({
   open: false,
   setOpen: () => false,
   activePage: 0,
   setActivePage: () => 0,
   accountLoading: false,
+  setAccountLoading: () => false,
+  intent: "login",
+  setIntent: () => "login",
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [activePage, setActivePage] = useState<AuthPage>(0);
+  const [intent, setIntent] = useState<AuthIntent>("login");
   const { isConnected, address } = useWalletKit();
   const [accountLoading, setAccountLoading] = useState(false);
 
@@ -77,13 +85,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log(user);
         if (ignore) return;
         if (!user) {
-          setActivePage(2);
+          if (intent === "register-owner") {
+            setActivePage(2);
+          }
           setAccountLoading(false);
           return;
         }
         localStorage.setItem(storageKeys.role, user?.role ?? "");
         localStorage.setItem(storageKeys.user, user?.userId ?? "");
         localStorage.setItem(storageKeys.company, user?.companyId ?? "");
+        // If a user exists, close the auth modal (edge-case: accountLoading flow
+        // can open it while a sign-in is in progress).
+        setOpen(false);
+        setActivePage(0);
         setAccountLoading(false);
       };
       checkUser();
@@ -91,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ignore = true;
       };
     }
-  }, [accountLoading, address]);
+  }, [accountLoading, address, intent]);
 
   const pages: Record<AuthPage, React.ReactNode> = {
     0: <SigninOptions />,
@@ -101,7 +115,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ open, setOpen, activePage, setActivePage, accountLoading }}
+      value={{
+        open,
+        setOpen,
+        activePage,
+        setActivePage,
+        accountLoading,
+        setAccountLoading,
+        intent,
+        setIntent,
+      }}
     >
       {children}
       <Modal

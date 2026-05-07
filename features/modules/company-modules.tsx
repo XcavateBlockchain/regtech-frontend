@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { ModuleCardData } from "@/features/modules/module-item";
 import { ModuleList } from "@/features/modules/module-list";
 import { Filters, Header } from "@/features/modules/module-toolbar";
@@ -15,7 +16,15 @@ type ApiModule = {
   thumbnailUrl: string;
   txConfirmed: boolean;
   shareToken: string;
+  stats?: {
+    enrolled: number;
+    completed: number;
+    available: number;
+    avgScore: string;
+  };
 };
+
+const skeletonKeys = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
 
 function toCategoryLabel(raw: string): ModuleCardData["category"] {
   const upper = raw.toUpperCase();
@@ -30,9 +39,29 @@ export function CompanyModules() {
   const { company, loading: companyLoading } = useCompany(address);
   const [modules, setModules] = useState<ApiModule[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
-    if (!address || companyLoading || !company) return;
+    // Reset between wallet/company switches so skeleton shows immediately.
+    if (!address) {
+      setModules([]);
+      setHasLoaded(false);
+      setLoading(false);
+      return;
+    }
+    if (companyLoading) {
+      setModules([]);
+      setHasLoaded(false);
+      setLoading(false);
+      return;
+    }
+    if (!company) {
+      setModules([]);
+      setHasLoaded(true);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     fetch(`/api/company/modules?walletAddress=${encodeURIComponent(address)}`)
@@ -50,7 +79,10 @@ export function CompanyModules() {
         if (!cancelled) setModules([]);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setHasLoaded(true);
+        }
       });
 
     return () => {
@@ -79,10 +111,10 @@ export function CompanyModules() {
           mode: "stats",
           shareToken: m.shareToken,
           stats: {
-            enrolled: 0,
-            completed: 0,
-            available: 0,
-            avgScore: "—",
+            enrolled: m.stats?.enrolled ?? 0,
+            completed: m.stats?.completed ?? 0,
+            available: m.stats?.available ?? 0,
+            avgScore: m.stats?.avgScore ?? "—",
           },
         };
       }),
@@ -90,13 +122,37 @@ export function CompanyModules() {
   );
 
   const activeCount = modules.filter((m) => m.status === "ACTIVE").length;
+  const showSkeleton =
+    Boolean(address) && (companyLoading || loading || !hasLoaded);
 
   return (
     <>
       <Header total={loading ? 0 : activeCount} />
       <Filters />
-      {loading ? (
-        <div className="text-sm text-muted-foreground">Loading modules…</div>
+      {showSkeleton ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {skeletonKeys.map((k) => (
+            <div
+              key={`skeleton-${k}`}
+              className="flex flex-col overflow-hidden rounded-md border border-border bg-card"
+            >
+              <Skeleton className="h-[188px] w-full rounded-none" />
+              <div className="flex flex-col gap-3.5 px-3 py-4">
+                <Skeleton className="h-5 w-3/4" />
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-20 justify-self-end" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-20 justify-self-end" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Skeleton className="h-10 w-24" />
+                  <Skeleton className="h-10 w-24" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <ModuleList modules={cards} />
       )}

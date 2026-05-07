@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { AddEmployeeDialog } from "@/features/team/add-employee-dialog";
 import { EmployeeList } from "@/features/team/employee-list";
 import { InviteList } from "@/features/team/invite-list";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 type ApiInvite = {
   id: string;
@@ -43,7 +43,9 @@ export function TeamManager() {
     let cancelled = false;
     setLoading(true);
     Promise.all([
-      fetch(`/api/company/invites?walletAddress=${encodeURIComponent(address)}`),
+      fetch(
+        `/api/company/invites?walletAddress=${encodeURIComponent(address)}`,
+      ),
       fetch(
         `/api/company/employees?walletAddress=${encodeURIComponent(address)}`,
       ),
@@ -103,4 +105,3 @@ export function TeamManager() {
     </main>
   );
 }
-

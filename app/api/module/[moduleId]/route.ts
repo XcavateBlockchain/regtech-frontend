@@ -20,6 +20,7 @@ export async function GET(
         completionTime: true,
         language: true,
         passThreshold: true,
+        coolDownSeconds: true,
         assessment: {
           select: {
             id: true,
@@ -60,18 +61,33 @@ export async function GET(
             select: { status: true },
           });
           if (assignment) {
-            const attempt = await prisma.assessmentAttempt.findFirst({
-              where: {
-                assessment: { moduleId },
-                employeeId: user.employment.id,
-                submittedAt: null,
-              },
-              select: { id: true },
-              orderBy: { startedAt: "desc" },
-            });
+            const [activeAttempt, lastSubmitted] = await Promise.all([
+              prisma.assessmentAttempt.findFirst({
+                where: {
+                  assessment: { moduleId },
+                  employeeId: user.employment.id,
+                  submittedAt: null,
+                },
+                select: { id: true },
+                orderBy: { startedAt: "desc" },
+              }),
+              prisma.assessmentAttempt.findFirst({
+                where: {
+                  assessment: { moduleId },
+                  employeeId: user.employment.id,
+                  submittedAt: { not: null },
+                },
+                select: { passed: true, submittedAt: true },
+                orderBy: { submittedAt: "desc" },
+              }),
+            ]);
             enrollment = {
               status: assignment.status,
-              activeAttemptId: attempt?.id ?? null,
+              activeAttemptId: activeAttempt?.id ?? null,
+              lastSubmittedAtIso:
+                lastSubmitted?.submittedAt?.toISOString() ?? null,
+              lastPassed: lastSubmitted?.passed ?? null,
+              cooldownSeconds: module.coolDownSeconds,
             };
           }
         } else {
@@ -80,18 +96,33 @@ export async function GET(
             select: { status: true },
           });
           if (enroll) {
-            const attempt = await prisma.assessmentAttempt.findFirst({
-              where: {
-                assessment: { moduleId },
-                userId: user.id,
-                submittedAt: null,
-              },
-              select: { id: true },
-              orderBy: { startedAt: "desc" },
-            });
+            const [activeAttempt, lastSubmitted] = await Promise.all([
+              prisma.assessmentAttempt.findFirst({
+                where: {
+                  assessment: { moduleId },
+                  userId: user.id,
+                  submittedAt: null,
+                },
+                select: { id: true },
+                orderBy: { startedAt: "desc" },
+              }),
+              prisma.assessmentAttempt.findFirst({
+                where: {
+                  assessment: { moduleId },
+                  userId: user.id,
+                  submittedAt: { not: null },
+                },
+                select: { passed: true, submittedAt: true },
+                orderBy: { submittedAt: "desc" },
+              }),
+            ]);
             enrollment = {
               status: enroll.status,
-              activeAttemptId: attempt?.id ?? null,
+              activeAttemptId: activeAttempt?.id ?? null,
+              lastSubmittedAtIso:
+                lastSubmitted?.submittedAt?.toISOString() ?? null,
+              lastPassed: lastSubmitted?.passed ?? null,
+              cooldownSeconds: module.coolDownSeconds,
             };
           }
         }
@@ -108,6 +139,7 @@ export async function GET(
         completionTime: module.completionTime,
         language: module.language,
         passThreshold: module.passThreshold,
+        cooldownSeconds: module.coolDownSeconds,
         quiz: {
           batchCount: module.assessment?._count.batches ?? 0,
           pointsPerBatch:

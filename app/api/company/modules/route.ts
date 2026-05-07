@@ -12,8 +12,11 @@ function totalPointsForBatch(batch: { questions: { points: number }[] }) {
   return batch.questions.reduce((sum, q) => sum + q.points, 0);
 }
 
-function validateEqualBatchPoints(bank: { id: string; questions: { points: number }[] }[]) {
-  if (!bank.length) return { ok: false as const, reason: "No batches available" };
+function validateEqualBatchPoints(
+  bank: { id: string; questions: { points: number }[] }[],
+) {
+  if (!bank.length)
+    return { ok: false as const, reason: "No batches available" };
   const totals = bank.map((b) => ({ id: b.id, total: totalPointsForBatch(b) }));
   const expected = totals[0]?.total ?? 0;
   const mismatch = totals.find((t) => t.total !== expected);
@@ -36,6 +39,14 @@ const dataSchema = z.object({
   passingScore: z.coerce.number().int().min(1).max(100),
   recipients: z.coerce.number().int().min(1).max(10000),
   moduleType: z.enum(["employee", "user"]),
+  quizTimeLimitMinutes: z.coerce.number().int().min(0).max(180).optional(),
+  cooldownHours: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(24 * 365)
+    .default(24),
+  credentialExpiryMonths: z.coerce.number().int().min(0).max(120).optional(),
 });
 
 async function uploadToS3(key: string, file: File): Promise<string> {
@@ -84,10 +95,122 @@ export async function GET(req: Request) {
         thumbnailUrl: true,
         txConfirmed: true,
         shareToken: true,
+        maxRecipients: true,
       },
     });
 
-    return NextResponse.json({ modules }, { status: 200 });
+    const moduleIds = modules.map((m) => m.id);
+
+    const [enrollmentCounts, assignmentCounts, enrollmentAvg, assignmentAvg] =
+      await Promise.all([
+        prisma.moduleEnrollment.groupBy({
+          by: ["moduleId", "status"],
+          where: { moduleId: { in: moduleIds } },
+          _count: { _all: true },
+        }),
+        prisma.moduleAssignment.groupBy({
+          by: ["moduleId", "status"],
+          where: { moduleId: { in: moduleIds } },
+          _count: { _all: true },
+        }),
+        prisma.moduleEnrollment.groupBy({
+          by: ["moduleId"],
+          where: {
+            moduleId: { in: moduleIds },
+            status: "COMPLETED",
+            finalScoreBps: { not: null },
+          },
+          _avg: { finalScoreBps: true },
+        }),
+        prisma.moduleAssignment.groupBy({
+          by: ["moduleId"],
+          where: {
+            moduleId: { in: moduleIds },
+            status: "COMPLETED",
+            finalScoreBps: { not: null },
+          },
+          _avg: { finalScoreBps: true },
+        }),
+      ]);
+
+    const countMap = new Map<
+      string,
+      {
+        enrolled: number;
+        completed: number;
+        failed: number;
+        inProgress: number;
+      }
+    >();
+
+    function bump(
+      moduleId: string,
+      status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED",
+      inc: number,
+    ) {
+      const current = countMap.get(moduleId) ?? {
+        enrolled: 0,
+        completed: 0,
+        failed: 0,
+        inProgress: 0,
+      };
+      current.enrolled += inc;
+      if (status === "COMPLETED") current.completed += inc;
+      else if (status === "FAILED") current.failed += inc;
+      else current.inProgress += inc;
+      countMap.set(moduleId, current);
+    }
+
+    for (const row of enrollmentCounts) {
+      bump(row.moduleId, row.status, row._count._all);
+    }
+    for (const row of assignmentCounts) {
+      bump(row.moduleId, row.status, row._count._all);
+    }
+
+    const avgMap = new Map<string, number>();
+    for (const row of enrollmentAvg) {
+      const v = row._avg.finalScoreBps;
+      if (typeof v === "number") avgMap.set(row.moduleId, v);
+    }
+    for (const row of assignmentAvg) {
+      const v = row._avg.finalScoreBps;
+      if (typeof v !== "number") continue;
+      const prev = avgMap.get(row.moduleId);
+      // Best-effort blend — without counts we just average the two sources.
+      avgMap.set(row.moduleId, typeof prev === "number" ? (prev + v) / 2 : v);
+    }
+
+    const modulesWithStats = modules.map((m) => {
+      const counts = countMap.get(m.id) ?? {
+        enrolled: 0,
+        completed: 0,
+        failed: 0,
+        inProgress: 0,
+      };
+      const available = Math.max(0, m.maxRecipients - counts.enrolled);
+      const avgBps = avgMap.get(m.id);
+      const avgScore =
+        typeof avgBps === "number" ? `${Math.round(avgBps / 100)}%` : "—";
+
+      return {
+        id: m.id,
+        name: m.name,
+        category: m.category,
+        status: m.status,
+        thumbnailUrl: m.thumbnailUrl,
+        txConfirmed: m.txConfirmed,
+        shareToken: m.shareToken,
+        stats: {
+          enrolled: counts.enrolled,
+          completed: counts.completed,
+          available,
+          avgScore,
+        },
+      };
+    });
+
+    return NextResponse.json({ modules: modulesWithStats }, { status: 200 });
   } catch (e) {
     console.error("[GET /api/company/modules]", e);
     return NextResponse.json(
@@ -178,7 +301,10 @@ export async function POST(req: Request) {
         moduleIdHash,
         moduleType: data.moduleType === "employee" ? "EMPLOYEE" : "USER",
         passThreshold: data.passingScore * 100,
-        coolDownSeconds: 0,
+        coolDownSeconds: data.cooldownHours * 3600,
+        expiresInSeconds: data.credentialExpiryMonths
+          ? data.credentialExpiryMonths * 30 * 86400
+          : null,
         maxRecipients: data.recipients,
         status: "DRAFT",
         credentialType: data.category.toUpperCase(),
@@ -194,6 +320,9 @@ export async function POST(req: Request) {
         assessment: {
           create: {
             title: data.title,
+            timeLimit: data.quizTimeLimitMinutes
+              ? data.quizTimeLimitMinutes * 60
+              : null,
             batches: {
               create: bank.map((b, batchIndex) => ({
                 label: b.id,

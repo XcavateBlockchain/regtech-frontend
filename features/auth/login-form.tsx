@@ -6,6 +6,7 @@ import { ModalDescription, ModalHeader, ModalTitle } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
+import { toBase58Signature } from "@/lib/phantom-signature";
 import { storageKeys, useAuthContext } from "@/providers/auth-provider";
 
 export function LoginForm() {
@@ -15,7 +16,7 @@ export function LoginForm() {
 
 function SigninUser(props: { onBack: () => void }) {
   const router = useRouter();
-  const { setOpen, setActivePage } = useAuthContext();
+  const { setOpen, setActivePage, setAccountLoading } = useAuthContext();
   const { connect, isConnecting } = useConnect();
   const { address, isConnected, open: openWalletModal } = useWalletKit();
   const { solana } = useSolana();
@@ -42,12 +43,7 @@ function SigninUser(props: { onBack: () => void }) {
         timestampIso,
       });
       const signed = await solana.signMessage(message);
-      const signature =
-        typeof signed === "string"
-          ? signed
-          : "signature" in signed
-            ? String(signed.signature)
-            : String(signed);
+      const signature = toBase58Signature(signed);
 
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -79,6 +75,8 @@ function SigninUser(props: { onBack: () => void }) {
       }
       localStorage.removeItem(storageKeys.employee);
 
+      // Stop any provider-driven account loading flow from re-opening the modal.
+      setAccountLoading(false);
       setOpen(false);
       setActivePage(0);
 

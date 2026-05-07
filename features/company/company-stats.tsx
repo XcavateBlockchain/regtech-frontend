@@ -48,6 +48,7 @@ export function CompanyStats() {
     credentialsIssued: number;
     employees: number;
     publicEnrolled: number;
+    totalEnrolments: number;
   } | null>(null);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export function CompanyStats() {
           credentialsIssued: number;
           employees: number;
           publicEnrolled: number;
+          totalEnrolments: number;
         }>;
       })
       .then((data) => {
@@ -79,7 +81,7 @@ export function CompanyStats() {
     typeof v === "number" ? String(v) : "—";
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
       <StatCard
         label="Active Modules"
         value={valueOrDash(stats?.activeModules)}
@@ -99,6 +101,11 @@ export function CompanyStats() {
       <StatCard
         label="Public enrolled"
         value={valueOrDash(stats?.publicEnrolled)}
+        delta={{ value: "Live", tone: "muted" }}
+      />
+      <StatCard
+        label="Total enrolments"
+        value={valueOrDash(stats?.totalEnrolments)}
         delta={{ value: "Live", tone: "muted" }}
       />
     </div>

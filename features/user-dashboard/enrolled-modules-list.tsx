@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { storageKeys } from "@/providers/auth-provider";
 
 type DashboardModule = {
@@ -75,7 +81,9 @@ export function EnrolledModulesList({
       if (!res.ok) throw new Error(json.error ?? "Failed to load attempt");
       setAnswers(json.attempt ?? null);
     } catch (e) {
-      setAnswersError(e instanceof Error ? e.message : "Failed to load attempt");
+      setAnswersError(
+        e instanceof Error ? e.message : "Failed to load attempt",
+      );
     } finally {
       setAnswersLoading(false);
     }
@@ -97,52 +105,59 @@ export function EnrolledModulesList({
     <>
       <ul className="flex flex-col gap-3">
         {modules.map((m) => (
-          <li key={m.moduleId} className="rounded-xl border border-border bg-card p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">
-                {m.moduleName}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {m.companyName} · {m.status}
-                {m.credential ? ` · Credential: ${m.credential.status}` : ""}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                <span>Attempts: {m.attemptsUsed}</span>
-                <span>Avg: {fmtPctFromBps(m.avgScoreBps ?? null)}</span>
-                <span>
-                  Last score:{" "}
-                  {m.lastAttempt?.scoreBps != null
-                    ? fmtPctFromBps(m.lastAttempt.scoreBps)
-                    : m.lastAttempt?.score != null
-                      ? `${m.lastAttempt.score}%`
-                      : "—"}
-                </span>
-                <span>
-                  Result:{" "}
-                  {m.lastAttempt?.passed == null
-                    ? "—"
-                    : m.lastAttempt.passed
-                      ? "Pass"
-                      : "Fail"}
-                </span>
-                <span>Best: {fmtPctFromBps(m.bestScoreBps)}</span>
-                <span>
-                  Last activity: {m.lastAttempt ? fmtDate(m.lastAttempt.startedAt) : "—"}
-                </span>
+          <li
+            key={m.moduleId}
+            className="rounded-xl border border-border bg-card p-4"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {m.moduleName}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {m.companyName} · {m.status}
+                  {m.credential ? ` · Credential: ${m.credential.status}` : ""}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span>Attempts: {m.attemptsUsed}</span>
+                  <span>Avg: {fmtPctFromBps(m.avgScoreBps ?? null)}</span>
+                  <span>
+                    Last score:{" "}
+                    {m.lastAttempt?.scoreBps != null
+                      ? fmtPctFromBps(m.lastAttempt.scoreBps)
+                      : m.lastAttempt?.score != null
+                        ? `${m.lastAttempt.score}%`
+                        : "—"}
+                  </span>
+                  <span>
+                    Result:{" "}
+                    {m.lastAttempt?.passed == null
+                      ? "—"
+                      : m.lastAttempt.passed
+                        ? "Pass"
+                        : "Fail"}
+                  </span>
+                  <span>Best: {fmtPctFromBps(m.bestScoreBps)}</span>
+                  <span>
+                    Last activity:{" "}
+                    {m.lastAttempt ? fmtDate(m.lastAttempt.startedAt) : "—"}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  nativeButton={false}
+                  render={<Link href={`/module/${m.moduleId}`}>Continue</Link>}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => openLastAttemptAnswers(m.moduleId)}
+                >
+                  Last attempt answers
+                </Button>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button nativeButton={false} render={<Link href={`/module/${m.moduleId}`}>Continue</Link>} />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => openLastAttemptAnswers(m.moduleId)}
-              >
-                Last attempt answers
-              </Button>
-            </div>
-          </div>
           </li>
         ))}
       </ul>
@@ -168,7 +183,11 @@ export function EnrolledModulesList({
             <div className="space-y-4">
               <div className="text-xs text-muted-foreground">
                 Score: {fmtPctFromBps(answers.scoreBps)} · Result:{" "}
-                {answers.passed == null ? "—" : answers.passed ? "Pass" : "Fail"}
+                {answers.passed == null
+                  ? "—"
+                  : answers.passed
+                    ? "Pass"
+                    : "Fail"}
               </div>
               <ol className="space-y-3">
                 {answers.questions.map((q, idx) => (
@@ -197,4 +216,3 @@ export function EnrolledModulesList({
     </>
   );
 }
-

@@ -9,6 +9,7 @@ import { FieldInput } from "@/components/ui/field-input";
 import Form, { useZodForm } from "@/components/ui/form";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
+import { toBase58Signature } from "@/lib/phantom-signature";
 import { storageKeys } from "@/providers/auth-provider";
 
 type InvitePreview = {
@@ -91,12 +92,7 @@ export default function InviteClaimPage() {
       });
 
       const signed = await solana.signMessage(message);
-      const signature =
-        typeof signed === "string"
-          ? signed
-          : "signature" in signed
-            ? String(signed.signature)
-            : String(signed);
+      const signature = toBase58Signature(signed);
 
       const res = await fetch(
         `/api/invite/${encodeURIComponent(token)}/claim`,

@@ -11,8 +11,8 @@ export function WalletButton() {
   const { address: solanaAddress, toggleModal } = useWalletKit();
   const { isConnected } = usePhantom();
   const { company } = useCompany(solanaAddress);
-  const swigAddress = company?.swigAddress ?? null;
-  const swigBalance = useSolBalance(swigAddress);
+  const swigWalletAddress = company?.swigWalletAddress ?? null;
+  const swigWalletBalance = useSolBalance(swigWalletAddress);
 
   if (!isConnected) return null;
 
@@ -23,7 +23,7 @@ export function WalletButton() {
         onClick={toggleModal}
         className="border flex items-center gap-1.5 border-[#181819] transition-colors hover:border-primary hover:text-primary py-1 px-2.5 rounded-[10px] text-center text-[#525252] text-sm leading-6"
       >
-        <span> {`${swigBalance ?? "0.00"} SOL`}</span>
+        <span> {`${swigWalletBalance ?? "0.00"} SOL`}</span>
         <Icon.arrowDown className="size-3" strokeWidth={2} />
       </button>
     </div>

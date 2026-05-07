@@ -22,11 +22,11 @@ export const TIME_OPTIONS = [
 ];
 
 export const LANGUAGE_OPTIONS = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
-  { value: "de", label: "German" },
-  { value: "zh", label: "Chinese" },
+  { value: "english", label: "English" },
+  { value: "spanish", label: "Spanish" },
+  { value: "french", label: "French" },
+  { value: "german", label: "German" },
+  { value: "chinese", label: "Chinese" },
 ];
 
 const MAX_IMAGE_BYTES = 50 * 1024 * 1024; // 50MB
@@ -76,6 +76,27 @@ const coreModuleObjectSchema = z.object({
     .int("Recipients must be a whole number")
     .min(1, "Add at least one recipient")
     .max(10000, "Maximum is 10,000 recipients"),
+  // Quiz attempt timer (minutes). 0 / undefined = unlimited.
+  quizTimeLimitMinutes: z.coerce
+    .number({ message: "Time limit must be a number" })
+    .int("Time limit must be a whole number")
+    .min(0, "Time limit cannot be negative")
+    .max(180, "Time limit cannot exceed 180 minutes")
+    .optional(),
+  // Minimum wait between attempts (hours). On-chain: cooldown_seconds.
+  cooldownHours: z.coerce
+    .number({ message: "Cooldown must be a number" })
+    .int("Cooldown must be a whole number")
+    .min(0, "Cooldown cannot be negative")
+    .max(24 * 365, "Cooldown is too long")
+    .default(24),
+  // Credential validity (months). 0 / undefined = never expires. On-chain: expires_in_seconds.
+  credentialExpiryMonths: z.coerce
+    .number({ message: "Expiry must be a number" })
+    .int("Expiry must be a whole number")
+    .min(0, "Expiry cannot be negative")
+    .max(120, "Expiry cannot exceed 120 months")
+    .optional(),
   /** Set when editing a draft that already has a thumbnail in storage */
   existingThumbnailUrl: z.string().url().optional(),
   thumbnailImage: optionalThumbnailFile,

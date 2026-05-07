@@ -93,6 +93,42 @@ export default function ModuleForm({ form }: IForm) {
           tooltipDescription="Number of recipients is how many certificates you want to sponsor."
           required
         />
+        <FieldInput
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={180}
+          label="Quiz time limit (min)"
+          placeholder="0 = unlimited"
+          {...form.register("quizTimeLimitMinutes")}
+          error={form.formState.errors.quizTimeLimitMinutes}
+          tooltip="Quiz time limit"
+          tooltipDescription="Per-attempt countdown in minutes. 0 or empty means no limit."
+        />
+        <FieldInput
+          type="number"
+          inputMode="numeric"
+          min={0}
+          label="Cooldown (hrs)"
+          placeholder="Hours between attempts"
+          {...form.register("cooldownHours")}
+          error={form.formState.errors.cooldownHours}
+          tooltip="Retry cooldown"
+          tooltipDescription="Minimum wait between attempts, in hours. 0 = allow immediate retries. Locked after publish."
+          required
+        />
+        <FieldInput
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={120}
+          label="Credential expiry (months)"
+          placeholder="Leave blank for never"
+          {...form.register("credentialExpiryMonths")}
+          error={form.formState.errors.credentialExpiryMonths}
+          tooltip="Credential expiry"
+          tooltipDescription="How long the issued credential stays valid, in months. Leave blank or 0 for permanent. Locked after publish."
+        />
       </div>
       <div className="grid grid-cols-1 gap-x-2.5 md:grid-cols-2">
         <div className="flex flex-col gap-1">

@@ -16,4 +16,3 @@ export const inviteClaimSchema = z.object({
 
 export type InviteCreateInput = z.input<typeof inviteCreateSchema>;
 export type InviteClaimInput = z.input<typeof inviteClaimSchema>;
-

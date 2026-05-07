@@ -50,7 +50,10 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
   }, [address]);
 
   const selectedUserIds = useMemo(
-    () => Object.entries(selected).filter(([, v]) => v).map(([k]) => k),
+    () =>
+      Object.entries(selected)
+        .filter(([, v]) => v)
+        .map(([k]) => k),
     [selected],
   );
 
@@ -68,7 +71,10 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
           employeeUserIds: selectedUserIds,
         }),
       });
-      const json = (await res.json()) as { results?: { ok: boolean }[]; error?: string };
+      const json = (await res.json()) as {
+        results?: { ok: boolean }[];
+        error?: string;
+      };
       if (!res.ok) throw new Error(json.error ?? "Assignment failed");
       const ok = (json.results ?? []).filter((r) => r.ok).length;
       setMessage(`${ok} assignment(s) sent`);
@@ -94,14 +100,18 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
         <Button
           type="button"
           onClick={assign}
-          disabled={!company || !address || submitting || selectedUserIds.length === 0}
+          disabled={
+            !company || !address || submitting || selectedUserIds.length === 0
+          }
         >
           {submitting ? "Assigning…" : "Assign"}
         </Button>
       </div>
 
       {loading ? (
-        <div className="mt-3 text-sm text-muted-foreground">Loading employees…</div>
+        <div className="mt-3 text-sm text-muted-foreground">
+          Loading employees…
+        </div>
       ) : employees.length ? (
         <ul className="mt-3 flex flex-col gap-2">
           {employees.map((e) => (
@@ -114,7 +124,9 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
                 }
               />
               <div className="min-w-0">
-                <p className="truncate text-sm text-foreground">{e.user.name}</p>
+                <p className="truncate text-sm text-foreground">
+                  {e.user.name}
+                </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {e.user.email} · {e.permission}
                 </p>
@@ -123,7 +135,9 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-muted-foreground">No employees found.</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          No employees found.
+        </p>
       )}
 
       {message ? (
@@ -132,4 +146,3 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
     </section>
   );
 }
-

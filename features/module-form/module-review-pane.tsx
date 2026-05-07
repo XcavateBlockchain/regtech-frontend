@@ -3,17 +3,26 @@
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { appEnv } from "@/constants/app-env";
+import type { QuizBalance } from "@/hooks/use-quiz-balance";
 import {
   CATEGORY_OPTIONS,
   MODULE_TYPE_OPTIONS,
   type ModuleWithQuizInput,
 } from "@/lib/validations/module-schema";
 
+const LOW_QUIZ_BALANCE_THRESHOLD = 10;
+
 interface ModuleReviewPaneProps {
   onSave?: () => void;
+  quizBalance?: QuizBalance | null;
+  quizBalanceLoading?: boolean;
 }
 
-export default function ModuleReviewPane({ onSave }: ModuleReviewPaneProps) {
+export default function ModuleReviewPane({
+  onSave,
+  quizBalance,
+  quizBalanceLoading,
+}: ModuleReviewPaneProps) {
   const values = useWatch<ModuleWithQuizInput>();
   const { formState } = useFormContext<ModuleWithQuizInput>();
 
@@ -28,6 +37,56 @@ export default function ModuleReviewPane({ onSave }: ModuleReviewPaneProps) {
     !Number.isNaN(values.passingScore)
       ? `${values.passingScore}%`
       : "—";
+
+  const quizTimeLimitDisplay =
+    typeof values.quizTimeLimitMinutes === "number" &&
+    Number.isFinite(values.quizTimeLimitMinutes) &&
+    values.quizTimeLimitMinutes > 0
+      ? `${values.quizTimeLimitMinutes} min`
+      : "Unlimited";
+
+  const cooldownDisplay =
+    typeof values.cooldownHours === "number" &&
+    Number.isFinite(values.cooldownHours)
+      ? values.cooldownHours === 0
+        ? "None"
+        : `${values.cooldownHours} hr`
+      : "—";
+
+  const credentialExpiryDisplay =
+    typeof values.credentialExpiryMonths === "number" &&
+    Number.isFinite(values.credentialExpiryMonths) &&
+    values.credentialExpiryMonths > 0
+      ? `${values.credentialExpiryMonths} months`
+      : "Never";
+
+  const remainingQuizzes = quizBalance?.remaining ?? null;
+  const quizWarning = (() => {
+    if (quizBalanceLoading || remainingQuizzes == null) return null;
+    if (remainingQuizzes === 0) {
+      return {
+        tone: "danger" as const,
+        title: "No quiz allocations available",
+        body: "You currently have 0 quizzes allocated. Allocate quizzes from your company vault before learners can take this module.",
+      };
+    }
+    if (recipientsCount > 0 && remainingQuizzes < recipientsCount) {
+      const shortfall = recipientsCount - remainingQuizzes;
+      return {
+        tone: "danger" as const,
+        title: `Only ${remainingQuizzes} quizzes remaining`,
+        body: `This module is set to ${recipientsCount} recipients but you only have ${remainingQuizzes} quizzes available. Allocate ${shortfall} more, or reduce the recipient count.`,
+      };
+    }
+    if (remainingQuizzes < LOW_QUIZ_BALANCE_THRESHOLD) {
+      return {
+        tone: "warn" as const,
+        title: `Low quiz balance: ${remainingQuizzes} remaining`,
+        body: "You're running low on quiz allocations. Consider allocating more from your company vault.",
+      };
+    }
+    return null;
+  })();
 
   const recipients =
     typeof values.recipients === "number" && Number.isFinite(values.recipients)
@@ -76,6 +135,12 @@ export default function ModuleReviewPane({ onSave }: ModuleReviewPaneProps) {
               label="Recipients"
               value={values.recipients?.toString() ?? "—"}
             />
+            <ReviewRow label="Quiz Time Limit" value={quizTimeLimitDisplay} />
+            <ReviewRow label="Retry Cooldown" value={cooldownDisplay} />
+            <ReviewRow
+              label="Credential Expiry"
+              value={credentialExpiryDisplay}
+            />
           </div>
           <div className="flex items-center justify-between font-display font-semibold">
             <span>Payment</span>
@@ -94,6 +159,19 @@ export default function ModuleReviewPane({ onSave }: ModuleReviewPaneProps) {
             regtech. A small platform fee (5%) applies to each enrolment.
           </p>
         </div>
+
+        {quizWarning ? (
+          <output
+            className={
+              quizWarning.tone === "danger"
+                ? "block rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                : "block rounded-lg border border-amber-300/40 bg-amber-50/60 px-3 py-2 text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200"
+            }
+          >
+            <p className="font-semibold">{quizWarning.title}</p>
+            <p className="mt-0.5 leading-snug">{quizWarning.body}</p>
+          </output>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2">

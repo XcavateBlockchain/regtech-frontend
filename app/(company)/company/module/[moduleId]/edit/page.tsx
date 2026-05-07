@@ -23,6 +23,9 @@ export default async function EditModulePage({
       maxRecipients: true,
       moduleType: true,
       thumbnailUrl: true,
+      coolDownSeconds: true,
+      expiresInSeconds: true,
+      assessment: { select: { timeLimit: true } },
     },
   });
 
@@ -40,6 +43,13 @@ export default async function EditModulePage({
     moduleType: (module.moduleType === "EMPLOYEE" ? "employee" : "user") as
       | "employee"
       | "user",
+    cooldownHours: Math.round(module.coolDownSeconds / 3600),
+    quizTimeLimitMinutes: module.assessment?.timeLimit
+      ? Math.round(module.assessment.timeLimit / 60)
+      : undefined,
+    credentialExpiryMonths: module.expiresInSeconds
+      ? Math.round(module.expiresInSeconds / (30 * 86400))
+      : undefined,
     ...(module.thumbnailUrl
       ? { existingThumbnailUrl: module.thumbnailUrl }
       : {}),

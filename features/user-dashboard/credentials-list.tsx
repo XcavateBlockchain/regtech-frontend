@@ -77,7 +77,9 @@ export function CredentialsList({
   credentials: GroupedCredentials;
 }) {
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading credentials…</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Loading credentials…</p>
+    );
   }
 
   const total =
@@ -101,4 +103,3 @@ export function CredentialsList({
     </div>
   );
 }
-

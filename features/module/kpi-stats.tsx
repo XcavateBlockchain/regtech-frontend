@@ -1,43 +1,112 @@
+"use client";
+
 import { FileText } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
-export function KpiStats() {
+type Analytics = {
+  totalEnrolments: number;
+  passRate: number;
+  failRate: number;
+  thisWeek: { newPasses: number };
+  lastMonth: { delta: number; passRate: number };
+};
+
+export function KpiStats({
+  moduleId,
+  moduleName,
+  fileUrl,
+}: {
+  moduleId: string;
+  moduleName: string;
+  fileUrl?: string | null;
+}) {
+  const { address } = useWalletKit();
+  const [data, setData] = useState<Analytics | null>(null);
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetch(
+      `/api/company/modules/${encodeURIComponent(moduleId)}/analytics?walletAddress=${encodeURIComponent(address)}`,
+    )
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<Analytics>;
+      })
+      .then((json) => {
+        if (!cancelled) setData(json);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address, moduleId]);
+
+  const passRate = data?.passRate;
+  const failRate = data?.failRate;
+  const totalEnrolments = data?.totalEnrolments;
+  const thisWeekNewPasses = data?.thisWeek?.newPasses;
+  const lastMonthDelta = data?.lastMonth?.delta;
+
+  const fmtPct = (v: number | undefined) =>
+    typeof v === "number" ? `${Math.round(v)}%` : "—";
+  const fmtNum = (v: number | undefined) =>
+    typeof v === "number" ? String(v) : "—";
+  const fmtSignedPct = (v: number | undefined) =>
+    typeof v === "number"
+      ? `${v >= 0 ? "+" : ""}${Math.round(v)}% Last month`
+      : "—";
+
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         label="Passed users"
-        value={"92%"}
-        delta={"+120 this week"}
+        value={fmtPct(passRate)}
+        delta={
+          typeof thisWeekNewPasses === "number"
+            ? `+${thisWeekNewPasses} this week`
+            : "—"
+        }
         deltaTone="success"
       />
       <KpiCard
         label="Failed user"
-        value={"8%"}
+        value={fmtPct(failRate)}
         valueSuffix="Pass"
-        delta={"3% Last month"}
-        deltaTone="success"
+        delta={fmtSignedPct(lastMonthDelta)}
+        deltaTone={
+          typeof lastMonthDelta === "number" && lastMonthDelta < 0
+            ? "muted"
+            : "success"
+        }
       />
       <KpiCard
         label="Total enrolments"
-        value={"14"}
-        delta={"2% Requires attention"}
+        value={fmtNum(totalEnrolments)}
+        delta={"Live"}
         deltaTone="muted"
       />
       <Card className="flex flex-col gap-5 px-6 py-6">
         <p className="text-sm uppercase text-ink-mute">The module</p>
         <div className="flex flex-col gap-2.5">
-          <p className="text-base leading-6 text-ink-strong">
-            SEC Disclosure Requirements
-          </p>
-          <Link
-            href="#"
-            className="inline-flex items-center gap-1.5 text-sm leading-6 text-brand transition-colors hover:underline"
-          >
-            <FileText className="size-3.5" strokeWidth={1.75} />
-            View PDF
-          </Link>
+          <p className="text-base leading-6 text-ink-strong">{moduleName}</p>
+          {fileUrl ? (
+            <Link
+              href={fileUrl}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 text-sm leading-6 text-brand transition-colors hover:underline"
+            >
+              <FileText className="size-3.5" strokeWidth={1.75} />
+              View file
+            </Link>
+          ) : null}
         </div>
       </Card>
     </div>

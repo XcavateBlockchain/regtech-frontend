@@ -72,13 +72,13 @@ export function useCompany(walletAddress: string | null): UseCompanyReturn {
           partnerVaultAddress,
           partnerVaultSolBalance,
         }) => {
-        if (!cancelled) {
-          setCompany({ ...company, swigWalletAddress });
-          setSwigSolBalance(swigSolBalance);
-          setPartnerVaultAddress(partnerVaultAddress);
-          setPartnerVaultSolBalance(partnerVaultSolBalance);
-        }
-      },
+          if (!cancelled) {
+            setCompany({ ...company, swigWalletAddress });
+            setSwigSolBalance(swigSolBalance);
+            setPartnerVaultAddress(partnerVaultAddress);
+            setPartnerVaultSolBalance(partnerVaultSolBalance);
+          }
+        },
       )
       .catch((e) => {
         if (!cancelled)
