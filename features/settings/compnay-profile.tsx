@@ -1,12 +1,14 @@
 "use client";
 
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { CompanyEditForm } from "./company-edit-form";
 
 export function CompanyProfile() {
   const { address } = useWalletKit();
-  const { company, loading } = useCompany(address);
+  const slug = useCompanySlug();
+  const { company, loading } = useCompany(slug, address);
 
   if (!address || loading) {
     return (

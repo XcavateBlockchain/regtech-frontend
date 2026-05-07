@@ -11,6 +11,7 @@ import {
 } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useSolBalance } from "@/hooks/use-sol-balance";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 
@@ -24,11 +25,13 @@ function truncate(addr: string) {
 
 export function WalletAccount(props: { onClose: () => void }) {
   const { address: solanaAddress, handleDisconnect } = useWalletKit();
+  const slug = useCompanySlug();
 
   const balance = useSolBalance(solanaAddress);
-  const { company } = useCompany(solanaAddress);
-  const swigAddress = company?.swigAddress ?? null;
-  const swigBalance = useSolBalance(swigAddress);
+  const { company } = useCompany(slug, solanaAddress);
+  const swigAccountPda = company?.swigAddress ?? null;
+  const swigWalletPda = company?.swigWalletAddress ?? null;
+  const swigWalletBalance = useSolBalance(swigWalletPda);
 
   // function handleDisconnect() {
   //   props.onClose();
@@ -71,20 +74,43 @@ export function WalletAccount(props: { onClose: () => void }) {
               </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-1 px-1">
+            <div className="flex flex-col items-center justify-center gap-1 px-2">
               <p className="text-balance text-sm text-muted-foreground">
-                {`${swigBalance ?? "0.00"} Swig`}
+                {`${swigWalletBalance ?? "0.00"} SOL`}
               </p>
               <div className="flex items-center gap-1.5">
                 <h1 className="text-base font-semibold">
-                  <div>{truncate(swigAddress ?? "")}</div>
+                  <div>{truncate(swigWalletPda ?? "")}</div>
                 </h1>
-                <CopyAnyAddressButton address={swigAddress ?? ""} />
+                <CopyAnyAddressButton address={swigWalletPda ?? ""} />
               </div>
+              <p className="text-[11px] leading-4 text-muted-foreground">
+                Swig wallet PDA
+              </p>
             </div>
           </div>
 
-          <Button className="w-full rounded-xl" onClick={handleDisconnect}>
+          {swigAccountPda ? (
+            <div className="w-full rounded-xl border px-3 py-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Swig account PDA</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-medium">
+                    {truncate(swigAccountPda)}
+                  </span>
+                  <CopyAnyAddressButton address={swigAccountPda} />
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <Button
+            className="w-full rounded-xl"
+            onClick={() => {
+              props.onClose();
+              handleDisconnect();
+            }}
+          >
             Disconnect
           </Button>
         </div>

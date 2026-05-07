@@ -32,7 +32,10 @@ type UseCompanyReturn = {
   refetch: () => void;
 };
 
-export function useCompany(walletAddress: string | null): UseCompanyReturn {
+export function useCompany(
+  slug: string | null,
+  walletAddress: string | null,
+): UseCompanyReturn {
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [swigSolBalance, setSwigSolBalance] = useState(0);
   const [partnerVaultAddress, setPartnerVaultAddress] = useState<string | null>(
@@ -45,12 +48,14 @@ export function useCompany(walletAddress: string | null): UseCompanyReturn {
 
   useEffect(() => {
     void tick;
-    if (!walletAddress) return;
+    if (!slug || !walletAddress) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    fetch(`/api/company/me?walletAddress=${encodeURIComponent(walletAddress)}`)
+    fetch(
+      `/api/company/${encodeURIComponent(slug)}/me?walletAddress=${encodeURIComponent(walletAddress)}`,
+    )
       .then(async (res) => {
         if (!res.ok) {
           const body = (await res.json()) as { error: string };
@@ -72,13 +77,13 @@ export function useCompany(walletAddress: string | null): UseCompanyReturn {
           partnerVaultAddress,
           partnerVaultSolBalance,
         }) => {
-        if (!cancelled) {
-          setCompany({ ...company, swigWalletAddress });
-          setSwigSolBalance(swigSolBalance);
-          setPartnerVaultAddress(partnerVaultAddress);
-          setPartnerVaultSolBalance(partnerVaultSolBalance);
-        }
-      },
+          if (!cancelled) {
+            setCompany({ ...company, swigWalletAddress });
+            setSwigSolBalance(swigSolBalance);
+            setPartnerVaultAddress(partnerVaultAddress);
+            setPartnerVaultSolBalance(partnerVaultSolBalance);
+          }
+        },
       )
       .catch((e) => {
         if (!cancelled)
@@ -91,7 +96,7 @@ export function useCompany(walletAddress: string | null): UseCompanyReturn {
     return () => {
       cancelled = true;
     };
-  }, [walletAddress, tick]);
+  }, [slug, walletAddress, tick]);
 
   return {
     company,

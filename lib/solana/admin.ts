@@ -7,6 +7,7 @@ import {
 } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
+  AccountRole,
   type Address,
   appendTransactionMessageInstructions,
   createKeyPairSignerFromBytes,
@@ -22,15 +23,19 @@ import {
   signTransactionMessageWithSigners,
 } from "@solana/signers";
 import { getBase64EncodedWireTransaction } from "@solana/transactions";
-import { Keypair } from "@solana/web3.js";
 import {
+  Actions,
+  createEd25519AuthorityInfo,
   fetchSwig,
+  findSwigPda,
+  getAddAuthorityInstructions,
+  getCreateSwigInstruction,
   getSignInstructions,
   getSwigWalletAddress,
   type Swig,
 } from "@swig-wallet/kit";
 import { appEnv } from "@/constants/app-env";
-import { getAttestor } from "@/lib/attestor";
+import { REGTECH_PROGRAM_ADDRESS } from "@/generated/reg_tech";
 
 const { SOLANA_RPC_URL: RPC_URL } = appEnv;
 if (!RPC_URL) {
@@ -51,7 +56,6 @@ function loadKeypairBytes(envVar: string): Uint8Array {
 }
 
 let _adminSigner: KeyPairSigner | null = null;
-let _delegateSigner: KeyPairSigner | null = null;
 
 export async function getAdminSigner(): Promise<KeyPairSigner> {
   if (!_adminSigner)
@@ -61,36 +65,25 @@ export async function getAdminSigner(): Promise<KeyPairSigner> {
   return _adminSigner;
 }
 
-/**
- * Loads a per-company attestor signer from the local attestor registry.
- * The Company record stores the attestor public address (base58) and we
- * look up the corresponding private bytes in `keys/attestors.json`.
- */
-export async function getAttestorSigner(
-  attestorAddress: string,
-): Promise<KeyPairSigner> {
-  const entry = await getAttestor(attestorAddress);
-  if (!entry) {
-    throw new Error(`No attestor found for address ${attestorAddress}`);
-  }
-  const raw = new Uint8Array(entry.secretKey);
-  // Our attestor registry stores a 32-byte Ed25519 seed; expand to the
-  // 64-byte Solana secret key bytes expected by createKeyPairSignerFromBytes.
-  const keypairBytes =
-    raw.byteLength === 32 ? Keypair.fromSeed(raw).secretKey : raw;
-  return createKeyPairSignerFromBytes(keypairBytes);
-}
-
-export async function getDelegateSigner(): Promise<KeyPairSigner> {
-  if (!_delegateSigner)
-    _delegateSigner = await createKeyPairSignerFromBytes(
-      loadKeypairBytes("PARTNER_DELEGATE_PRIVATE_KEY"),
-    );
-  return _delegateSigner;
-}
-
-export async function getDelegateAddress(): Promise<Address> {
-  return (await getDelegateSigner()).address;
+function buildSolTransferInstruction(
+  from: Address,
+  to: Address,
+  lamports: bigint,
+): Instruction {
+  // SystemProgram::Transfer (2) with u64 lamports little-endian.
+  const data = new Uint8Array(12);
+  const view = new DataView(data.buffer);
+  view.setUint32(0, 2, true);
+  view.setUint32(4, Number(lamports & 0xffffffffn), true);
+  view.setUint32(8, Number(lamports >> 32n), true);
+  return {
+    programAddress: "11111111111111111111111111111111" as Address,
+    accounts: [
+      { address: from, role: AccountRole.WRITABLE_SIGNER },
+      { address: to, role: AccountRole.WRITABLE },
+    ],
+    data,
+  };
 }
 
 // ─── UUID → bytes ─────────────────────────────────────────────────────────────
@@ -151,7 +144,9 @@ async function withRetries<T>(
     }
   }
   throw lastErr instanceof Error
-    ? new Error(`${opts.label} failed after ${opts.attempts} attempts: ${lastErr.message}`)
+    ? new Error(
+        `${opts.label} failed after ${opts.attempts} attempts: ${lastErr.message}`,
+      )
     : new Error(`${opts.label} failed after ${opts.attempts} attempts`);
 }
 
@@ -190,10 +185,10 @@ export async function sendServerTransaction(
 
 /**
  * Finds the role ID in the Swig account whose Ed25519 authority matches
- * the PARTNER_DELEGATE_KEY pubkey.
+ * the XCAVATE_ADMIN pubkey.
  */
 export async function findDelegateRoleId(swig: Swig): Promise<number> {
-  const delegateAddr = await getDelegateAddress();
+  const delegateAddr = (await getAdminSigner()).address;
   for (const role of swig.roles) {
     const auth = role.authority;
     // Ed25519Authority exposes addressString (base58)
@@ -205,13 +200,13 @@ export async function findDelegateRoleId(swig: Swig): Promise<number> {
     }
   }
   throw new Error(
-    "Delegate role not found in Swig account. Ensure company completed Step 3b during registration.",
+    "Delegate role not found in Swig account. Ensure the company Swig has the server delegate authority set.",
   );
 }
 
 /**
  * Fetches the Swig account, wraps the instruction with the server delegate role,
- * signs with PARTNER_DELEGATE_KEY, and broadcasts the transaction.
+ * signs with XCAVATE_ADMIN_PRIVATE_KEY, and broadcasts the transaction.
  */
 export async function executeViaSwigDelegate(
   swigAddress: Address,
@@ -220,7 +215,7 @@ export async function executeViaSwigDelegate(
   // fetchSwig expects Rpc<GetAccountInfoApi> from swig's bundled @solana/kit v2.
   // Our createSolanaRpc returns a v6 Rpc — structurally compatible at runtime.
   const rpc = createSolanaRpc(RPC_URL) as never;
-  const delegateSigner = await getDelegateSigner();
+  const delegateSigner = await getAdminSigner();
 
   const swigAccount = await fetchSwig(rpc, swigAddress);
   if (process.env.NODE_ENV !== "production") {
@@ -239,6 +234,76 @@ export async function executeViaSwigDelegate(
   ])) as unknown as Instruction[];
 
   return sendServerTransaction(delegateSigner, signIxs);
+}
+
+export async function createSwigForCompany(
+  ownerAddress: Address,
+  initialFundLamports?: bigint,
+): Promise<{ swigAddress: Address; swigId: string }> {
+  const adminSigner = await getAdminSigner();
+  const adminAddress = adminSigner.address as Address;
+  const swigIdBytes = crypto.getRandomValues(new Uint8Array(32));
+  const swigAddress = (await findSwigPda(swigIdBytes)) as Address;
+
+  const createIx = (await getCreateSwigInstruction({
+    payer: adminAddress,
+    id: swigIdBytes,
+    actions: Actions.set().all().get(),
+    authorityInfo: createEd25519AuthorityInfo(adminAddress),
+  })) as unknown as Instruction;
+
+  await sendServerTransaction(adminSigner, [createIx]);
+
+  // Add owner as restricted co-authority (programLimit → regtech program only)
+  const rpc = createSolanaRpc(RPC_URL) as never;
+  const swigAccount = await fetchSwig(rpc, swigAddress);
+  const rootRole = swigAccount.roles[0];
+  if (!rootRole) throw new Error("Swig has no roles after creation");
+
+  const ownerIxs = (await getAddAuthorityInstructions(
+    swigAccount,
+    rootRole.id,
+    createEd25519AuthorityInfo(ownerAddress),
+    Actions.set().programLimit({ programId: REGTECH_PROGRAM_ADDRESS }).get(),
+    { payer: adminAddress },
+  )) as unknown as Instruction[];
+
+  await sendServerTransaction(adminSigner, ownerIxs);
+
+  const lamports = initialFundLamports ?? 0n;
+  if (lamports > 0n) {
+    await fundSwigVault(swigAddress, lamports);
+  }
+
+  return {
+    swigAddress,
+    swigId: Buffer.from(swigIdBytes).toString("base64"),
+  };
+}
+
+export async function fundSwigVault(
+  swigAddress: Address,
+  lamports: bigint,
+): Promise<string> {
+  if (lamports <= 0n) throw new Error("lamports must be > 0");
+  const rpc = createSolanaRpc(RPC_URL) as never;
+  const swigAccount = await fetchSwig(rpc, swigAddress);
+  const vaultAddress = (await getSwigWalletAddress(swigAccount)) as Address;
+  return fundAddressFromAdmin(vaultAddress, lamports);
+}
+
+export async function fundAddressFromAdmin(
+  to: Address,
+  lamports: bigint,
+): Promise<string> {
+  if (lamports <= 0n) throw new Error("lamports must be > 0");
+  const adminSigner = await getAdminSigner();
+  const ix = buildSolTransferInstruction(
+    adminSigner.address as Address,
+    to,
+    lamports,
+  );
+  return sendServerTransaction(adminSigner, [ix]);
 }
 
 /**

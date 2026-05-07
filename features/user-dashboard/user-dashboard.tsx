@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { storageKeys } from "@/providers/auth-provider";
-import { EnrolledModulesList } from "@/features/user-dashboard/enrolled-modules-list";
-import { CredentialsList } from "@/features/user-dashboard/credentials-list";
+import { CredentialsList } from "./credentials-list";
+import { EnrolledModulesList } from "./enrolled-modules-list";
 
 type DashboardModule = {
   moduleId: string;
@@ -156,15 +156,10 @@ export function UserDashboard() {
         </div>
       </section>
 
-      {error ? (
-        <p className="mt-4 text-sm text-destructive">{error}</p>
-      ) : null}
+      {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
 
-      <Tabs defaultValue="modules" className="mt-8 md:mt-10">
-        <TabsList
-          variant="line"
-          className="h-auto w-full justify-start gap-6 border-b border-border bg-transparent p-0 sm:gap-10"
-        >
+      <Tabs defaultValue="manual" className="mt-8 w-full gap-6 md:mt-10">
+        <TabsList className={"bg-transparent gap-2.5"}>
           <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="credentials">Credentials</TabsTrigger>
         </TabsList>
@@ -180,4 +175,3 @@ export function UserDashboard() {
     </main>
   );
 }
-

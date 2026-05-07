@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/use-user";
@@ -22,11 +22,19 @@ type ModuleData = {
   description: string;
   thumbnailUrl: string;
   passThreshold: number;
+  cooldownSeconds: number;
   quiz: {
     batchCount: number;
     pointsPerBatch: number;
     sampleBatchLabel: string | null;
   };
+};
+type Enrollment = {
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+  activeAttemptId: string | null;
+  lastSubmittedAtIso: string | null;
+  lastPassed: boolean | null;
+  cooldownSeconds: number;
 };
 type Result = {
   passed: boolean;
@@ -55,87 +63,24 @@ export default function ModulePage() {
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [moduleData, setModuleData] = useState<ModuleData | null>(null);
+  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [result, setResult] = useState<Result | null>(null);
   const [quizStartedAtMs, setQuizStartedAtMs] = useState<number | null>(null);
+  const [serverStartedAtMs, setServerStartedAtMs] = useState<number | null>(
+    null,
+  );
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoSubmittedRef = useRef(false);
 
   const moduleId = params.moduleId;
 
-  async function handleBegin() {
-    if (!user) {
-      openAuthModal();
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/module/${moduleId}/start`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletAddress: user.walletAddress }),
-      });
-      const json = (await res.json()) as {
-        attemptId?: string;
-        questions?: Question[];
-        error?: string;
-      };
-      if (!res.ok || !json.attemptId || !json.questions) {
-        throw new Error(json.error ?? "Failed to start");
-      }
-      setAttemptId(json.attemptId);
-      setQuestions(json.questions);
-      setCurrentIdx(0);
-      setQuizStartedAtMs(Date.now());
-      setPhase("quiz");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const handleLoadModule = useCallback(async () => {
-    try {
-      const walletAddress = user?.walletAddress ?? null;
-      const res = await fetch(
-        `/api/module/${moduleId}${walletAddress ? `?walletAddress=${encodeURIComponent(walletAddress)}` : ""}`,
-      );
-      const json = (await res.json()) as {
-        module?: ModuleData;
-        error?: string;
-      };
-      if (!res.ok || !json.module) return;
-      setModuleData(json.module);
-    } catch {
-      // silently ignore — module data used for intro display only
-    }
-  }, [moduleId, user?.walletAddress]);
-
-  useEffect(() => {
-    void handleLoadModule();
-  }, [handleLoadModule]);
-
-  function selectOption(questionId: string, optionId: string, multi: boolean) {
-    setAnswers((prev) => {
-      const current = prev[questionId] ?? [];
-      if (multi) {
-        return {
-          ...prev,
-          [questionId]: current.includes(optionId)
-            ? current.filter((id) => id !== optionId)
-            : [...current, optionId],
-        };
-      }
-      return { ...prev, [questionId]: [optionId] };
-    });
-  }
-
-  async function handleSubmit() {
+  const handleSubmit = useCallback(async () => {
     if (!user || !attemptId) return;
     setLoading(true);
     setError(null);
@@ -164,7 +109,121 @@ export default function ModulePage() {
     } finally {
       setLoading(false);
     }
+  }, [answers, attemptId, moduleId, questions, user]);
+
+  async function handleBegin() {
+    if (!user) {
+      openAuthModal();
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/module/${moduleId}/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress: user.walletAddress }),
+      });
+      const json = (await res.json()) as {
+        attemptId?: string;
+        questions?: Question[];
+        startedAtIso?: string;
+        timeLimitSeconds?: number | null;
+        error?: string;
+      };
+      if (!res.ok || !json.attemptId || !json.questions) {
+        const raw = json.error ?? "Failed to start";
+        const friendly = /retry\s*too\s*soon|cooldown/i.test(raw)
+          ? "Cooldown still active — please wait until you can retry."
+          : raw;
+        throw new Error(friendly);
+      }
+      autoSubmittedRef.current = false;
+      setAttemptId(json.attemptId);
+      setQuestions(json.questions);
+      setCurrentIdx(0);
+      setQuizStartedAtMs(Date.now());
+      setServerStartedAtMs(
+        json.startedAtIso ? new Date(json.startedAtIso).getTime() : Date.now(),
+      );
+      setTimeLimitSeconds(
+        typeof json.timeLimitSeconds === "number" && json.timeLimitSeconds > 0
+          ? json.timeLimitSeconds
+          : null,
+      );
+      setPhase("quiz");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   }
+
+  const handleLoadModule = useCallback(async () => {
+    try {
+      const walletAddress = user?.walletAddress ?? null;
+      const res = await fetch(
+        `/api/module/${moduleId}${walletAddress ? `?walletAddress=${encodeURIComponent(walletAddress)}` : ""}`,
+      );
+      const json = (await res.json()) as {
+        module?: ModuleData;
+        enrollment?: Enrollment | null;
+        error?: string;
+      };
+      if (!res.ok || !json.module) return;
+      setModuleData(json.module);
+      setEnrollment(json.enrollment ?? null);
+    } catch {
+      // silently ignore — module data used for intro display only
+    }
+  }, [moduleId, user?.walletAddress]);
+
+  useEffect(() => {
+    void handleLoadModule();
+  }, [handleLoadModule]);
+
+  function selectOption(questionId: string, optionId: string, multi: boolean) {
+    setAnswers((prev) => {
+      const current = prev[questionId] ?? [];
+      if (multi) {
+        return {
+          ...prev,
+          [questionId]: current.includes(optionId)
+            ? current.filter((id) => id !== optionId)
+            : [...current, optionId],
+        };
+      }
+      return { ...prev, [questionId]: [optionId] };
+    });
+  }
+
+  const quizDeadlineMs =
+    serverStartedAtMs != null && timeLimitSeconds != null
+      ? serverStartedAtMs + timeLimitSeconds * 1000
+      : null;
+  const { remainingMs: quizRemainingMs } = useCountdown(
+    phase === "quiz" ? quizDeadlineMs : null,
+  );
+
+  useEffect(() => {
+    if (phase !== "quiz") return;
+    if (quizRemainingMs == null) return;
+    if (quizRemainingMs > 0) return;
+    if (autoSubmittedRef.current) return;
+    autoSubmittedRef.current = true;
+    void handleSubmit();
+  }, [phase, quizRemainingMs, handleSubmit]);
+
+  const cooldownTargetMs =
+    enrollment?.lastSubmittedAtIso &&
+    enrollment.lastPassed === false &&
+    enrollment.cooldownSeconds > 0
+      ? new Date(enrollment.lastSubmittedAtIso).getTime() +
+        enrollment.cooldownSeconds * 1000
+      : null;
+  const { remainingMs: introCooldownMs, ready: introCooldownReady } =
+    useCountdown(cooldownTargetMs);
+  const cooldownActive = !introCooldownReady && introCooldownMs > 0;
 
   const currentQuestion = questions[currentIdx];
   const isLastQuestion = currentIdx === questions.length - 1;
@@ -174,6 +233,8 @@ export default function ModulePage() {
   const hasAnswer = currentAnswer.length > 0;
 
   if (phase === "result" && result) {
+    const resultCooldownSeconds =
+      moduleData?.cooldownSeconds ?? enrollment?.cooldownSeconds ?? 0;
     return (
       <ResultScreen
         result={result}
@@ -181,6 +242,7 @@ export default function ModulePage() {
         answers={answers}
         quizStartedAtMs={quizStartedAtMs}
         moduleId={moduleId}
+        cooldownSeconds={resultCooldownSeconds}
         onRetry={() => {
           setPhase("intro");
           setAnswers({});
@@ -189,6 +251,10 @@ export default function ModulePage() {
           setResult(null);
           setQuestions([]);
           setQuizStartedAtMs(null);
+          setServerStartedAtMs(null);
+          setTimeLimitSeconds(null);
+          autoSubmittedRef.current = false;
+          void handleLoadModule();
         }}
         onDashboard={() => router.push("/dashboard")}
       />
@@ -256,12 +322,19 @@ export default function ModulePage() {
               )}
             </section>
 
+            {cooldownActive ? (
+              <output className="mt-6 block rounded-[10px] border border-amber-300/40 bg-amber-50/60 px-3 py-2 text-sm text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+                You can retry this quiz in{" "}
+                <strong>{formatHmS(introCooldownMs)}</strong>.
+              </output>
+            ) : null}
+
             {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
 
             <div className="mt-8 flex justify-center md:mt-10">
               <Button
                 className="h-[42px] min-w-[158px] bg-[#624781] px-6 text-white hover:bg-[#624781]/90"
-                disabled={loading}
+                disabled={loading || cooldownActive}
                 onClick={handleBegin}
               >
                 {loading ? "Starting…" : "Begin quiz"}
@@ -272,6 +345,22 @@ export default function ModulePage() {
 
         {phase === "quiz" && currentQuestion && (
           <>
+            {quizRemainingMs != null ? (
+              <div
+                role="timer"
+                aria-live="polite"
+                className={cn(
+                  "mb-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs tabular-nums",
+                  quizRemainingMs <= 30_000
+                    ? "border-destructive/40 bg-destructive/10 text-destructive"
+                    : "border-border bg-muted text-foreground",
+                )}
+              >
+                <span className="opacity-60">Time left</span>
+                <span>{formatMmSs(quizRemainingMs)}</span>
+              </div>
+            ) : null}
+
             <div className="mb-6 flex items-center justify-between text-xs text-muted-foreground">
               <span>
                 Question {currentIdx + 1} of {questions.length}
@@ -376,12 +465,51 @@ function formatDurationMs(ms: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
+function formatMmSs(ms: number) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatHmS(ms: number) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+  }
+  return `${seconds}s`;
+}
+
+function useCountdown(targetMs: number | null) {
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    if (targetMs == null) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [targetMs]);
+
+  if (targetMs == null) {
+    return { remainingMs: 0, ready: true };
+  }
+  const remainingMs = Math.max(0, targetMs - now);
+  return { remainingMs, ready: remainingMs <= 0 };
+}
+
 function ResultScreen({
   result,
   questions,
   answers,
   quizStartedAtMs,
   moduleId,
+  cooldownSeconds,
   onRetry,
   onDashboard,
 }: {
@@ -390,12 +518,22 @@ function ResultScreen({
   answers: Record<string, string[]>;
   quizStartedAtMs: number | null;
   moduleId: string;
+  cooldownSeconds: number;
   onRetry: () => void;
   onDashboard: () => void;
 }) {
   const passed = result.passed;
   const elapsedMs =
     quizStartedAtMs != null ? Date.now() - quizStartedAtMs : null;
+
+  const submittedAtMs = new Date(result.submittedAt).getTime();
+  const cooldownTargetMs =
+    !passed && cooldownSeconds > 0
+      ? submittedAtMs + cooldownSeconds * 1000
+      : null;
+  const { remainingMs: retryRemainingMs, ready: retryReady } =
+    useCountdown(cooldownTargetMs);
+  const retryBlocked = !passed && cooldownSeconds > 0 && !retryReady;
 
   const walletAddress =
     result.credential?.asset ?? result.credential?.onChainAddress ?? null;
@@ -435,7 +573,9 @@ function ResultScreen({
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {result.correctCount}/{result.totalCount} correct
-            {elapsedMs != null ? ` · ${formatDurationMs(elapsedMs)} elapsed` : ""}
+            {elapsedMs != null
+              ? ` · ${formatDurationMs(elapsedMs)} elapsed`
+              : ""}
           </p>
         </div>
 
@@ -456,7 +596,10 @@ function ResultScreen({
                   .map((o) => o.text);
 
                 return (
-                  <li key={q.id} className="rounded-lg border border-border p-3">
+                  <li
+                    key={q.id}
+                    className="rounded-lg border border-border p-3"
+                  >
                     <p className="text-sm font-medium text-foreground">
                       {idx + 1}. {q.text}
                     </p>
@@ -527,19 +670,31 @@ function ResultScreen({
             </div>
           </section>
         ) : (
-          <div className="mt-8 flex justify-center gap-3">
-            {!passed && (
-              <Button variant="outline" onClick={onRetry}>
-                Try again
+          <>
+            {retryBlocked ? (
+              <output className="mx-auto mt-6 block max-w-md rounded-[10px] border border-amber-300/40 bg-amber-50/60 px-3 py-2 text-center text-sm text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+                You can retry this quiz in{" "}
+                <strong>{formatHmS(retryRemainingMs)}</strong>.
+              </output>
+            ) : null}
+            <div className="mt-8 flex justify-center gap-3">
+              {!passed && (
+                <Button
+                  variant="outline"
+                  onClick={onRetry}
+                  disabled={retryBlocked}
+                >
+                  Try again
+                </Button>
+              )}
+              <Button
+                className="bg-[#624781] text-white hover:bg-[#624781]/90"
+                onClick={onDashboard}
+              >
+                Back to dashboard
               </Button>
-            )}
-            <Button
-              className="bg-[#624781] text-white hover:bg-[#624781]/90"
-              onClick={onDashboard}
-            >
-              Back to dashboard
-            </Button>
-          </div>
+            </div>
+          </>
         )}
       </main>
     </div>

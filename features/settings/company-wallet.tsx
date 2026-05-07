@@ -1,6 +1,7 @@
 "use client";
 
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { RegtechTransactions } from "./regtech-transactions";
 import { SwigWalletCard } from "./swig-wallet-card";
@@ -41,6 +42,7 @@ function WalletSectionSkeleton() {
 
 export function CompanyWalletSection() {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const {
     company,
     swigSolBalance,
@@ -49,8 +51,7 @@ export function CompanyWalletSection() {
     loading,
     error,
     refetch,
-  } =
-    useCompany(address);
+  } = useCompany(slug, address);
 
   if (!address || loading) return <WalletSectionSkeleton />;
   if (
@@ -71,6 +72,7 @@ export function CompanyWalletSection() {
         partnerVaultAddress={partnerVaultAddress}
         partnerVaultSolBalance={partnerVaultSolBalance}
         onAllocated={refetch}
+        onFunded={refetch}
       />
       <RegtechTransactions />
     </div>

@@ -1,15 +1,18 @@
 "use client";
 
-import { z } from "zod";
-import { useEffect, useMemo, useState } from "react";
+import { useConnect, usePhantom, useSolana } from "@phantom/react-sdk";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { FieldInput } from "@/components/ui/field-input";
 import Form, { useZodForm } from "@/components/ui/form";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
+import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
+import { toBase58Signature } from "@/lib/phantom-signature";
 import { storageKeys } from "@/providers/auth-provider";
 
 const joinSchema = z.object({
-  walletAddress: z.string().min(32, "Wallet address is required"),
   name: z.string().min(1, "Name is required"),
   email: z.email("Invalid email address"),
 });
@@ -28,6 +31,10 @@ export default function ModuleJoinPage() {
   const params = useParams<{ shareToken: string }>();
   const router = useRouter();
   const shareToken = params.shareToken;
+  const { connect, isConnecting } = useConnect();
+  const { address, isConnected, open: openWalletModal } = useWalletKit();
+  const { solana } = useSolana();
+  const phantom = usePhantom();
 
   const [preview, setPreview] = useState<Preview | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(true);
@@ -37,7 +44,6 @@ export default function ModuleJoinPage() {
   const form = useZodForm({
     schema: joinSchema,
     defaultValues: {
-      walletAddress: "",
       name: "",
       email: "",
     },
@@ -80,10 +86,34 @@ export default function ModuleJoinPage() {
     setSubmitting(true);
     setError(null);
     try {
+      if (!isConnected || !address) {
+        throw new Error("Please connect your wallet to continue");
+      }
+      if (!solana?.isConnected) {
+        throw new Error("Solana wallet is not connected");
+      }
+
+      const timestampIso = new Date().toISOString();
+      const message = buildPhantomAuthMessage({
+        purpose: "module-join",
+        resourceId: shareToken,
+        walletAddress: address,
+        timestampIso,
+      });
+      const signed = await solana.signMessage(message);
+      const signature = toBase58Signature(signed);
+
       const res = await fetch(`/api/m/${encodeURIComponent(shareToken)}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          walletAddress: address,
+          timestampIso,
+          message,
+          signature,
+        }),
       });
       const json = (await res.json()) as {
         moduleId?: string;
@@ -118,7 +148,8 @@ export default function ModuleJoinPage() {
         </h1>
         {preview ? (
           <p className="text-sm text-muted-foreground">
-            Provided by <span className="font-medium">{preview.companyName}</span>
+            Provided by{" "}
+            <span className="font-medium">{preview.companyName}</span>
           </p>
         ) : null}
       </header>
@@ -139,15 +170,48 @@ export default function ModuleJoinPage() {
       ) : null}
 
       <section className="rounded-xl border border-border bg-card p-4">
+        {!isConnected ? (
+          <div className="mb-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={async () => {
+                setError(null);
+                try {
+                  if (phantom.isLoading) return;
+                  await connect({ provider: "google" });
+                } catch (e) {
+                  // Fallback: open the modal if direct connect fails.
+                  // eslint-disable-next-line no-console
+                  console.error("[Phantom connect google failed]", e);
+                  openWalletModal();
+                  setError(
+                    e instanceof Error ? e.message : "Failed to connect wallet",
+                  );
+                }
+              }}
+              disabled={
+                loadingPreview || !preview || isConnecting || phantom.isLoading
+              }
+            >
+              {isConnecting
+                ? "Connecting…"
+                : "Connect wallet (Google) to continue"}
+            </Button>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              We’ll generate your wallet address automatically — no manual
+              wallet input.
+            </p>
+          </div>
+        ) : null}
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)}>
           <div className="space-y-3">
             <FieldInput
-              {...form.register("walletAddress")}
               label="Wallet address"
-              placeholder="Your Solana wallet address"
-              error={form.formState.errors.walletAddress}
-              autoComplete="off"
-              required
+              value={address ?? ""}
+              placeholder="Connect wallet to generate an address"
+              disabled
             />
             <FieldInput
               {...form.register("name")}
@@ -170,7 +234,13 @@ export default function ModuleJoinPage() {
           <Button
             type="submit"
             className="mt-4 w-full"
-            disabled={submitting || loadingPreview || !preview}
+            disabled={
+              submitting ||
+              loadingPreview ||
+              !preview ||
+              !isConnected ||
+              !address
+            }
           >
             {submitting ? "Joining…" : "Join and continue"}
           </Button>
@@ -182,4 +252,3 @@ export default function ModuleJoinPage() {
     </main>
   );
 }
-

@@ -58,5 +58,4 @@ AGENTS.md
 CLAUDE.md
 /generated/prisma
 
-# local key registries (never commit private keys)
-/keys/attestors.json
+.cursor

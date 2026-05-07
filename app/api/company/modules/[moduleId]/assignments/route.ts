@@ -57,7 +57,8 @@ export async function POST(
   try {
     const { moduleId } = await params;
     const json = await req.json();
-    const { companyId, walletAddress, employeeUserIds } = bodySchema.parse(json);
+    const { companyId, walletAddress, employeeUserIds } =
+      bodySchema.parse(json);
 
     const company = await prisma.company.findUnique({
       where: { id: companyId },
@@ -175,4 +176,3 @@ export async function POST(
     );
   }
 }
-

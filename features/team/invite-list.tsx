@@ -17,11 +17,7 @@ function isExpired(expiresAt: string) {
   return new Date(expiresAt).getTime() <= Date.now();
 }
 
-export function InviteList({
-  invites,
-}: {
-  invites: InviteRow[];
-}) {
+export function InviteList({ invites }: { invites: InviteRow[] }) {
   if (!invites.length) {
     return (
       <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
@@ -81,4 +77,3 @@ export function InviteList({
     </div>
   );
 }
-

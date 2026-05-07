@@ -1,7 +1,17 @@
+"use client";
+
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 
 export function CompanyDashboardHeader() {
+  const slug = useCompanySlug();
+  const createHref = slug
+    ? `/company/${slug}/module/create`
+    : "/company/module/create";
+  const employeeHref = slug ? `/company/${slug}/team` : "/company/team/";
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-col gap-1">
@@ -13,11 +23,22 @@ export function CompanyDashboardHeader() {
         </p>
       </div>
       <div className="flex items-center gap-2.5">
-        <Button variant="outline" className="gap-2">
-          Add team
+        <Button
+          nativeButton={false}
+          render={<Link href={employeeHref}>Add team</Link>}
+          variant="outline"
+          className="gap-2"
+        >
+          Add Employee
           <Plus className="size-3.5" strokeWidth={2} />
         </Button>
-        <Button>Create Module</Button>
+
+        <Button
+          nativeButton={false}
+          render={<Link href={createHref}>Create Module</Link>}
+        >
+          Create Module
+        </Button>
       </div>
     </div>
   );

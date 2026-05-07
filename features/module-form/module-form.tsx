@@ -1,4 +1,5 @@
 import type { UseFormReturn } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import FileUpload from "@/components/file-upload";
 import ImageUpload from "@/components/image-upload";
 import NativeSelect from "@/components/native-select";
@@ -17,6 +18,11 @@ interface IForm {
 }
 
 export default function ModuleForm({ form }: IForm) {
+  const existingThumbnailUrl = useWatch({
+    control: form.control,
+    name: "existingThumbnailUrl",
+  });
+
   return (
     <>
       <FieldInput
@@ -87,6 +93,42 @@ export default function ModuleForm({ form }: IForm) {
           tooltipDescription="Number of recipients is how many certificates you want to sponsor."
           required
         />
+        <FieldInput
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={180}
+          label="Quiz time limit (min)"
+          placeholder="0 = unlimited"
+          {...form.register("quizTimeLimitMinutes")}
+          error={form.formState.errors.quizTimeLimitMinutes}
+          tooltip="Quiz time limit"
+          tooltipDescription="Per-attempt countdown in minutes. 0 or empty means no limit."
+        />
+        <FieldInput
+          type="number"
+          inputMode="numeric"
+          min={0}
+          label="Cooldown (hrs)"
+          placeholder="Hours between attempts"
+          {...form.register("cooldownHours")}
+          error={form.formState.errors.cooldownHours}
+          tooltip="Retry cooldown"
+          tooltipDescription="Minimum wait between attempts, in hours. 0 = allow immediate retries. Locked after publish."
+          required
+        />
+        <FieldInput
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={120}
+          label="Credential expiry (months)"
+          placeholder="Leave blank for never"
+          {...form.register("credentialExpiryMonths")}
+          error={form.formState.errors.credentialExpiryMonths}
+          tooltip="Credential expiry"
+          tooltipDescription="How long the issued credential stays valid, in months. Leave blank or 0 for permanent. Locked after publish."
+        />
       </div>
       <div className="grid grid-cols-1 gap-x-2.5 md:grid-cols-2">
         <div className="flex flex-col gap-1">
@@ -94,11 +136,31 @@ export default function ModuleForm({ form }: IForm) {
             <FieldError errors={[form.formState.errors.thumbnailImage]} />
           )}
           <ImageUpload
-            handleFileChange={(files) => {
-              form.setValue("thumbnailImage", files[0], {
+            remotePreviewUrl={existingThumbnailUrl || undefined}
+            onRemoteClear={() => {
+              form.setValue("existingThumbnailUrl", undefined, {
                 shouldValidate: true,
-                shouldDirty: true,
               });
+              form.setValue("thumbnailImage", undefined, {
+                shouldValidate: true,
+              });
+            }}
+            handleFileChange={(files) => {
+              const f = files[0];
+              if (f) {
+                form.setValue("thumbnailImage", f, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+                form.setValue("existingThumbnailUrl", undefined, {
+                  shouldValidate: true,
+                });
+              } else {
+                form.setValue("thumbnailImage", undefined, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+              }
             }}
           />
         </div>

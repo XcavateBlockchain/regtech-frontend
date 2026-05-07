@@ -9,9 +9,17 @@ import { useFileUpload } from "@/hooks/use-file-upload";
 
 interface ISingleImageUpload {
   handleFileChange: (file: File[]) => void;
+  /** Shown when no new file is selected (e.g. existing draft thumbnail URL). */
+  remotePreviewUrl?: string | null;
+  /** Called when the user clears the remote-only preview (remove button). */
+  onRemoteClear?: () => void;
 }
 
-export default function ImageUpload({ handleFileChange }: ISingleImageUpload) {
+export default function ImageUpload({
+  handleFileChange,
+  remotePreviewUrl,
+  onRemoteClear,
+}: ISingleImageUpload) {
   const maxSizeMB = 5;
   const maxSize = maxSizeMB * 1024 * 1024; // 5MB default
 
@@ -38,7 +46,10 @@ export default function ImageUpload({ handleFileChange }: ISingleImageUpload) {
     },
   });
 
-  const previewUrl = files[0]?.preview || null;
+  const previewUrl = files[0]?.preview || remotePreviewUrl || null;
+  const showRemove = Boolean(
+    previewUrl && (files[0]?.preview || (remotePreviewUrl && onRemoteClear)),
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -68,9 +79,14 @@ export default function ImageUpload({ handleFileChange }: ISingleImageUpload) {
               /> */}
               <Image
                 src={previewUrl}
-                alt={files[0]?.file?.name || "Uploaded image"}
+                alt={files[0]?.file?.name || "Module thumbnail"}
                 fill={true}
                 objectFit="cover"
+                unoptimized={
+                  previewUrl.startsWith("http://") ||
+                  previewUrl.startsWith("https://") ||
+                  previewUrl.startsWith("blob:")
+                }
                 // className="cursor-pointer rounded-lg transition group-hover:brightness-50"
               />
             </div>
@@ -91,12 +107,19 @@ export default function ImageUpload({ handleFileChange }: ISingleImageUpload) {
             </div>
           )}
         </div>
-        {previewUrl && (
+        {showRemove && (
           <div className="absolute top-4 right-4">
             <button
               type="button"
               className="z-50 flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition-[color,box-shadow] outline-none hover:bg-black/80 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              onClick={() => removeFile(files[0]?.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (files[0]?.id) {
+                  removeFile(files[0].id);
+                } else if (remotePreviewUrl && onRemoteClear) {
+                  onRemoteClear();
+                }
+              }}
               aria-label="Remove image"
             >
               <XIcon className="size-4" aria-hidden="true" />

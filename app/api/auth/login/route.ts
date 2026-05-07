@@ -1,22 +1,35 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { verifyPhantomAuthPayload } from "@/lib/phantom-auth";
 import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
-  email: z.email(),
+  walletAddress: z.string().min(32),
+  timestampIso: z.string().min(1),
+  message: z.string().min(1),
+  signature: z.string().min(1),
 });
 
 /**
- * Email lookup session bootstrap for learner / employee flows.
- * Replace with magic-link, OTP, or password-verified auth before production exposure.
+ * Wallet-based login for learner / employee flows.
+ * Client signs a purpose-bound message; server verifies signature and looks up user by walletAddress.
  */
 export async function POST(req: Request) {
   try {
     const json = await req.json();
-    const { email } = bodySchema.parse(json);
+    const { walletAddress, timestampIso, message, signature } =
+      bodySchema.parse(json);
+
+    verifyPhantomAuthPayload({
+      purpose: "login",
+      resourceId: "login",
+      walletAddress,
+      timestampIso,
+      payload: { message, signature },
+    });
 
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { walletAddress },
       select: {
         userId: true,
         role: true,
@@ -28,7 +41,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "No account for this email" },
+        { error: "No account for this wallet" },
         { status: 404 },
       );
     }

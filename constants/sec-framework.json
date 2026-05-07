@@ -1,0 +1,2354 @@
+{
+  "batches": [
+    {
+      "id": "batch1",
+      "questions": [
+        {
+          "id": "b1q1",
+          "text": "When a firm is considering an ICO or otherwise offering, selling, or distributing a digital asset, what threshold issue should be considered under the U.S. federal securities laws?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states that a threshold issue is whether the digital asset is a “security” under the U.S. federal securities laws.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            {
+              "id": "a",
+              "text": "Whether the digital asset uses blockchain technology",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Whether the digital asset is a “security” under the U.S. federal securities laws",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Whether the digital asset is classified as legal tender",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Whether the digital asset is traded only outside the United States",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b1q2",
+          "text": "Under the Howey test described in the framework, an “investment contract” exists when there is the investment of money in a common enterprise with a reasonable expectation of profits to be derived from the efforts of others.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework summarizes Howey and subsequent case law using these elements and this wording.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b1q3",
+          "text": "According to the framework, which factor is emphasized in the Howey analysis for digital assets?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework explains the focus is on the “economic reality” of the transaction and the manner in which the asset is offered and sold, not merely the form.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            {
+              "id": "a",
+              "text": "Only the instrument’s label and written form",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Only the token’s technical architecture and consensus mechanism",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The transaction’s economic reality and how the asset is offered, sold, or resold",
+              "isCorrect": true,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Whether the token is called a “utility token” in marketing materials",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b1q4",
+          "text": "The framework states that issuers and others involved in marketing, offering, selling, reselling, or distributing a digital asset must analyze relevant transactions, including secondary market sales, to determine whether the federal securities laws apply.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly notes the analysis includes the circumstances and manner of offering, selling, or reselling (including secondary market sales).",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b1q5",
+          "text": "If an offer or sale involves a digital asset that is a security, what does the framework say the federal securities laws generally require for offers and sales of securities?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states offers and sales must be registered under the federal securities laws or qualify for an exemption from registration.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            {
+              "id": "a",
+              "text": "They must be registered or qualify for an exemption from registration",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "They must be approved by a digital asset exchange",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "They must be conducted only through a decentralized network",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "They must be priced at a discount to encourage adoption",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b1q6",
+          "text": "Under the framework, the registration provisions require disclosure of certain information to investors, and that information must be complete and not materially misleading.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework explicitly describes this disclosure requirement and the standard that it be complete and not materially misleading.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b1q7",
+          "text": "Which element of disclosure does the framework highlight as among the information that must be disclosed in securities offerings, including those involving a digital asset?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "It notes disclosure includes information relating to the essential managerial efforts that affect the success of the enterprise.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            {
+              "id": "a",
+              "text": "The source code for all smart contracts as a mandatory exhibit",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Information relating to essential managerial efforts affecting the enterprise’s success",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "A guarantee of secondary market liquidity",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "A promise that the asset’s price will remain constant",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b1q8",
+          "text": "The framework explains that absent required disclosures about managerial efforts and enterprise progress and prospects, significant informational asymmetries may exist between management/promoters and investors.",
+          "type": "TRUE_FALSE",
+          "explanation": "It expressly links required disclosures to reducing informational asymmetries and protecting investors.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b1q9",
+          "text": "Which statement best reflects the framework’s view on the first Howey prong (“investment of money”) in digital asset offers and sales?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "It states the first prong is typically satisfied because the asset is purchased or acquired in exchange for value (fiat, another digital asset, or other consideration).",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            {
+              "id": "a",
+              "text": "It is never satisfied if purchasers pay with another digital asset",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It is typically satisfied because the asset is acquired in exchange for value",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It is satisfied only when payment is made in cash",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It is satisfied only when purchasers sign a formal contract",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b1q10",
+          "text": "The framework states that the lack of monetary consideration (for example, tokens distributed via a “bounty program” or “airdrop”) necessarily means the “investment of money” prong cannot be satisfied.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework says the lack of monetary consideration does not mean the prong is not satisfied; it notes non-cash contributions can satisfy the prong and airdrops may constitute a sale or distribution of securities.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": false, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": true, "sortOrder": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch2",
+      "questions": [
+        {
+          "id": "b2q1",
+          "text": "In the framework, which term is used for a promoter, sponsor, or other third party (or affiliated group) that provides essential managerial efforts affecting the success of the enterprise?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework defines such a party as an “Active Participant” (AP).",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            {
+              "id": "a",
+              "text": "Network Validator",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Active Participant (AP)",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Exchange Sponsor",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Custodial Agent",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b2q2",
+          "text": "According to the framework, whether purchasers are relying on the efforts of others turns in part on whether those efforts are essential managerial efforts affecting the failure or success of the enterprise, rather than ministerial efforts.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework distinguishes essential managerial efforts from ministerial efforts and treats this as a key issue in the “efforts of others” analysis.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b2q3",
+          "text": "Which scenario most strongly indicates reliance on the efforts of others under the framework?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework highlights that where the network/asset is not fully functional at the time of offer or sale, purchasers would reasonably expect an AP to further develop functionality—especially if further development is promised to grow value.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            {
+              "id": "a",
+              "text": "The network is fully developed and operational at the time of sale, with no ongoing development expected",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "An AP promises additional development efforts for a not-fully-functional network so the asset can attain or grow in value",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The asset can only be used immediately for its intended functionality with built-in incentives to encourage use",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Transfers are restricted in a way consistent with use rather than facilitating speculation",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b2q4",
+          "text": "The framework suggests reliance on others is more likely where essential tasks are performed by an AP rather than by an unaffiliated, dispersed community of network users (commonly known as a “decentralized” network).",
+          "type": "TRUE_FALSE",
+          "explanation": "It lists this as a characteristic indicating purchasers may be relying on the efforts of others.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b2q5",
+          "text": "Which AP activity is identified in the framework as potentially supporting a market price for the digital asset?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes an AP may support a market price by limiting supply or ensuring scarcity through buybacks, “burning,” or other activities.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            {
+              "id": "a",
+              "text": "Publishing daily price forecasts to purchasers",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Limiting supply or ensuring scarcity through buybacks or “burning”",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Requiring all users to pass a knowledge test before using the network",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Restricting all transfers permanently to prevent any resale",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b2q6",
+          "text": "An AP playing a lead or central role in deciding governance issues and code updates is listed in the framework as a factor supporting reliance on the efforts of others.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework includes AP leadership in governance, code updates, and participation/validation decisions as a relevant characteristic.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b2q7",
+          "text": "A compliance team is reviewing communications where purchasers are told the sponsor will “arrange for trading on a secondary platform” to provide liquidity. Under the framework, which factor is most directly implicated?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes purchasers may reasonably rely on an AP for liquidity where the AP has arranged or promised to arrange secondary market trading.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            {
+              "id": "a",
+              "text": "No AP has access to material, non-public information",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Purchasers reasonably rely on an AP for liquidity via promised secondary market trading",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The asset’s value is designed to degrade over time",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Transfers are limited only among users of a platform",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b2q8",
+          "text": "The framework recognizes that token holders may put forth some effort in network operations, but that nominal or limited responsibilities assigned to investors do not necessarily negate the existence of an investment contract.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explains that even if holders have some responsibilities, reliance on an AP’s essential managerial efforts may still be present; nominal responsibilities do not negate an investment contract.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b2q9",
+          "text": "Which situation is listed in the framework as indicating purchasers may reasonably expect an AP to promote its own interests and enhance the value of the network or digital asset?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes purchasers may expect an AP to enhance value where the AP retains a stake or interest in the digital asset and can realize capital appreciation.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            {
+              "id": "a",
+              "text": "The AP has no stake or interest in the digital asset",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The AP retains a stake or interest in the digital asset and can realize capital appreciation",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The asset can be redeemed immediately for goods in a developed network at a stable value",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The asset is marketed solely by emphasizing present functionality and not market value",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b2q10",
+          "text": "For later offers or sales of a digital asset previously sold as a security, the framework notes it is relevant to consider whether the efforts of an AP (including any successor AP) continue to be important to the value of an investment in the digital asset.",
+          "type": "TRUE_FALSE",
+          "explanation": "It lists this as an additional consideration in reevaluating the “efforts of others” element over time.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch3",
+      "questions": [
+        {
+          "id": "b3q1",
+          "text": "Under the framework, which outcome is identified as a way a purchaser may expect to realize a return on a digital asset?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "It notes purchasers may expect returns through participating in distributions or realizing appreciation by selling at a gain in a secondary market.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            {
+              "id": "a",
+              "text": "Guaranteed redemption at a fixed premium",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Distributions or appreciation realized by selling at a gain in a secondary market",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Automatic insurance against losses funded by network fees",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Mandatory conversion into fiat currency after a set holding period",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b3q2",
+          "text": "The framework states that price appreciation resulting solely from external market forces (such as general inflationary trends or the economy) is not considered “profit” under the Howey test.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly distinguishes profits from appreciation caused solely by external market forces affecting supply and demand for an underlying asset generally.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b3q3",
+          "text": "Which factor does the framework identify as making it more likely purchasers have a reasonable expectation of profit?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "It lists transferability and trading on or through a secondary market (or expectation of future trading) as a factor supporting profit expectations.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            {
+              "id": "a",
+              "text": "The digital asset is not transferable and can only be sold back at a discount",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The digital asset is transferable or traded on a secondary market or platform (or expected to be)",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The asset’s value is designed to remain constant or degrade over time",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Marketing emphasizes functionality and not potential market value",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b3q4",
+          "text": "Offering a digital asset broadly to potential purchasers, rather than targeting expected users who need the network’s functionality, is identified as a factor supporting a reasonable expectation of profit.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework lists broad offering to potential purchasers versus targeted expected users as a characteristic supporting profit expectations.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b3q5",
+          "text": "A firm sells a digital asset in quantities significantly greater than any likely user would reasonably need. Under the framework, how is this fact treated in the profit-expectation analysis?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states that quantities indicative of investment intent—such as significantly greater than likely user need—support a reasonable expectation of profit.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            {
+              "id": "a",
+              "text": "It indicates consumptive intent and weighs against profit expectation",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It is indicative of investment intent and supports a reasonable expectation of profit",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It is irrelevant if the asset uses a distributed ledger",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It automatically proves the network is fully developed and operational",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b3q6",
+          "text": "The framework states that a lack of correlation between the purchase/offering price of the digital asset and the market price of the goods or services that can be acquired in exchange for it is a characteristic supporting a reasonable expectation of profit.",
+          "type": "TRUE_FALSE",
+          "explanation": "It lists little apparent correlation between offering price and the market price of redeemable goods/services as a factor supporting profit expectation.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b3q7",
+          "text": "Which marketing approach is identified in the framework as supporting a reasonable expectation of profit?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists marketing that emphasizes potential profitability, appreciation, the AP’s expertise, or the future functionality to be delivered as supporting profit expectation.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            {
+              "id": "a",
+              "text": "Marketing that emphasizes the asset’s functionality and not the potential for increased market value",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Marketing that emphasizes potential appreciation in the asset’s value or profitability of network operations",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Marketing that restricts all discussion to present goods/services already available on an existing network",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Marketing that states the asset cannot be transferred or resold under any circumstances",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b3q8",
+          "text": "The framework lists raising an amount of funds in excess of what may be needed to establish a functional network or digital asset as a factor supporting a reasonable expectation of profit.",
+          "type": "TRUE_FALSE",
+          "explanation": "It includes excess fundraising relative to what may be needed for a functional network as a profit-expectation characteristic.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b3q9",
+          "text": "Which of the following is described in the framework as a profit-expectation factor related to the AP’s incentives?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes the AP may benefit from holding the same class of assets as the public and may continue spending funds to enhance functionality/value, supporting profit expectation.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            {
+              "id": "a",
+              "text": "The AP is prohibited from holding any digital assets",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The AP holds the same class of digital assets as the public and can benefit from its efforts",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The AP requires users to convert the asset to fiat before any purchase",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The AP sets the asset’s value to decline automatically over time",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b3q10",
+          "text": "The framework states that the availability of a trading market for the digital asset, particularly where the AP implicitly or explicitly promises to create or support such a market, is relevant to the reasonable expectation of profits analysis.",
+          "type": "TRUE_FALSE",
+          "explanation": "It specifically lists availability of a market and AP promises to create/support a trading market as profit-expectation factors.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch4",
+      "questions": [
+        {
+          "id": "b4q1",
+          "text": "The framework notes that, when assessing profit derived from the efforts of others, federal courts have considered whether the instrument is offered and sold for use or consumption by purchasers.",
+          "type": "TRUE_FALSE",
+          "explanation": "It states courts consider whether the instrument is offered and sold for use or consumption as part of the economic reality analysis.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b4q2",
+          "text": "Which characteristic does the framework say makes the Howey test less likely to be met (use/consumption characteristic)?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "It lists that the distributed ledger network and digital asset are fully developed and operational as a characteristic weighing against Howey being met.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            {
+              "id": "a",
+              "text": "The network and digital asset are still in development and not fully functional",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The distributed ledger network and digital asset are fully developed and operational",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The AP promises future functionality and highlights future value growth",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The asset is broadly offered to potential purchasers as an investment opportunity",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b4q3",
+          "text": "Immediate ability for holders to use the digital asset for its intended functionality on the network (especially with built-in incentives encouraging such use) is presented as a factor weighing against the Howey test being met.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework lists immediate usability for intended functionality as a use/consumption characteristic reducing likelihood Howey is met.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b4q4",
+          "text": "A token is designed so it can only be used on the network and generally can be held or transferred only in amounts that correspond to a purchaser’s expected use. Under the framework, how is this design treated?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists a structure designed to meet user needs and restrict amounts to expected use (rather than feeding speculation) as a use/consumption characteristic weighing against Howey being met.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            {
+              "id": "a",
+              "text": "It supports a reasonable expectation of profit because it encourages broad speculative trading",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It is a use/consumption characteristic that makes Howey less likely to be met",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It is irrelevant because the framework disregards network design",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It conclusively proves the asset is a security in all circumstances",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b4q5",
+          "text": "The framework indicates that when prospects for appreciation are limited—such as when the design provides the asset’s value will remain constant or even degrade over time—a reasonable purchaser would be less expected to hold it for extended periods as an investment.",
+          "type": "TRUE_FALSE",
+          "explanation": "It lists limited appreciation prospects (including constant or degrading value) as a use/consumption characteristic weighing against investment intent.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b4q6",
+          "text": "Which condition does the framework describe for a digital asset referred to as a virtual currency to be considered more like use/consumption rather than an investment contract characteristic?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "It notes virtual currency use/consumption characteristics include immediate use to make payments in a wide variety of contexts without first converting it to another digital asset or real currency.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            {
+              "id": "a",
+              "text": "It can only be used after being converted into another digital asset",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It can immediately be used to make payments in a wide variety of contexts without first converting it",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It is marketed primarily on the AP’s expertise and potential price appreciation",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It is sold broadly in quantities far exceeding likely consumer needs",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b4q7",
+          "text": "The framework lists that a digital asset representing rights to a good or service currently can be redeemed within a developed network or platform to acquire or otherwise use those goods or services as a factor weighing against Howey being met.",
+          "type": "TRUE_FALSE",
+          "explanation": "It expressly includes current redeemability within a developed network/platform as a use/consumption characteristic.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b4q8",
+          "text": "A compliance reviewer sees product materials emphasizing the digital asset’s functionality rather than its potential market value. Under the framework, this emphasis is most directly relevant to which analysis?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists marketing that emphasizes functionality and not potential for increase in market value as a use/consumption characteristic making Howey less likely to be met.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            {
+              "id": "a",
+              "text": "Whether the AP controls the creation and issuance of the digital asset",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Use/consumption characteristics that make an investment contract less likely",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Whether price appreciation is driven solely by inflation",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Whether vertical or horizontal commonality is required in all jurisdictions",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b4q9",
+          "text": "The framework states that restrictions on the transferability of the digital asset that are consistent with the asset’s use and not facilitating a speculative market are characteristics weighing against Howey being met.",
+          "type": "TRUE_FALSE",
+          "explanation": "It lists transfer restrictions consistent with use (and not facilitating speculation) as a use/consumption characteristic.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b4q10",
+          "text": "Under the framework, if an AP facilitates the creation of a secondary market, which additional limitation is described as consistent with use/consumption characteristics?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes that if the AP facilitates a secondary market, transfers may only be made by and among users of the platform.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            {
+              "id": "a",
+              "text": "Transfers may only be made by and among users of the platform",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Transfers must be available globally without restrictions to maximize liquidity",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Transfers must always occur at a discount to the value of goods and services",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Transfers must be accompanied by a promise of future AP development",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch5",
+      "questions": [
+        {
+          "id": "b5q1",
+          "text": "The framework provides a scenario of an online retailer with a fully-developed operating business that issues a digital asset redeemable for products priced commensurately in real currency, not transferable, and only usable to purchase products or sell back at a discount. Under those facts, what does the framework conclude?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states that under these facts, the digital asset would not be an investment contract.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            {
+              "id": "a",
+              "text": "The digital asset would not be an investment contract",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The digital asset would always be an investment contract because it is sold for real currency",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The digital asset would be an investment contract solely because it uses a distributed ledger",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The digital asset would be an investment contract only if the retailer markets its products",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b5q2",
+          "text": "In the retailer example, the framework notes the digital assets are not transferable and consumers can only use them to purchase products from the retailer or sell them back to the retailer at a discount to the original purchase price.",
+          "type": "TRUE_FALSE",
+          "explanation": "These features are explicitly described as part of the example’s facts.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b5q3",
+          "text": "Even where a digital asset can be used to purchase goods or services on a network, the framework says securities transactions may still be present if certain factors exist. Which combination below is specifically listed?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists factors including discount to the value of goods/services, quantities exceeding reasonable use, and limited/no resale restrictions, particularly where an AP continues efforts to increase value or has facilitated a secondary market.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            {
+              "id": "a",
+              "text": "Full network functionality, immediate usability, and transfer restrictions consistent with use",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Sold at a discount to goods/services value, sold in quantities exceeding reasonable use, and limited/no resale restrictions",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Value designed to degrade over time and marketing focused on functionality",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Redeemable within a developed platform and sold in increments correlating to consumptive intent",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b5q4",
+          "text": "The framework indicates that where the network’s or digital asset’s functionality is being developed or improved, securities transactions may be present particularly where an AP is continuing in efforts to increase the value of the digital assets or has facilitated a secondary market.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly links these circumstances to potential securities transactions even if the asset can be used for goods/services.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b5q5",
+          "text": "A token is marketed as a payment method for an existing online retailer’s products, and customers can immediately use it to purchase products. Which additional fact from the framework’s example most supports the conclusion that the token is not an investment contract under those facts?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "In the example, the token is not transferable and can only be used to purchase products or sold back to the retailer at a discount—supporting use/consumption rather than investment intent.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            {
+              "id": "a",
+              "text": "The AP promises to arrange secondary market trading to provide liquidity",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The digital assets are not transferable and can only be used for purchases or sold back at a discount",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The retailer raises funds in excess of what is needed to establish the network",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The token is offered broadly in quantities far exceeding likely consumer need",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b5q6",
+          "text": "In the retailer example, consumers are described as being immediately able to purchase products on the network using the digital asset upon receipt.",
+          "type": "TRUE_FALSE",
+          "explanation": "Immediate usability for intended functionality is explicitly stated in the example facts.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b5q7",
+          "text": "A compliance team sees a proposed token sale where tokens are sold at a discount to the value of the goods/services they can be used to acquire, sold in large quantities, and freely resold. Under the framework, why is this combination a red flag in the securities analysis?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states these factors may indicate securities transactions even if the token can be used for goods/services, especially where resale is unrestricted and functionality is being developed/improved.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            {
+              "id": "a",
+              "text": "Because discounts and large quantities always prove the network is decentralized",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Because these factors may suggest purchasers are not primarily motivated by use/consumption and securities transactions may be present",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Because resale restrictions consistent with use are required in all token models",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Because the framework states any token redeemable for goods/services is automatically a security",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b5q8",
+          "text": "The framework’s retailer example includes that the retailer continues to market its products to its existing customer base and advertises its digital asset payment method as part of those efforts.",
+          "type": "TRUE_FALSE",
+          "explanation": "This marketing approach is expressly included as part of the example’s facts.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b5q9",
+          "text": "Which fact pattern most closely matches the framework’s example of a digital asset that would not be an investment contract?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The example is a fully-developed retailer issuing a non-transferable token redeemable for products at commensurate pricing, immediately usable upon receipt, with ability to sell back at a discount.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            {
+              "id": "a",
+              "text": "A not-yet-functional network where purchasers fund development and the AP highlights future price appreciation",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "A fully-developed retailer issues a non-transferable token immediately usable to buy products priced commensurately in real currency",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "An AP limits supply via buybacks and promises to list the token on a secondary market for liquidity",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "A token broadly sold in quantities far exceeding typical consumer use and marketed as an investment",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b5q10",
+          "text": "The framework indicates that, for tokens with use/consumption features, the stronger those characteristics are present, the less likely the Howey test is met; however, it also notes no single characteristic is necessarily determinative.",
+          "type": "TRUE_FALSE",
+          "explanation": "It states use/consumption characteristics are not necessarily determinative and must be assessed as part of the overall economic reality analysis.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch6",
+      "questions": [
+        {
+          "id": "b6q1",
+          "text": "The framework states that issuers of digital assets, like all issuers, must provide full and fair disclosure of material information consistent with the requirements of the federal securities laws.",
+          "type": "TRUE_FALSE",
+          "explanation": "This statement is explicitly included in the framework’s discussion of disclosure obligations.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b6q2",
+          "text": "In the framework, what does “material” depend upon for an issuer of a digital asset?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states what is material depends upon the nature and structure of the issuer’s particular network and circumstances.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            {
+              "id": "a",
+              "text": "Only the size of the token sale proceeds",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The nature and structure of the issuer’s particular network and circumstances",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Whether the digital asset is called a coin or token",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Whether the issuer can guarantee immediate secondary market listings",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b6q3",
+          "text": "The framework states that required disclosures protect investors by reducing informational asymmetries between management/promoters and investors/prospective investors.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly describes investor protection as a primary purpose of disclosure obligations through reducing informational asymmetry.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b6q4",
+          "text": "A project team drafts an offering description but omits discussion of the managerial efforts that will affect whether the network succeeds. Based on the framework, why is this omission significant?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework highlights that disclosures include information relating to essential managerial efforts affecting the enterprise’s success; without it, informational asymmetries may arise and investors may lack information needed for informed decisions.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            {
+              "id": "a",
+              "text": "Because the framework requires disclosure of the full source code in all cases",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Because investors need information about essential managerial efforts to make informed decisions, and omission may increase informational asymmetry",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Because the framework states managerial efforts are always irrelevant to digital assets",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Because the framework states only marketing statements must be disclosed",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b6q5",
+          "text": "The framework says the requirement that disclosed information be “complete and not materially misleading” furthers the goal of providing investors with information necessary to make informed investment decisions.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly links these disclosure standards to informed investment decisions.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b6q6",
+          "text": "Which of the following is explicitly described in the framework as included in the term “digital asset” for purposes of the guidance?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework defines “digital asset” as an asset issued and transferred using distributed ledger or blockchain technology, including “virtual currencies,” “coins,” and “tokens.”",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            {
+              "id": "a",
+              "text": "Only stable-value instruments that are legal tender",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Assets issued and transferred using distributed ledger or blockchain technology, including “virtual currencies,” “coins,” and “tokens”",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Only assets that are transferable shares in a corporation",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Only assets that can be redeemed for physical commodities",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b6q7",
+          "text": "The framework states it is a rule, regulation, or statement of the Commission, and the Commission has approved its content.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework explicitly states it is not a rule, regulation, or statement of the Commission, and the Commission has neither approved nor disapproved its content.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": false, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": true, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b6q8",
+          "text": "Which statement best reflects the framework’s guidance on how issuers should approach materiality?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "It says issuers should be guided by the regulatory framework and concepts of materiality, and that materiality depends on the nature/structure of the network and circumstances.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            {
+              "id": "a",
+              "text": "Materiality is fixed and does not vary across digital asset networks",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Materiality depends on the nature and structure of the issuer’s particular network and circumstances",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Materiality is determined solely by trading volume in secondary markets",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Materiality is determined solely by whether the asset is called a “virtual currency”",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b6q9",
+          "text": "The framework states that an investment contract determination does not turn on whether there is a formal contract between parties and that form is disregarded for substance with emphasis on economic reality.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly notes no formal contract is required and quotes the principle that form is disregarded for substance with emphasis on economic reality.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b6q10",
+          "text": "A compliance function is building monitoring controls for offering communications. Based on the framework, which outcome is most aligned with the purpose of required disclosures?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states disclosure reduces informational asymmetries and provides investors information necessary to make informed investment decisions, which protects investors.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            {
+              "id": "a",
+              "text": "Ensure investors receive information needed for informed decisions by reducing informational asymmetries",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Ensure all purchasers receive guaranteed profits regardless of network performance",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Ensure all digital assets are labeled as non-securities to reduce compliance burden",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Ensure only technical specifications are provided, excluding managerial efforts",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch7",
+      "questions": [
+        {
+          "id": "b7q1",
+          "text": "The framework states that the “main issue” in analyzing a digital asset under Howey is usually whether a purchaser has a reasonable expectation of profits (or other financial returns) derived from the efforts of others.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly describes this as usually the main issue in the Howey analysis for digital assets.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b7q2",
+          "text": "A project markets a token by highlighting that the proceeds will be used to develop the network and deliver future (not present) functionality. Under the framework, how is this marketing most relevant?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists marketing emphasizing proceeds to develop the network and future functionality (and AP delivery of it) as factors supporting a reasonable expectation of profit.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            {
+              "id": "a",
+              "text": "It is a use/consumption characteristic that makes Howey less likely to be met",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It is a profit-expectation marketing factor supporting Howey’s third prong",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It conclusively proves the asset is not transferable",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It is irrelevant because only technical functionality matters",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b7q3",
+          "text": "The framework lists that marketing the digital asset in terms indicating it is an investment or that solicited holders are investors supports a reasonable expectation of profit.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly includes investment-oriented marketing language as a profit-expectation factor.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b7q4",
+          "text": "Which of the following is explicitly listed as a factor supporting a reasonable expectation of profit when emphasized in marketing or promotional materials?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists emphasis on potential profitability of network operations or potential appreciation in the digital asset’s value as a relevant marketing factor.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            {
+              "id": "a",
+              "text": "The asset’s value will remain constant or degrade over time",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The potential profitability of network operations or potential appreciation in the digital asset’s value",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Transfers are restricted consistent with use and not facilitating speculation",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The asset is only usable in amounts corresponding to expected consumption",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b7q5",
+          "text": "The framework states that the inquiry into whether a purchaser is relying on the efforts of others is an objective one, focused on the transaction and the manner in which the digital asset is offered and sold.",
+          "type": "TRUE_FALSE",
+          "explanation": "It describes the inquiry as objective and focused on the transaction itself and the offering/sales manner.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b7q6",
+          "text": "A token is marketed with the “ready transferability” of the token as a key selling feature. Under the framework, this marketing point is most directly relevant to which analysis?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists ready transferability as a selling feature supporting a reasonable expectation of profit.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            {
+              "id": "a",
+              "text": "Use/consumption characteristics indicating limited appreciation prospects",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Profit expectation factors, including marketing that emphasizes transferability",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The first Howey prong requiring a cash payment",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "A requirement that the token be redeemable only within a developed network",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b7q7",
+          "text": "The framework states that “profits” can include capital appreciation resulting from the development of the initial investment or business enterprise or participation in earnings resulting from the use of purchasers’ funds.",
+          "type": "TRUE_FALSE",
+          "explanation": "It describes profits in these terms as part of the profit-expectation analysis.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b7q8",
+          "text": "Which factor is listed in the framework as supporting a reasonable expectation of profit based on market structure and behavior?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes that if there is a secondary trading market enabling holders to resell and realize gains, this supports profit expectation where appreciation comes from network developments.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            {
+              "id": "a",
+              "text": "A secondary trading market that enables holders to resell and realize gains",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "A strict prohibition on transfers outside a single retailer",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "A design that keeps value constant or degrading over time",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Immediate redemption for goods within a developed platform at correlated prices",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b7q9",
+          "text": "The framework indicates that an AP may support a market for the digital asset by controlling creation and issuance of the asset or taking other actions to support the market price.",
+          "type": "TRUE_FALSE",
+          "explanation": "It expressly lists market support factors including control over issuance and price-support actions such as limiting supply.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b7q10",
+          "text": "A compliance officer reviews a token distribution plan where compensated individuals receive tokens as compensation tied to the token’s secondary market price. Under the framework, why is this relevant?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes that if an AP distributes tokens as compensation or compensation is tied to secondary market price, those individuals can be expected to take steps to build the token’s value—supporting reliance on efforts of others.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            {
+              "id": "a",
+              "text": "It indicates the asset is necessarily a virtual currency used for payments",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It suggests incentives for compensated individuals to build the digital asset’s value, supporting reliance on others’ efforts",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It proves the asset’s value is designed to remain constant",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It proves the asset cannot be a security because it is used as compensation",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch8",
+      "questions": [
+        {
+          "id": "b8q1",
+          "text": "For later offers or sales of a digital asset previously sold as a security, the framework lists as an additional consideration whether purchasers no longer reasonably expect continued development efforts of an AP to be a key factor determining the asset’s value.",
+          "type": "TRUE_FALSE",
+          "explanation": "This is explicitly listed under additional considerations related to “reasonable expectation of profits” for reevaluation at later offers or sales.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b8q2",
+          "text": "Which factor does the framework list as supporting the view that a digital asset’s value aligns with consumptive use rather than profit expectation during reevaluation?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists that the asset’s value has shown a direct and stable correlation to the value of the good or service for which it may be exchanged or redeemed.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            {
+              "id": "a",
+              "text": "The asset is offered broadly to potential purchasers rather than targeted to users",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The asset’s value shows a direct and stable correlation to the value of the good or service for which it may be exchanged or redeemed",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The AP promises to create a trading market for the asset",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The AP limits supply by buybacks and burning to support price",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b8q3",
+          "text": "The framework lists that trading volume corresponding to the level of demand for the good or service for which the asset may be exchanged or redeemed is relevant in reevaluating profit expectation.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly lists this as an additional consideration related to “reasonable expectation of profits” in later offers or sales.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b8q4",
+          "text": "In reevaluating a digital asset previously sold as a security, which question is explicitly identified in the framework as relevant to “efforts of others”?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists whether the network operates such that purchasers would no longer reasonably expect an AP to carry out essential managerial or entrepreneurial efforts.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            {
+              "id": "a",
+              "text": "Whether the network operates so purchasers no longer reasonably expect an AP to carry out essential managerial or entrepreneurial efforts",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Whether the issuer can guarantee a minimum resale price",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Whether the token is described as a “coin” rather than a “token”",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Whether the token is exchangeable for fiat only through a conversion process",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b8q5",
+          "text": "The framework lists as an additional reevaluation consideration that no AP has access to material, non-public information or could otherwise be deemed to hold material inside information about the digital asset.",
+          "type": "TRUE_FALSE",
+          "explanation": "This factor is explicitly listed under additional considerations related to “reasonable expectation of profits” in later offers or sales.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b8q6",
+          "text": "Which factor does the framework list as relevant to determining whether purchasers can use the digital asset for its intended functionality during later offers or sales?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists whether holders are then able to use the digital asset for its intended functionality, such as to acquire goods and services on or through the network or platform.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            {
+              "id": "a",
+              "text": "Whether the AP controls intellectual property rights of the network",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Whether holders are then able to use the digital asset for its intended functionality (e.g., to acquire goods/services)",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Whether the asset is always offered in quantities exceeding reasonable use",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Whether an AP has arranged for broad secondary trading to maximize liquidity",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b8q7",
+          "text": "The framework states that in determining whether and when a digital asset may no longer be a security, no single factor is determinative and the listed factors are not intended to be exhaustive.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly states factors are not exhaustive and no single factor is determinative, and that the framework is intended to assist analysis.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b8q8",
+          "text": "A governance committee is assessing whether AP efforts still affect enterprise success. Under the framework, which observation most directly supports that AP efforts are no longer affecting success?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists “whether the efforts of an AP are no longer affecting the enterprise’s success” as a reevaluation consideration related to the “efforts of others” element.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            {
+              "id": "a",
+              "text": "The AP continues to play a lead role in governance issues and code updates",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The AP’s efforts are no longer affecting the enterprise’s success",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The AP continues to arrange secondary market trading for liquidity",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Purchasers still expect the AP to develop future functionality to grow value",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b8q9",
+          "text": "The framework lists that, in later offers or sales, any economic benefit derived from appreciation in the asset’s value being incidental to obtaining the right to use it for intended functionality is relevant to profit expectation reevaluation.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly includes this factor under additional considerations related to reasonable expectation of profits for later offers or sales.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b8q10",
+          "text": "Which of the following is explicitly identified as an additional consideration in later offers or sales relating to profit expectations?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists multiple additional considerations, including correlation between asset value and redeemable goods/services value.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            {
+              "id": "a",
+              "text": "The asset’s value has shown a direct and stable correlation to the value of the good or service for which it may be exchanged or redeemed",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The issuer must guarantee a profit to all purchasers",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Secondary market trading must be prohibited in all circumstances",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "A formal written contract is required for the Howey test to apply",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch9",
+      "questions": [
+        {
+          "id": "b9q1",
+          "text": "The framework states that, under Howey, “form [is] disregarded for substance and the emphasis [is] on economic reality.”",
+          "type": "TRUE_FALSE",
+          "explanation": "This quoted principle is included in the framework’s discussion of investment contract analysis.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b9q2",
+          "text": "A compliance reviewer is assessing whether token holders’ voting rights eliminate reliance on others. Which statement best matches the framework’s discussion of voting rights in this context?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework notes that even where token holders have certain voting rights, they nonetheless may reasonably rely on the managerial efforts of others (referencing the DAO Report).",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            {
+              "id": "a",
+              "text": "Voting rights always eliminate reliance on others and therefore remove securities-law concerns",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Voting rights may exist, but holders can still reasonably rely on the managerial efforts of others",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Voting rights are prohibited for digital assets under the framework",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Voting rights automatically prove the network is fully decentralized",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b9q3",
+          "text": "The framework defines “network” broadly to encompass the various elements that comprise a digital asset’s network, enterprise, platform, or application.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly states it uses “network” broadly for this purpose.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b9q4",
+          "text": "Which of the following is listed as an example of an AP’s continuing managerial role affecting the network or digital asset?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists multiple examples, including making managerial-level business decisions such as how to deploy funds raised from sales of the digital asset.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            {
+              "id": "a",
+              "text": "Determining how to deploy funds raised from sales of the digital asset",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Ensuring the asset is always redeemable for fiat at a premium",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Guaranteeing the asset’s market price will track inflation",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Prohibiting any further code updates after launch",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b9q5",
+          "text": "The framework lists an AP’s responsibility for ongoing security of the network (including playing a leading role in validation or confirmation of transactions) as relevant to reliance on the efforts of others.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly includes AP responsibility for validation/confirmation and ongoing network security as managerial efforts affecting success.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b9q6",
+          "text": "A token issuer claims that because tokens were given away for free, there was no “investment of money.” Based on the framework, which response is most accurate?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states the investment of money need not be cash; lack of monetary consideration (e.g., bounty programs or airdrops) does not mean the prong is not satisfied and an airdrop may constitute a sale or distribution of securities.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            {
+              "id": "a",
+              "text": "Free distribution always prevents the investment-of-money prong from being satisfied",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Non-cash contributions can satisfy the prong, and free distributions like airdrops may still be securities distributions",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The prong is satisfied only if the issuer receives fiat currency",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The prong is satisfied only if the token trades on a secondary market",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b9q7",
+          "text": "The framework notes that an AP owning or controlling intellectual property rights of the network or digital asset is a factor supporting reliance on the efforts of others.",
+          "type": "TRUE_FALSE",
+          "explanation": "It lists AP ownership/control of IP rights as a characteristic supporting reliance on others’ efforts.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b9q8",
+          "text": "Which statement best reflects the framework’s approach to the “common enterprise” element when evaluating digital assets?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states that in evaluating digital assets, it has found that a common enterprise typically exists.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            {
+              "id": "a",
+              "text": "A common enterprise never exists for digital assets due to decentralized technology",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "A common enterprise typically exists when evaluating digital assets",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "A common enterprise exists only if there is a formal contract among purchasers",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "A common enterprise exists only if tokens are redeemable for physical goods",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b9q9",
+          "text": "The framework states that a “common enterprise” is always analyzed as a distinct element in every instance and that the Commission requires vertical or horizontal commonality per se.",
+          "type": "TRUE_FALSE",
+          "explanation": "The framework explains courts have analyzed common enterprise as a distinct element, but also notes the Commission does not require vertical or horizontal commonality per se and does not view common enterprise as a distinct element of “investment contract.”",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": false, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": true, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b9q10",
+          "text": "A firm’s compliance program flags statements that the project team will “decide who receives additional digital assets and under what conditions.” Under the framework, why might that matter in the Howey analysis?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists an AP determining who will receive additional digital assets and under what conditions as an example of a continuing managerial role relevant to reliance on others’ efforts.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            {
+              "id": "a",
+              "text": "It is a use/consumption feature indicating immediate functionality",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It is an example of AP managerial judgment relevant to reliance on the efforts of others",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It is irrelevant because only price correlation matters",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It proves appreciation must be caused solely by inflation",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "batch10",
+      "questions": [
+        {
+          "id": "b10q1",
+          "text": "The framework encourages market participants to seek the advice of securities counsel and engage with the Staff through the SEC’s FinHub.",
+          "type": "TRUE_FALSE",
+          "explanation": "In its conclusion, the framework explicitly encourages seeking securities counsel and engaging with Staff through www.sec.gov/finhub.",
+          "points": 1,
+          "sortOrder": 1,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b10q2",
+          "text": "Which statement best captures the framework’s position on whether its factor list is exhaustive or determinative?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states the factors are not intended to be exhaustive and no single factor is determinative.",
+          "points": 1,
+          "sortOrder": 2,
+          "options": [
+            {
+              "id": "a",
+              "text": "The listed factors are exhaustive and must all be satisfied to find a security",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The listed factors are not exhaustive and no single factor is determinative",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Only one factor determines all outcomes: whether the token is transferable",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Only courts can apply the test, so market participants should not analyze transactions",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b10q3",
+          "text": "The framework states that analysis concerning digital assets as securities may evolve over time as the digital asset market matures.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly notes the analysis may evolve as the market matures.",
+          "points": 1,
+          "sortOrder": 3,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b10q4",
+          "text": "A compliance team is designing internal controls for token marketing. Based on the framework, which control focus is most directly aligned with avoiding misleading disclosures in the context of securities registration obligations?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states registration provisions require disclosures that are complete and not materially misleading, including information about essential managerial efforts and enterprise progress/prospects.",
+          "points": 1,
+          "sortOrder": 4,
+          "options": [
+            {
+              "id": "a",
+              "text": "Ensure offering disclosures are complete and not materially misleading, including essential managerial efforts and enterprise progress/prospects",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "Ensure marketing emphasizes potential profitability and appreciation to attract investors",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "Ensure all tokens are transferable to maximize secondary market volume",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "Ensure the network remains under AP control to support price stability",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b10q5",
+          "text": "The framework says that the term “security” includes an “investment contract,” as well as other instruments such as stocks, bonds, and transferable shares.",
+          "type": "TRUE_FALSE",
+          "explanation": "This description appears in the introduction as part of explaining why digital assets must be analyzed for security characteristics.",
+          "points": 1,
+          "sortOrder": 5,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b10q6",
+          "text": "Which aspect of the framework most directly speaks to governance risk where a small group can influence network outcomes?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework highlights AP central roles in governance issues, code updates, and how third parties participate in transaction validation as relevant to reliance on the efforts of others.",
+          "points": 1,
+          "sortOrder": 6,
+          "options": [
+            {
+              "id": "a",
+              "text": "An AP plays a lead or central role in deciding governance issues and code updates",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "The asset can immediately be used to make payments in a wide variety of contexts",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "The asset’s value is designed to degrade over time",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "The purchase price correlates with the market price of redeemable goods",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b10q7",
+          "text": "The framework states that the federal securities laws’ registration provisions are intended to provide investors with information necessary to make informed investment decisions.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly ties required disclosures to informed investment decisions as a goal of the federal securities laws.",
+          "points": 1,
+          "sortOrder": 7,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b10q8",
+          "text": "A project’s token is marketed with statements that the AP will “build a business or operation,” rather than deliver currently available goods or services for use on an existing network. Under the framework, why is this relevant?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework lists marketing that promises to build a business or operation (as opposed to delivering currently available goods/services on an existing network) as a factor supporting a reasonable expectation of profit.",
+          "points": 1,
+          "sortOrder": 8,
+          "options": [
+            {
+              "id": "a",
+              "text": "It is a factor supporting a reasonable expectation of profit because it emphasizes building future operations rather than present consumptive use",
+              "isCorrect": true,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "It is a factor weighing against Howey because it emphasizes immediate functionality",
+              "isCorrect": false,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "It proves that price appreciation is solely driven by inflationary trends",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "It proves the token cannot be traded on any platform",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        },
+        {
+          "id": "b10q9",
+          "text": "The framework states that the “Howey test” applies to any contract, scheme, or transaction regardless of whether it has any of the characteristics of typical securities.",
+          "type": "TRUE_FALSE",
+          "explanation": "It explicitly states the test applies regardless of whether a scheme has characteristics of typical securities.",
+          "points": 1,
+          "sortOrder": 9,
+          "options": [
+            { "id": "a", "text": "True", "isCorrect": true, "sortOrder": 1 },
+            { "id": "b", "text": "False", "isCorrect": false, "sortOrder": 2 }
+          ]
+        },
+        {
+          "id": "b10q10",
+          "text": "Which scenario best reflects the framework’s statement that the analysis includes the manner in which the asset is offered and sold, including secondary market sales?",
+          "type": "SINGLE_CHOICE",
+          "explanation": "The framework states the focus includes not only the instrument’s form/terms but also the circumstances and manner of offering, selling, or reselling, including secondary market sales.",
+          "points": 1,
+          "sortOrder": 10,
+          "options": [
+            {
+              "id": "a",
+              "text": "A firm evaluates only the token’s code and ignores how it is marketed, sold, or resold",
+              "isCorrect": false,
+              "sortOrder": 1
+            },
+            {
+              "id": "b",
+              "text": "A firm evaluates both the token and the circumstances and manner of offering, selling, and reselling, including secondary market sales",
+              "isCorrect": true,
+              "sortOrder": 2
+            },
+            {
+              "id": "c",
+              "text": "A firm concludes that secondary market sales can never be relevant to the analysis",
+              "isCorrect": false,
+              "sortOrder": 3
+            },
+            {
+              "id": "d",
+              "text": "A firm concludes that calling the token a “utility token” determines the analysis regardless of distribution",
+              "isCorrect": false,
+              "sortOrder": 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

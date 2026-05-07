@@ -1,5 +1,5 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import type { Address } from "@solana/kit";
+import { type Address, isAddress } from "@solana/kit";
 import { createNoopSigner } from "@solana/signers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { s3 } from "@/lib/s3";
 import {
   executeViaSwigDelegate,
-  getAttestorSigner,
+  getAdminSigner,
   getPartnerAdminAddress,
   mintCredentialNft,
   sendServerTransaction,
@@ -39,6 +39,15 @@ export async function POST(
     const { moduleId, attemptId } = await params;
     const body = await req.json();
     const { walletAddress, answers } = bodySchema.parse(body);
+    if (!isAddress(walletAddress)) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid walletAddress. Expected a Solana base58 public key (32–44 chars).",
+        },
+        { status: 400 },
+      );
+    }
 
     // ── Load user ────────────────────────────────────────────────────────────
     const user = await prisma.user.findUnique({
@@ -83,11 +92,7 @@ export async function POST(
       where: { id: moduleId, status: "ACTIVE" },
       include: { company: true },
     });
-    if (
-      !module?.moduleIdHash ||
-      !module.company.swigAddress ||
-      !module.company.attestor
-    ) {
+    if (!module?.moduleIdHash || !module.company.swigAddress) {
       return NextResponse.json(
         { error: "Module not available" },
         { status: 404 },
@@ -152,7 +157,7 @@ export async function POST(
       module.moduleIdHash,
     );
 
-    const attestorSigner = await getAttestorSigner(company.attestor as string);
+    const attestorSigner = await getAdminSigner();
     const submitIx = await getSubmitAttemptInstructionAsync({
       attestor: attestorSigner,
       user: walletAddress as Address,

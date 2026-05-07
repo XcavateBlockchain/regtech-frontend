@@ -9,8 +9,9 @@ export const CATEGORY_OPTIONS = [
 ];
 
 export const MODULE_TYPE_OPTIONS = [
-  { value: "employee", label: "Employee Training" },
-  { value: "user", label: "Customer / User" },
+  { value: "fca_investment", label: "FCA Investment" },
+  { value: "fca_regulated", label: "FCA Regulated" },
+  { value: "sec_framework", label: "SEC Framework" },
 ];
 
 export const TIME_OPTIONS = [
@@ -22,11 +23,11 @@ export const TIME_OPTIONS = [
 ];
 
 export const LANGUAGE_OPTIONS = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
-  { value: "de", label: "German" },
-  { value: "zh", label: "Chinese" },
+  { value: "english", label: "English" },
+  { value: "spanish", label: "Spanish" },
+  { value: "french", label: "French" },
+  { value: "german", label: "German" },
+  { value: "chinese", label: "Chinese" },
 ];
 
 const MAX_IMAGE_BYTES = 50 * 1024 * 1024; // 50MB
@@ -45,7 +46,9 @@ const imageFile = z
 //   "Image must be JPEG, PNG, or WebP or JPG",
 // );
 
-export const moduleSchema = z.object({
+const optionalThumbnailFile = imageFile.optional();
+
+const coreModuleObjectSchema = z.object({
   mode: z.enum(["manual", "ai"]),
   title: z
     .string()
@@ -55,8 +58,6 @@ export const moduleSchema = z.object({
     .string()
     .min(3, "Title must be at least 3 characters")
     .max(500, "Description must be 500 characters or fewer"),
-  // .optional()
-  // .or(z.literal("")),
   category: z.enum(["securities", "aml", "kyc", "defi", "tax"], {
     message: "Please select a category",
   }),
@@ -76,16 +77,68 @@ export const moduleSchema = z.object({
     .int("Recipients must be a whole number")
     .min(1, "Add at least one recipient")
     .max(10000, "Maximum is 10,000 recipients"),
-  thumbnailImage: imageFile,
+  // Quiz attempt timer (minutes). 0 / undefined = unlimited.
+  quizTimeLimitMinutes: z.coerce
+    .number({ message: "Time limit must be a number" })
+    .int("Time limit must be a whole number")
+    .min(0, "Time limit cannot be negative")
+    .max(180, "Time limit cannot exceed 180 minutes")
+    .optional(),
+  // Minimum wait between attempts (hours). On-chain: cooldown_seconds.
+  cooldownHours: z.coerce
+    .number({ message: "Cooldown must be a number" })
+    .int("Cooldown must be a whole number")
+    .min(0, "Cooldown cannot be negative")
+    .max(24 * 365, "Cooldown is too long")
+    .default(24),
+  // Credential validity (months). 0 / undefined = never expires. On-chain: expires_in_seconds.
+  credentialExpiryMonths: z.coerce
+    .number({ message: "Expiry must be a number" })
+    .int("Expiry must be a whole number")
+    .min(0, "Expiry cannot be negative")
+    .max(120, "Expiry cannot exceed 120 months")
+    .optional(),
+  /** Set when editing a draft that already has a thumbnail in storage */
+  existingThumbnailUrl: z.string().url().optional(),
+  thumbnailImage: optionalThumbnailFile,
   contents: z.array(imageFile),
 });
+
+function requireThumbnailOrExisting(
+  data: {
+    thumbnailImage?: File | undefined;
+    existingThumbnailUrl?: string | undefined;
+  },
+  ctx: z.RefinementCtx,
+) {
+  const hasNewThumb =
+    data.thumbnailImage instanceof File && data.thumbnailImage.size > 0;
+  const hasExistingThumb =
+    typeof data.existingThumbnailUrl === "string" &&
+    data.existingThumbnailUrl.length > 0;
+  if (!hasNewThumb && !hasExistingThumb) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "An image is required",
+      path: ["thumbnailImage"],
+    });
+  }
+}
+
+export const moduleSchema = coreModuleObjectSchema.superRefine(
+  requireThumbnailOrExisting,
+);
 
 export type ModuleInput = z.input<typeof moduleSchema>;
 export type ModuleValues = z.infer<typeof moduleSchema>;
 
-export const moduleWithQuizSchema = moduleSchema.extend({
-  moduleType: z.enum(["employee", "user"], { message: "Select a module type" }),
-});
+export const moduleWithQuizSchema = coreModuleObjectSchema
+  .extend({
+    moduleType: z.enum(["fca_investment", "fca_regulated", "sec_framework"], {
+      message: "Select a module type",
+    }),
+  })
+  .superRefine(requireThumbnailOrExisting);
 
 export type ModuleWithQuizInput = z.input<typeof moduleWithQuizSchema>;
 export type ModuleWithQuizValues = z.infer<typeof moduleWithQuizSchema>;

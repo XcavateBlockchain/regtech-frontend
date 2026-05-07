@@ -25,7 +25,13 @@ export async function GET(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { userId },
-      select: { id: true, userId: true, name: true, email: true, walletAddress: true },
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+        email: true,
+        walletAddress: true,
+      },
     });
     if (!user) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -55,7 +61,11 @@ export async function GET(req: Request) {
     const moduleIds = enrollments.map((e) => e.module.id);
     if (moduleIds.length === 0) {
       return NextResponse.json(
-        { user, modules: [], credentials: { ACTIVE: [], REVOKED: [], EXPIRED: [] } },
+        {
+          user,
+          modules: [],
+          credentials: { ACTIVE: [], REVOKED: [], EXPIRED: [] },
+        },
         { status: 200 },
       );
     }
@@ -97,10 +107,7 @@ export async function GET(req: Request) {
       attemptsByModule.set(a.assessment.moduleId, list);
     }
 
-    const credentialByModule = new Map<
-      string,
-      (typeof credentials)[number]
-    >();
+    const credentialByModule = new Map<string, (typeof credentials)[number]>();
     for (const c of credentials) {
       if (c.moduleId && !credentialByModule.has(c.moduleId)) {
         credentialByModule.set(c.moduleId, c);
@@ -121,8 +128,10 @@ export async function GET(req: Request) {
         const avgScoreBps =
           submitted.length > 0
             ? Math.round(
-                submitted.reduce((sum, a) => sum + (a.onChainScoreBps ?? 0), 0) /
-                  submitted.length,
+                submitted.reduce(
+                  (sum, a) => sum + (a.onChainScoreBps ?? 0),
+                  0,
+                ) / submitted.length,
               )
             : null;
         const bestScoreBps = moduleAttempts.reduce<number | null>((best, a) => {
@@ -133,10 +142,7 @@ export async function GET(req: Request) {
         }, null);
 
         const lastActivity =
-          lastAttempt?.startedAt ??
-          e.completedAt ??
-          e.updatedAt ??
-          e.joinedAt;
+          lastAttempt?.startedAt ?? e.completedAt ?? e.updatedAt ?? e.joinedAt;
 
         const cred = credentialByModule.get(e.module.id) ?? null;
 
@@ -199,4 +205,3 @@ export async function GET(req: Request) {
     );
   }
 }
-

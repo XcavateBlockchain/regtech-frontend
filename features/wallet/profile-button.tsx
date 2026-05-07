@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,9 +9,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useUser } from "@/hooks/use-user";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 export function ProfileButton() {
   const { user, loading, openAuthModal } = useUser();
+  const { handleDisconnect } = useWalletKit();
+  const [open, setOpen] = useState(false);
   if (!loading && !user) {
     return <Button onClick={openAuthModal}>Sign in</Button>;
   }
@@ -27,7 +31,7 @@ export function ProfileButton() {
           : "";
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
         <div className="flex items-center gap-1">
           <Avatar className="size-9">
@@ -38,9 +42,7 @@ export function ProfileButton() {
           </Avatar>
 
           <div className="flex items-start justify-center flex-col">
-            <p className="text-sm font-medium">
-              {orgName}
-            </p>
+            <p className="text-sm font-medium">{orgName}</p>
             <p className="text-xs text-muted-foreground capitalize -mt-0.5">
               {user?.name ?? user?.email} {roleLabel ? roleLabel : null}
             </p>
@@ -55,6 +57,10 @@ export function ProfileButton() {
           type="button"
           data-testid="topbar-sign-out"
           className="text-red-400 hover:bg-red-500/10 hover:text-red-300 flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"
+          onClick={() => {
+            setOpen(false);
+            handleDisconnect();
+          }}
         >
           <svg
             className="size-5"

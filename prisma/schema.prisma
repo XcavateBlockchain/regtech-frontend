@@ -31,8 +31,9 @@ enum ModuleStatus {
 }
 
 enum ModuleType {
-  EMPLOYEE // Quiz drawn from regulators.batch.ts
-  USER // Quiz drawn from customers-batch.ts
+  FCA_INVESTMENT // Quiz drawn from fca-investsment.json
+  FCA_REGULATED // Quiz drawn from fca-regulated.json
+  SEC_FRAMEWORK // Quiz drawn from sec-framework.json
 }
 
 enum QuestionType {
@@ -74,6 +75,13 @@ enum NotificationType {
   CREDENTIAL_ISSUED
   CREDENTIAL_REVOKED
   INVITATION
+}
+
+enum FundingRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
 }
 
 model User {
@@ -130,8 +138,9 @@ model Company {
   employees    Employee[]
   modules      Module[]
   invites      Invite[]
-  credentials  Credential[]  @relation("IssuingCompany")
-  activityLogs ActivityLog[] @relation("CompanyLogs")
+  credentials     Credential[]       @relation("IssuingCompany")
+  activityLogs    ActivityLog[]      @relation("CompanyLogs")
+  fundingRequests FundingRequest[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
@@ -140,6 +149,28 @@ model Company {
   @@index([ownerId])
   @@index([partnerId])
   @@map("companies")
+}
+
+model FundingRequest {
+  id                String               @id @default(cuid())
+  companyId         String               @map("company_id")
+  company           Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  requestedLamports String               @map("requested_lamports")
+  dailyCapLamports  String?              @map("daily_cap_lamports")
+  reason            String?
+  status            FundingRequestStatus @default(PENDING)
+
+  requestedByWallet String   @map("requested_by_wallet")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  decidedAt       DateTime? @map("decided_at")
+  decidedByWallet String?   @map("decided_by_wallet")
+  rejectReason    String?   @map("reject_reason")
+  txHash          String?   @map("tx_hash")
+
+  @@index([companyId])
+  @@index([status])
+  @@map("funding_requests")
 }
 
 // Join table linking a User (role=EMPLOYEE) to their Company.
@@ -232,7 +263,7 @@ model Module {
   maxAttempts   Int @default(3) // Constrained at app layer; on-chain has no hard limit
 
   status     ModuleStatus @default(DRAFT)
-  moduleType ModuleType   @default(EMPLOYEE) @map("module_type")
+  moduleType ModuleType   @default(FCA_INVESTMENT) @map("module_type")
 
   // shareToken: embedded in public URL /m/:shareToken/join
   shareToken String @unique @default(cuid())

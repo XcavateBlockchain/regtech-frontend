@@ -4,7 +4,7 @@ import { BellIcon } from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -102,15 +102,13 @@ export default function Notifications() {
 
   return (
     <Popover>
-      <PopoverTrigger>
-        <button type="button" className="relative hover:text-foreground">
-          <BellIcon className="size-6" strokeWidth={1.5} />
-          {unreadCount > 0 && (
-            <Badge className="-top-2 -translate-x-1/2 absolute left-full min-w-5 px-1">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </Badge>
-          )}
-        </button>
+      <PopoverTrigger className="relative hover:text-foreground">
+        <BellIcon className="size-6" strokeWidth={1.5} />
+        {unreadCount > 0 && (
+          <Badge className="-top-2 -translate-x-1/2 absolute left-full min-w-5 px-1">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </Badge>
+        )}
       </PopoverTrigger>
       <PopoverContent className="w-80 p-1">
         <div className="flex items-baseline justify-between gap-4 px-3 py-2">

@@ -53,4 +53,3 @@ export function EmployeeList({ employees }: { employees: EmployeeRow[] }) {
     </div>
   );
 }
-

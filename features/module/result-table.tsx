@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-type ResultRow = {
+export type ResultRow = {
   investor: string;
   wallet: string;
   module: string;
@@ -26,63 +26,11 @@ type ResultRow = {
   scoreTone: "success" | "danger";
   result: "Passed" | "Failed";
   date: string;
-  certId: string;
+  certLabel: string;
+  certHref?: string | null;
 };
 
-const sampleRows: ResultRow[] = [
-  {
-    investor: "James Liu",
-    wallet: "0x3f...a91b",
-    module: "SEC Disclosure",
-    score: "92%",
-    scoreTone: "success",
-    result: "Passed",
-    date: "Apr 20, 2026",
-    certId: "Cert #49583",
-  },
-  {
-    investor: "James Liu",
-    wallet: "0x3f...a91b",
-    module: "SEC Disclosure",
-    score: "92%",
-    scoreTone: "success",
-    result: "Passed",
-    date: "Apr 20, 2026",
-    certId: "Cert #49583",
-  },
-  {
-    investor: "James Liu",
-    wallet: "0x3f...a91b",
-    module: "SEC Disclosure",
-    score: "92%",
-    scoreTone: "success",
-    result: "Passed",
-    date: "Apr 20, 2026",
-    certId: "Cert #49583",
-  },
-  {
-    investor: "James Liu",
-    wallet: "0x3f...a91b",
-    module: "SEC Disclosure",
-    score: "56%",
-    scoreTone: "danger",
-    result: "Failed",
-    date: "Apr 20, 2026",
-    certId: "Cert #49583",
-  },
-  {
-    investor: "James Liu",
-    wallet: "0x3f...a91b",
-    module: "SEC Disclosure",
-    score: "92%",
-    scoreTone: "success",
-    result: "Passed",
-    date: "Apr 20, 2026",
-    certId: "Cert #49583",
-  },
-];
-
-export function ResultsTable({ rows = sampleRows }: { rows?: ResultRow[] }) {
+export function ResultsTable({ rows = [] }: { rows?: ResultRow[] }) {
   return (
     <Card className="px-6 pt-5 pb-6">
       <div className="mb-5 flex items-center justify-between">
@@ -117,43 +65,62 @@ export function ResultsTable({ rows = sampleRows }: { rows?: ResultRow[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: any
-            <TableRow key={i}>
-              <TableCell className="text-ink-strong">{row.investor}</TableCell>
-              <TableCell className="font-mono text-ink-strong">
-                {row.wallet}
-              </TableCell>
-              <TableCell className="text-ink-strong">{row.module}</TableCell>
+          {rows.length ? (
+            rows.map((row) => (
+              <TableRow key={`${row.wallet}-${row.date}`}>
+                <TableCell className="text-ink-strong">
+                  {row.investor}
+                </TableCell>
+                <TableCell className="font-mono text-ink-strong">
+                  {row.wallet}
+                </TableCell>
+                <TableCell className="text-ink-strong">{row.module}</TableCell>
+                <TableCell
+                  className={cn(
+                    row.scoreTone === "success"
+                      ? "text-status-success"
+                      : "text-status-danger-bright",
+                  )}
+                >
+                  {row.score}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      row.scoreTone === "success" ? "default" : "destructive"
+                    }
+                  >
+                    {row.result}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-ink-subtle">{row.date}</TableCell>
+                <TableCell className="text-right">
+                  {row.certHref ? (
+                    <Link
+                      href={row.certHref}
+                      target="_blank"
+                      className="font-medium text-action-link transition-colors hover:underline"
+                    >
+                      {row.certLabel}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      {row.certLabel}
+                    </span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
               <TableCell
-                className={cn(
-                  row.scoreTone === "success"
-                    ? "text-status-success"
-                    : "text-status-danger-bright",
-                )}
+                colSpan={7}
+                className="py-8 text-center text-sm text-muted-foreground"
               >
-                {row.score}
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={
-                    row.scoreTone === "success" ? "default" : "destructive"
-                  }
-                >
-                  {row.result}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-ink-subtle">{row.date}</TableCell>
-              <TableCell className="text-right">
-                <Link
-                  href="#"
-                  className="font-medium text-action-link transition-colors hover:underline"
-                >
-                  {row.certId}
-                </Link>
+                No results yet.
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </Card>

@@ -14,7 +14,17 @@ const dataSchema = z.object({
   language: z.enum(["en", "es", "fr", "de", "zh"]).optional(),
   passingScore: z.coerce.number().int().min(1).max(100).optional(),
   recipients: z.coerce.number().int().min(1).max(10000).optional(),
-  moduleType: z.enum(["employee", "user"]).optional(),
+  moduleType: z
+    .enum(["fca_investment", "fca_regulated", "sec_framework"])
+    .optional(),
+  quizTimeLimitMinutes: z.coerce.number().int().min(0).max(180).optional(),
+  cooldownHours: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(24 * 365)
+    .optional(),
+  credentialExpiryMonths: z.coerce.number().int().min(0).max(120).optional(),
 });
 
 async function uploadToS3(key: string, file: File): Promise<string> {
@@ -88,7 +98,18 @@ export async function PATCH(
       updateData.maxRecipients = data.recipients;
     if (data.moduleType !== undefined)
       updateData.moduleType =
-        data.moduleType === "employee" ? "EMPLOYEE" : "USER";
+        data.moduleType === "fca_investment"
+          ? "FCA_INVESTMENT"
+          : data.moduleType === "fca_regulated"
+            ? "FCA_REGULATED"
+            : "SEC_FRAMEWORK";
+    if (data.cooldownHours !== undefined)
+      updateData.coolDownSeconds = data.cooldownHours * 3600;
+    if (data.credentialExpiryMonths !== undefined)
+      updateData.expiresInSeconds =
+        data.credentialExpiryMonths > 0
+          ? data.credentialExpiryMonths * 30 * 86400
+          : null;
 
     if (thumbnail && thumbnail.size > 0) {
       const ext = thumbnail.name.split(".").pop() ?? "jpg";
@@ -119,6 +140,15 @@ export async function PATCH(
     }
 
     await prisma.module.update({ where: { id: moduleId }, data: updateData });
+
+    if (data.quizTimeLimitMinutes !== undefined) {
+      const timeLimit =
+        data.quizTimeLimitMinutes > 0 ? data.quizTimeLimitMinutes * 60 : null;
+      await prisma.assessment.update({
+        where: { moduleId },
+        data: { timeLimit },
+      });
+    }
 
     return NextResponse.json({ moduleId }, { status: 200 });
   } catch (e) {

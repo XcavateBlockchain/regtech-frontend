@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { AddEmployeeDialog } from "@/features/team/add-employee-dialog";
 import { EmployeeList } from "@/features/team/employee-list";
 import { InviteList } from "@/features/team/invite-list";
+import { useCompanySlug } from "@/hooks/use-company-slug";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 type ApiInvite = {
   id: string;
@@ -34,18 +35,21 @@ type ApiEmployee = {
 
 export function TeamManager() {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const [invites, setInvites] = useState<ApiInvite[]>([]);
   const [employees, setEmployees] = useState<ApiEmployee[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
     setLoading(true);
     Promise.all([
-      fetch(`/api/company/invites?walletAddress=${encodeURIComponent(address)}`),
       fetch(
-        `/api/company/employees?walletAddress=${encodeURIComponent(address)}`,
+        `/api/company/${encodeURIComponent(slug)}/invites?walletAddress=${encodeURIComponent(address)}`,
+      ),
+      fetch(
+        `/api/company/${encodeURIComponent(slug)}/employees?walletAddress=${encodeURIComponent(address)}`,
       ),
     ])
       .then(async ([invRes, empRes]) => {
@@ -73,7 +77,7 @@ export function TeamManager() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [slug, address]);
 
   useEffect(() => {
     const cleanup = load();
@@ -103,4 +107,3 @@ export function TeamManager() {
     </main>
   );
 }
-

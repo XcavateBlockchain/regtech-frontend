@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
@@ -43,17 +44,21 @@ function StatCard({ label, value, unit, delta }: StatCardProps) {
 
 export function CompanyStats() {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const [stats, setStats] = useState<{
     activeModules: number;
     credentialsIssued: number;
     employees: number;
     publicEnrolled: number;
+    totalEnrolments: number;
   } | null>(null);
 
   useEffect(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
-    fetch(`/api/company/stats?walletAddress=${encodeURIComponent(address)}`)
+    fetch(
+      `/api/company/${encodeURIComponent(slug)}/stats?walletAddress=${encodeURIComponent(address)}`,
+    )
       .then(async (res) => {
         if (!res.ok) return null;
         return res.json() as Promise<{
@@ -61,6 +66,7 @@ export function CompanyStats() {
           credentialsIssued: number;
           employees: number;
           publicEnrolled: number;
+          totalEnrolments: number;
         }>;
       })
       .then((data) => {
@@ -73,13 +79,13 @@ export function CompanyStats() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [slug, address]);
 
   const valueOrDash = (v: number | undefined) =>
     typeof v === "number" ? String(v) : "—";
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
       <StatCard
         label="Active Modules"
         value={valueOrDash(stats?.activeModules)}
@@ -99,6 +105,11 @@ export function CompanyStats() {
       <StatCard
         label="Public enrolled"
         value={valueOrDash(stats?.publicEnrolled)}
+        delta={{ value: "Live", tone: "muted" }}
+      />
+      <StatCard
+        label="Total enrolments"
+        value={valueOrDash(stats?.totalEnrolments)}
         delta={{ value: "Live", tone: "muted" }}
       />
     </div>

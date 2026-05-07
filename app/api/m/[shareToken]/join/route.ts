@@ -1,11 +1,16 @@
+import { isAddress } from "@solana/kit";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { verifyPhantomAuthPayload } from "@/lib/phantom-auth";
 import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
   walletAddress: z.string().min(32),
   name: z.string().min(1),
   email: z.email(),
+  timestampIso: z.string().min(1),
+  message: z.string().min(1),
+  signature: z.string().min(1),
 });
 
 function newExternalUserId() {
@@ -26,7 +31,25 @@ export async function POST(
     }
 
     const json = await req.json();
-    const { walletAddress, name, email } = bodySchema.parse(json);
+    const { walletAddress, name, email, timestampIso, message, signature } =
+      bodySchema.parse(json);
+    if (!isAddress(walletAddress)) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid walletAddress. Expected a Solana base58 public key (32–44 chars).",
+        },
+        { status: 400 },
+      );
+    }
+
+    verifyPhantomAuthPayload({
+      purpose: "module-join",
+      resourceId: shareToken,
+      walletAddress,
+      timestampIso,
+      payload: { message, signature },
+    });
 
     const module = await prisma.module.findFirst({
       where: { shareToken, status: "ACTIVE" },
@@ -132,4 +155,3 @@ export async function POST(
     );
   }
 }
-

@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import Form, { useZodForm } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
+import { useQuizBalance } from "@/hooks/use-quiz-balance";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import {
   type ModuleWithQuizValues,
@@ -27,9 +29,17 @@ function buildFormData(
   const fd = new FormData();
   fd.append("companyId", companyId);
   fd.append("walletAddress", walletAddress);
-  const { thumbnailImage, contents, ...rest } = values;
-  fd.append("data", JSON.stringify(rest));
-  fd.append("thumbnail", thumbnailImage);
+  const {
+    thumbnailImage,
+    existingThumbnailUrl: _omitExistingThumb,
+    contents,
+    ...jsonPayload
+  } = values;
+  void _omitExistingThumb;
+  fd.append("data", JSON.stringify(jsonPayload));
+  if (thumbnailImage instanceof File && thumbnailImage.size > 0) {
+    fd.append("thumbnail", thumbnailImage);
+  }
   for (const file of contents) {
     fd.append("contents", file);
   }
@@ -79,7 +89,12 @@ export default function CreateModuleFrom({
 }: CreateModuleFormProps = {}) {
   const router = useRouter();
   const { address } = useWalletKit();
-  const { company } = useCompany(address);
+  const slug = useCompanySlug();
+  const { company } = useCompany(slug, address);
+  const { balance: quizBalance, loading: quizBalanceLoading } = useQuizBalance(
+    company?.id ?? null,
+    address ?? null,
+  );
   const [moduleId, setModuleId] = useState<string | null>(
     existingModuleId ?? null,
   );
@@ -96,28 +111,37 @@ export default function CreateModuleFrom({
     },
   });
 
+  const resolveModuleId = () => moduleId ?? existingModuleId ?? null;
+
   async function saveAsDraft(values: ModuleWithQuizValues) {
-    if (!company || !address) {
+    if (!slug || !company || !address) {
       toast.error("Wallet not connected or company not loaded");
       return;
     }
     const tid = toast.loading("Saving draft…");
     try {
       const fd = buildFormData(values, company.id, address);
-      if (moduleId) {
-        const res = await fetch(`/api/company/modules/${moduleId}`, {
-          method: "PATCH",
-          body: fd,
-        });
+      const id = resolveModuleId();
+      if (id) {
+        const res = await fetch(
+          `/api/company/${encodeURIComponent(slug)}/modules/${encodeURIComponent(id)}`,
+          {
+            method: "PATCH",
+            body: fd,
+          },
+        );
         if (!res.ok) {
           const json = (await res.json()) as { error?: string };
           throw new Error(json.error ?? "Save failed");
         }
       } else {
-        const res = await fetch("/api/company/modules", {
-          method: "POST",
-          body: fd,
-        });
+        const res = await fetch(
+          `/api/company/${encodeURIComponent(slug)}/modules`,
+          {
+            method: "POST",
+            body: fd,
+          },
+        );
         if (!res.ok) {
           const json = (await res.json()) as { error?: string };
           throw new Error(json.error ?? "Save failed");
@@ -132,19 +156,22 @@ export default function CreateModuleFrom({
   }
 
   async function onSubmit(values: ModuleWithQuizValues) {
-    if (!company || !address) {
+    if (!slug || !company || !address) {
       toast.error("Wallet not connected or company not loaded");
       return;
     }
-    let id = moduleId;
+    let id = resolveModuleId();
     const tid = toast.loading("Publishing module…");
     try {
       const fd = buildFormData(values, company.id, address);
       if (!id) {
-        const res = await fetch("/api/company/modules", {
-          method: "POST",
-          body: fd,
-        });
+        const res = await fetch(
+          `/api/company/${encodeURIComponent(slug)}/modules`,
+          {
+            method: "POST",
+            body: fd,
+          },
+        );
         if (!res.ok) {
           const json = (await res.json()) as { error?: string };
           throw new Error(json.error ?? "Save failed");
@@ -153,26 +180,35 @@ export default function CreateModuleFrom({
         id = json.moduleId;
         setModuleId(id);
       } else {
-        const res = await fetch(`/api/company/modules/${id}`, {
-          method: "PATCH",
-          body: fd,
-        });
+        const res = await fetch(
+          `/api/company/${encodeURIComponent(slug)}/modules/${encodeURIComponent(id)}`,
+          {
+            method: "PATCH",
+            body: fd,
+          },
+        );
         if (!res.ok) {
           const json = (await res.json()) as { error?: string };
           throw new Error(json.error ?? "Update failed");
         }
       }
-      const pubRes = await fetch(`/api/company/modules/${id}/publish`, {
-        method: "POST",
-        body: JSON.stringify({ companyId: company.id, walletAddress: address }),
-        headers: { "Content-Type": "application/json" },
-      });
+      const pubRes = await fetch(
+        `/api/company/${encodeURIComponent(slug)}/modules/${encodeURIComponent(id)}/publish`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            companyId: company.id,
+            walletAddress: address,
+          }),
+          headers: { "Content-Type": "application/json" },
+        },
+      );
       if (!pubRes.ok) {
         const json = (await pubRes.json()) as { error?: string };
         throw new Error(json.error ?? "Publish failed");
       }
       toast.success("Module published", { id: tid });
-      router.push(`/company/module/${id}`);
+      router.push(`/company/${slug}/module/${id}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Publish failed", {
         id: tid,
@@ -222,6 +258,8 @@ export default function CreateModuleFrom({
       />
       <ModuleReviewPane
         onSave={form.handleSubmit(saveAsDraft, onValidationError)}
+        quizBalance={quizBalance}
+        quizBalanceLoading={quizBalanceLoading}
       />
     </Form>
   );

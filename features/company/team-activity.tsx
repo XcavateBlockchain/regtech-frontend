@@ -3,6 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 type TeamStat = { value: string; label: string };
@@ -29,6 +30,7 @@ function timeAgo(iso: string) {
 
 export function TeamActivity() {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const [stats, setStats] = useState<{
     activeEmployees: number;
     modulesThisWeek: number;
@@ -36,10 +38,10 @@ export function TeamActivity() {
   } | null>(null);
 
   useEffect(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
     fetch(
-      `/api/company/team-activity?walletAddress=${encodeURIComponent(address)}`,
+      `/api/company/${encodeURIComponent(slug)}/team-activity?walletAddress=${encodeURIComponent(address)}`,
     )
       .then(async (res) => {
         if (!res.ok) return null;
@@ -59,7 +61,7 @@ export function TeamActivity() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [slug, address]);
 
   const teamStats: TeamStat[] = useMemo(
     () => [

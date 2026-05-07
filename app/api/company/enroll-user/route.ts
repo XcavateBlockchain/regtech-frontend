@@ -62,10 +62,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(
-      { txHash, enrollmentAddress },
-      { status: 200 },
-    );
+    return NextResponse.json({ txHash, enrollmentAddress }, { status: 200 });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json(

@@ -86,4 +86,3 @@ export async function enrollEmployeeUserOnChain(input: {
 
   return { txHash, enrollmentAddress: enrollmentPda };
 }
-

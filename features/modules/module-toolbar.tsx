@@ -11,8 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 
 export function Header({ total }: { total: number }) {
+  const slug = useCompanySlug();
+  const createHref = slug
+    ? `/company/${slug}/module/create`
+    : "/company/module/create";
   // The Figma shows "12 active modules . 847 total enrolments" —
   // hard-coded enrolment count since the sample data doesn't carry it.
   return (
@@ -27,7 +32,7 @@ export function Header({ total }: { total: number }) {
       </div>
       <Button
         nativeButton={false}
-        render={<Link href="/company/module/create">Create Module</Link>}
+        render={<Link href={createHref}>Create Module</Link>}
       />
     </div>
   );

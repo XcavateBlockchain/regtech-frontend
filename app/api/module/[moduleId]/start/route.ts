@@ -1,7 +1,8 @@
-import type { Address } from "@solana/kit";
+import { type Address, createSolanaRpc, isAddress } from "@solana/kit";
 import { createNoopSigner } from "@solana/signers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { appEnv } from "@/constants/app-env";
 import {
   findPartnerPda,
   getEnrollUserInstructionAsync,
@@ -10,7 +11,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import {
   executeViaSwigDelegate,
-  getAttestorSigner,
+  getAdminSigner,
   getPartnerAdminAddress,
   sendServerTransaction,
   uuidToBytes,
@@ -33,6 +34,15 @@ export async function POST(
     const { moduleId } = await params;
     const body = await req.json();
     const { walletAddress } = bodySchema.parse(body);
+    if (!isAddress(walletAddress)) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid walletAddress. Expected a Solana base58 public key (32–44 chars).",
+        },
+        { status: 400 },
+      );
+    }
 
     // ── Load user ────────────────────────────────────────────────────────────
     const user = await prisma.user.findUnique({
@@ -58,11 +68,7 @@ export async function POST(
         },
       },
     });
-    if (
-      !module?.moduleIdHash ||
-      !module.company.swigAddress ||
-      !module.company.attestor
-    ) {
+    if (!module?.moduleIdHash || !module.company.swigAddress) {
       return NextResponse.json(
         { error: "Module not available" },
         { status: 404 },
@@ -157,6 +163,58 @@ export async function POST(
         enrollmentPda) as Address;
     }
 
+    // Defensive: ensure the enrollment PDA exists on-chain. If the DB says it
+    // exists but the account isn't initialized (e.g. prior tx failed), re-enroll.
+    const rpc = createSolanaRpc(appEnv.SOLANA_RPC_URL);
+    const { value: enrollmentAccount } = await rpc
+      .getAccountInfo(
+        onChainEnrollmentAddress as Parameters<typeof rpc.getAccountInfo>[0],
+        { encoding: "base64" },
+      )
+      .send();
+    if (!enrollmentAccount) {
+      if (isEmployee) {
+        return NextResponse.json(
+          {
+            error:
+              "Assignment enrollment is missing on-chain. Ask your company admin to re-enroll you.",
+          },
+          { status: 409 },
+        );
+      }
+
+      const partnerAdminWallet = await getPartnerAdminAddress(
+        company.swigAddress as Address,
+      );
+      const enrollIx = await getEnrollUserInstructionAsync({
+        partnerAdmin: createNoopSigner(partnerAdminWallet),
+        user: walletAddress as Address,
+        partner: partnerPda,
+        module: modulePda,
+        enrollment: enrollmentPda,
+        reasonCode: 0,
+      });
+      await executeViaSwigDelegate(
+        company.swigAddress as Address,
+        enrollIx as never,
+      );
+
+      await prisma.moduleEnrollment.upsert({
+        where: { moduleId_userId: { moduleId, userId: user.id } },
+        update: {
+          onChainEnrollmentAddress: enrollmentPda,
+          status: "IN_PROGRESS",
+        },
+        create: {
+          moduleId,
+          userId: user.id,
+          status: "IN_PROGRESS",
+          onChainEnrollmentAddress: enrollmentPda,
+        },
+      });
+      onChainEnrollmentAddress = enrollmentPda as Address;
+    }
+
     // ── Resume existing unsubmitted attempt if any ───────────────────────────
     const existing = await prisma.assessmentAttempt.findFirst({
       where: isEmployee
@@ -170,7 +228,7 @@ export async function POST(
             userId: user.id,
             submittedAt: null,
           },
-      select: { id: true, batchId: true },
+      select: { id: true, batchId: true, startedAt: true },
       orderBy: { startedAt: "desc" },
     });
     if (existing) {
@@ -200,13 +258,15 @@ export async function POST(
         },
       });
       if (!batch) {
-        return NextResponse.json(
-          { error: "Batch not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "Batch not found" }, { status: 404 });
       }
       const questions = batch.questions;
-      return NextResponse.json({ attemptId: existing.id, questions });
+      return NextResponse.json({
+        attemptId: existing.id,
+        questions,
+        startedAtIso: existing.startedAt.toISOString(),
+        timeLimitSeconds: module.assessment.timeLimit ?? null,
+      });
     }
 
     // ── Count previous attempts to set attempt number ────────────────────────
@@ -224,7 +284,7 @@ export async function POST(
       module.moduleIdHash,
     );
 
-    const attestorSigner = await getAttestorSigner(company.attestor as string);
+    const attestorSigner = await getAdminSigner();
     const startIx = await getStartAttemptInstructionAsync({
       attestor: attestorSigner,
       user: walletAddress as Address,
@@ -279,7 +339,12 @@ export async function POST(
     }
     const questions = batch.questions;
 
-    return NextResponse.json({ attemptId: attempt.id, questions });
+    return NextResponse.json({
+      attemptId: attempt.id,
+      questions,
+      startedAtIso: attempt.startedAt.toISOString(),
+      timeLimitSeconds: module.assessment.timeLimit ?? null,
+    });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json(

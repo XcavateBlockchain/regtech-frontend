@@ -1,8 +1,14 @@
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 /* ---------------------------------------------------------------
@@ -61,10 +67,27 @@ export function ModuleItem(props: ModuleCardData) {
     return `${window.location.origin}/m/${props.shareToken}/join`;
   }, [props]);
 
-  async function copyShareLink() {
-    if (!shareUrl) return;
+  async function copyShareLink(text: string) {
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+    } catch {
+      // fall through to legacy copy
+    }
+
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
     } catch {
       // ignore
     }
@@ -73,8 +96,9 @@ export function ModuleItem(props: ModuleCardData) {
   return (
     <article className="flex flex-col overflow-hidden rounded-md border border-border bg-card transition-shadow hover:shadow-md">
       {/* Cover */}
-      <div
-        className="relative h-[188px]"
+      <Link
+        href={`/company/module/${slug}`}
+        className="relative h-[188px] block"
         style={
           coverImageUrl
             ? {
@@ -95,14 +119,20 @@ export function ModuleItem(props: ModuleCardData) {
           type="button"
           aria-label="More options"
           className="absolute right-2.5 top-2.5 inline-flex size-6 items-center justify-center rounded-[14px] bg-background text-ink-subtle transition-colors hover:bg-accent"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         >
           <MoreHorizontal className="size-5" strokeWidth={2} />
         </button>
-      </div>
+      </Link>
 
       {/* Body */}
       <div className="flex flex-1 flex-col gap-3.5 px-3 py-4">
-        <h3 className="text-sm font-semibold leading-6">{title}</h3>
+        <Link href={`/company/module/${slug}`} className="hover:underline">
+          <h3 className="text-sm font-semibold leading-6">{title}</h3>
+        </Link>
 
         {props.mode === "edit" ? (
           <Button
@@ -115,16 +145,16 @@ export function ModuleItem(props: ModuleCardData) {
           <StatsGrid stats={props.stats} />
         )}
         <div className="flex items-center w-full justify-end gap-2">
-          <Button size={"lg"}>
-            <Link href={`/company/module/${slug}`}>View</Link>
-          </Button>
           {props.mode === "stats" ? (
             <>
               <Button
                 variant="outline"
                 size={"lg"}
                 type="button"
-                onClick={() => setShareOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShareOpen(true);
+                }}
               >
                 Share
               </Button>
@@ -133,7 +163,8 @@ export function ModuleItem(props: ModuleCardData) {
                   <DialogHeader>
                     <DialogTitle>Share invite link</DialogTitle>
                     <DialogDescription>
-                      Anyone with this link can join and sign up for this module.
+                      Anyone with this link can join and sign up for this
+                      module.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-3">
@@ -141,10 +172,21 @@ export function ModuleItem(props: ModuleCardData) {
                       {shareUrl ?? `/m/${props.shareToken}/join`}
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" type="button" onClick={() => setShareOpen(false)}>
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => setShareOpen(false)}
+                      >
                         Close
                       </Button>
-                      <Button type="button" onClick={copyShareLink}>
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          copyShareLink(
+                            shareUrl ?? `/m/${props.shareToken}/join`,
+                          )
+                        }
+                      >
                         Copy link
                       </Button>
                     </div>

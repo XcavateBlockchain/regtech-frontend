@@ -1,11 +1,12 @@
+import { useConnect, usePhantom, useSolana } from "@phantom/react-sdk";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ModalDescription, ModalHeader, ModalTitle } from "@/components/modal";
 import { Button } from "@/components/ui/button";
-import { FieldInput } from "@/components/ui/field-input";
-import Form, { useZodForm } from "@/components/ui/form";
-import { loginSchema } from "@/lib/validations/auth-schema";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
+import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
+import { toBase58Signature } from "@/lib/phantom-signature";
 import { storageKeys, useAuthContext } from "@/providers/auth-provider";
 
 export function LoginForm() {
@@ -15,22 +16,44 @@ export function LoginForm() {
 
 function SigninUser(props: { onBack: () => void }) {
   const router = useRouter();
-  const { setOpen, setActivePage } = useAuthContext();
+  const { setOpen, setActivePage, setAccountLoading } = useAuthContext();
+  const { connect, isConnecting } = useConnect();
+  const { address, isConnected, open: openWalletModal } = useWalletKit();
+  const { solana } = useSolana();
+  const phantom = usePhantom();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useZodForm({
-    schema: loginSchema,
-  });
-
-  async function onSubmit(values: { email: string }) {
+  async function onSubmit() {
     setLoading(true);
     setError(null);
     try {
+      if (!isConnected || !address) {
+        throw new Error("Please connect your wallet to sign in");
+      }
+      if (!solana?.isConnected) {
+        throw new Error("Solana wallet is not connected");
+      }
+
+      const timestampIso = new Date().toISOString();
+      const message = buildPhantomAuthMessage({
+        purpose: "login",
+        resourceId: "login",
+        walletAddress: address,
+        timestampIso,
+      });
+      const signed = await solana.signMessage(message);
+      const signature = toBase58Signature(signed);
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          walletAddress: address,
+          timestampIso,
+          message,
+          signature,
+        }),
       });
       const json = (await res.json()) as {
         userId?: string;
@@ -52,6 +75,8 @@ function SigninUser(props: { onBack: () => void }) {
       }
       localStorage.removeItem(storageKeys.employee);
 
+      // Stop any provider-driven account loading flow from re-opening the modal.
+      setAccountLoading(false);
       setOpen(false);
       setActivePage(0);
 
@@ -80,11 +105,9 @@ function SigninUser(props: { onBack: () => void }) {
         </button>
 
         <ModalHeader className="flex items-start flex-col gap-0 md:pb-0">
-          <ModalTitle className="text-sm font-semibold">
-            Sign In with Email
-          </ModalTitle>
+          <ModalTitle className="text-sm font-semibold">Sign In</ModalTitle>
           <ModalDescription className="text-center hidden">
-            email
+            wallet
           </ModalDescription>
         </ModalHeader>
       </div>
@@ -98,24 +121,46 @@ function SigninUser(props: { onBack: () => void }) {
         </div>
       ) : null}
 
-      <Form form={form} autoComplete="off" onSubmit={form.handleSubmit(onSubmit)}>
-        <FieldInput
-          {...form.register("email")}
-          error={form.formState.errors.email}
-          label="Email"
-          placeholder="you@example.com"
-          type="email"
-          autoComplete="email"
-          required
-        />
-        <Button type="submit" disabled={loading}>
-          {loading ? "Signing in…" : "Sign In"}
+      <div className="space-y-3">
+        <Button
+          type="button"
+          className="w-full"
+          variant={isConnected ? "default" : "outline"}
+          onClick={
+            isConnected
+              ? onSubmit
+              : async () => {
+                  setError(null);
+                  try {
+                    if (phantom.isLoading) return;
+                    await connect({ provider: "google" });
+                  } catch (e) {
+                    // eslint-disable-next-line no-console
+                    console.error("[Phantom connect google failed]", e);
+                    openWalletModal();
+                    setError(
+                      e instanceof Error
+                        ? e.message
+                        : "Failed to connect wallet",
+                    );
+                  }
+                }
+          }
+          disabled={loading || isConnecting || phantom.isLoading}
+        >
+          {loading
+            ? "Signing in…"
+            : isConnected
+              ? "Sign in with connected wallet"
+              : isConnecting
+                ? "Connecting…"
+                : "Connect wallet (Google) to sign in"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">
-          Don’t have an account? Ask your company admin for an invite link, or use
-          the module link they shared with you.
+          Don’t have an account? Use an invite link (employees) or a module link
+          (users) to create one.
         </p>
-      </Form>
+      </div>
     </>
   );
 }
