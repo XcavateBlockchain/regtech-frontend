@@ -1,6 +1,11 @@
 import { CompanyProfile, CompanyWalletSection } from "@/features/settings";
 
-export default function SettingsPage() {
+export default async function SettingsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  await params;
   return (
     <main className="flex flex-col px-6 py-6 gap-7">
       <div>

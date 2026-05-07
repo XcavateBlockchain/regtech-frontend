@@ -6,6 +6,7 @@ import type { ModuleCardData } from "@/features/modules/module-item";
 import { ModuleList } from "@/features/modules/module-list";
 import { Filters, Header } from "@/features/modules/module-toolbar";
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 type ApiModule = {
@@ -36,7 +37,8 @@ function toCategoryLabel(raw: string): ModuleCardData["category"] {
 
 export function CompanyModules() {
   const { address } = useWalletKit();
-  const { company, loading: companyLoading } = useCompany(address);
+  const slug = useCompanySlug();
+  const { company, loading: companyLoading } = useCompany(slug, address);
   const [modules, setModules] = useState<ApiModule[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -64,7 +66,16 @@ export function CompanyModules() {
 
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/company/modules?walletAddress=${encodeURIComponent(address)}`)
+    if (!slug) {
+      setModules([]);
+      setHasLoaded(true);
+      setLoading(false);
+      return;
+    }
+
+    fetch(
+      `/api/company/${encodeURIComponent(slug)}/modules?walletAddress=${encodeURIComponent(address)}`,
+    )
       .then(async (res) => {
         if (!res.ok) {
           const body = (await res.json()) as { error: string };
@@ -88,7 +99,7 @@ export function CompanyModules() {
     return () => {
       cancelled = true;
     };
-  }, [address, company, companyLoading]);
+  }, [address, slug, company, companyLoading]);
 
   const cards = useMemo<ModuleCardData[]>(
     () =>

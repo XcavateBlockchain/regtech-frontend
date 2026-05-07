@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
@@ -51,12 +52,15 @@ function timeAgo(iso: string) {
 
 export function RecentActivities() {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const [logs, setLogs] = useState<ApiLog[]>([]);
 
   useEffect(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
-    fetch(`/api/company/activity?walletAddress=${encodeURIComponent(address)}`)
+    fetch(
+      `/api/company/${encodeURIComponent(slug)}/activity?walletAddress=${encodeURIComponent(address)}`,
+    )
       .then(async (res) => {
         if (!res.ok) return null;
         return res.json() as Promise<{ logs: ApiLog[] }>;
@@ -71,7 +75,7 @@ export function RecentActivities() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [slug, address]);
 
   const activities = useMemo<ActivityRow[]>(() => {
     return logs.map((log) => {

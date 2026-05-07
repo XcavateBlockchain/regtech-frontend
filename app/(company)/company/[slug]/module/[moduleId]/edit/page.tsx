@@ -7,9 +7,9 @@ import { prisma } from "@/lib/prisma";
 export default async function EditModulePage({
   params,
 }: {
-  params: Promise<{ moduleId: string }>;
+  params: Promise<{ slug: string; moduleId: string }>;
 }) {
-  const { moduleId } = await params;
+  const { slug, moduleId } = await params;
   const module = await prisma.module.findFirst({
     where: { id: moduleId, status: "DRAFT" },
     select: {
@@ -58,7 +58,7 @@ export default async function EditModulePage({
   return (
     <main className="flex flex-col px-6 py-6 gap-6">
       <Link
-        href={`/company/module/${moduleId}`}
+        href={`/company/${slug}/module/${moduleId}`}
         className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-5" strokeWidth={1.75} />

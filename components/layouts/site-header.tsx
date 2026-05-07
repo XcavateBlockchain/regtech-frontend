@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { navItems } from "@/constants/nvaigations";
 import { ProfileButton } from "@/features/wallet/profile-button";
 import { WalletButton } from "@/features/wallet/wallet-button";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 import Icon from "@/public/icons";
@@ -15,17 +15,27 @@ import Notifications from "./notification";
 export default function CompanyNavHeader() {
   const pathname = usePathname();
   const { isConnected } = useWalletKit();
+  const slug = useCompanySlug();
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const isActive = (href: string) => pathname === href;
+  const resolveHref = (href: string) => {
+    // Convert legacy company hrefs (e.g. "/company/modules") into slugged paths.
+    if (!href.startsWith("/company")) return href;
+    if (!slug) return href;
+
+    const rest = href.replace(/^\/company/, "");
+    return `/company/${slug}${rest}`;
+  };
+
+  const isActive = (href: string) => pathname === resolveHref(href);
 
   return (
     <header className="border-b sticky top-0 z-50 bg-background/50 backdrop-blur-[45px] px-4 md:px-6">
       <div className="flex items-center justify-between h-14 gap-4 md:h-16 md:gap-6">
         {/* Logo + Nav */}
         <div className="flex items-center gap-4 md:gap-8">
-          <Link href="/">
+          {/* <Link href="/">
             <Image
               src={"/app_logo.svg"}
               alt="Regtech"
@@ -33,13 +43,18 @@ export default function CompanyNavHeader() {
               height={32}
               className="w-[180px] h-[50px]"
             />
+          </Link> */}
+          <Link href="/">
+            <span className="font-mono text-[28px] font-bold leading-6 tracking-[-0.143em] text-primary">
+              {slug}
+            </span>
           </Link>
           {isConnected && (
             <>
               {/* Desktop nav */}
               <nav className="hidden md:flex items-center gap-6">
                 {navItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
+                  <Link key={item.href} href={resolveHref(item.href)}>
                     <span
                       data-active={isActive(item.href)}
                       className={cn(
@@ -79,7 +94,7 @@ export default function CompanyNavHeader() {
             {navItems.map((item) => (
               <li key={item.href}>
                 <Link
-                  href={item.href}
+                  href={resolveHref(item.href)}
                   onClick={() => setMenuOpen(false)}
                   className="block w-full"
                 >

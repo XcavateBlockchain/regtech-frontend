@@ -2,6 +2,7 @@
 
 import { usePhantom } from "@phantom/react-sdk";
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useSolBalance } from "@/hooks/use-sol-balance";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 
@@ -10,7 +11,8 @@ import Icon from "@/public/icons";
 export function WalletButton() {
   const { address: solanaAddress, toggleModal } = useWalletKit();
   const { isConnected } = usePhantom();
-  const { company } = useCompany(solanaAddress);
+  const slug = useCompanySlug();
+  const { company } = useCompany(slug, solanaAddress);
   const swigWalletAddress = company?.swigWalletAddress ?? null;
   const swigWalletBalance = useSolBalance(swigWalletAddress);
 

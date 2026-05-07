@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "biome check",
+    "postinstall": "prisma generate",
     "format": "biome format --write",
     "format:check": "biome format --check",
     "format:fix": "biome check --fix --unsafe",

@@ -8,7 +8,14 @@ import {
   TeamActivity,
 } from "@/features/company";
 
-export default function CompanyPage() {
+export default async function CompanyPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  // Ensures this route stays dynamic and compatible with middleware rewrites.
+  await params;
+
   return (
     <main className="flex flex-col px-6 py-6 gap-6">
       <CompanyDashboardHeader />

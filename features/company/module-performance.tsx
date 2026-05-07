@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
@@ -104,6 +105,7 @@ const failToneMap = {
 
 export function ModulesPerformance() {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const [modules, setModules] = useState<Module[]>([]);
   const [open, setOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<{
@@ -114,10 +116,10 @@ export function ModulesPerformance() {
   const [learnersLoading, setLearnersLoading] = useState(false);
 
   useEffect(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
     fetch(
-      `/api/company/modules-performance?walletAddress=${encodeURIComponent(address)}`,
+      `/api/company/${encodeURIComponent(slug)}/modules-performance?walletAddress=${encodeURIComponent(address)}`,
     )
       .then(async (res) => {
         if (!res.ok) return null;
@@ -155,14 +157,14 @@ export function ModulesPerformance() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [slug, address]);
 
   useEffect(() => {
-    if (!open || !activeModule?.id || !address) return;
+    if (!open || !slug || !activeModule?.id || !address) return;
     let cancelled = false;
     setLearnersLoading(true);
     fetch(
-      `/api/company/modules/${encodeURIComponent(activeModule.id)}/learners?walletAddress=${encodeURIComponent(address)}`,
+      `/api/company/${encodeURIComponent(slug)}/modules/${encodeURIComponent(activeModule.id)}/learners?walletAddress=${encodeURIComponent(address)}`,
     )
       .then(async (res) => {
         if (!res.ok) return null;
@@ -208,7 +210,7 @@ export function ModulesPerformance() {
     return () => {
       cancelled = true;
     };
-  }, [open, activeModule?.id, address]);
+  }, [open, slug, activeModule?.id, address]);
 
   return (
     <Card className="p-4">

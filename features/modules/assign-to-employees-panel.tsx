@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 type Employee = {
@@ -13,7 +14,8 @@ type Employee = {
 
 export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
   const { address } = useWalletKit();
-  const { company } = useCompany(address);
+  const slug = useCompanySlug();
+  const { company } = useCompany(slug, address);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
@@ -21,10 +23,12 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/company/employees?walletAddress=${encodeURIComponent(address)}`)
+    fetch(
+      `/api/company/${encodeURIComponent(slug)}/employees?walletAddress=${encodeURIComponent(address)}`,
+    )
       .then(async (res) => {
         const json = (await res.json()) as {
           employees?: Array<{
@@ -47,7 +51,7 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [slug, address]);
 
   const selectedUserIds = useMemo(
     () =>
@@ -58,19 +62,22 @@ export function AssignToEmployeesPanel({ moduleId }: { moduleId: string }) {
   );
 
   async function assign() {
-    if (!company || !address || selectedUserIds.length === 0) return;
+    if (!slug || !company || !address || selectedUserIds.length === 0) return;
     setSubmitting(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/company/modules/${moduleId}/assignments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyId: company.id,
-          walletAddress: address,
-          employeeUserIds: selectedUserIds,
-        }),
-      });
+      const res = await fetch(
+        `/api/company/${encodeURIComponent(slug)}/modules/${encodeURIComponent(moduleId)}/assignments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyId: company.id,
+            walletAddress: address,
+            employeeUserIds: selectedUserIds,
+          }),
+        },
+      );
       const json = (await res.json()) as {
         results?: { ok: boolean }[];
         error?: string;

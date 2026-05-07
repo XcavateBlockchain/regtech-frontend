@@ -60,6 +60,15 @@ export default function ModuleReviewPane({
       ? `${values.credentialExpiryMonths} months`
       : "Never";
 
+  const recipients =
+    typeof values.recipients === "number" && Number.isFinite(values.recipients)
+      ? values.recipients
+      : Number(values.recipients);
+
+  const recipientsCount = Number.isFinite(recipients)
+    ? Math.max(0, recipients)
+    : 0;
+
   const remainingQuizzes = quizBalance?.remaining ?? null;
   const quizWarning = (() => {
     if (quizBalanceLoading || remainingQuizzes == null) return null;
@@ -87,15 +96,6 @@ export default function ModuleReviewPane({
     }
     return null;
   })();
-
-  const recipients =
-    typeof values.recipients === "number" && Number.isFinite(values.recipients)
-      ? values.recipients
-      : Number(values.recipients);
-
-  const recipientsCount = Number.isFinite(recipients)
-    ? Math.max(0, recipients)
-    : 0;
   const usdTotal = recipientsCount * 1;
   const usdDisplay = new Intl.NumberFormat("en-US", {
     style: "currency",

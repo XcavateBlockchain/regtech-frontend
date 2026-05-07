@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 type ApiCredential = {
@@ -36,17 +37,18 @@ function explorerBase() {
 
 export function CredentialsIssued() {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const [rows, setRows] = useState<ApiCredential[]>([]);
   const [loading, setLoading] = useState(false);
 
   const cluster = process.env.NEXT_PUBLIC_SOLANA_CLUSTER ?? "devnet";
 
   useEffect(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
     setLoading(true);
     fetch(
-      `/api/company/credentials?walletAddress=${encodeURIComponent(address)}`,
+      `/api/company/${encodeURIComponent(slug)}/credentials?walletAddress=${encodeURIComponent(address)}`,
     )
       .then(async (res) => {
         if (!res.ok) return null;
@@ -65,7 +67,7 @@ export function CredentialsIssued() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [slug, address]);
 
   const display = useMemo(() => rows, [rows]);
 

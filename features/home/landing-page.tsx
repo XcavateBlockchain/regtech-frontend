@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "@/providers/auth-provider";
 
@@ -67,6 +69,7 @@ export function LandingPage() {
 
 function Hero() {
   const { setOpen } = useAuthContext();
+  const { user } = useUser();
   return (
     <section className="flex w-full max-w-[626px] flex-col items-center gap-6 text-center">
       <div className="flex flex-col items-center gap-4">
@@ -87,9 +90,15 @@ function Hero() {
         for $1 to gain verified access to exclusive investment opportunities.
       </p>
 
-      <Button onClick={() => setOpen(true)} className="px-9">
-        Get Started
-      </Button>
+      {user ? (
+        <Link href="/dashboard">
+          <Button>Dashboard</Button>
+        </Link>
+      ) : (
+        <Button onClick={() => setOpen(true)} className="px-9">
+          Get Started
+        </Button>
+      )}
     </section>
   );
 }

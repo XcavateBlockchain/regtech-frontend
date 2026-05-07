@@ -18,7 +18,7 @@ function truncate(addr: string) {
 export default async function ModuleDetailsPage({
   params,
 }: {
-  params: Promise<{ moduleId: string }>;
+  params: Promise<{ slug: string; moduleId: string }>;
 }) {
   const { moduleId } = await params;
   const module = await prisma.module.findUnique({

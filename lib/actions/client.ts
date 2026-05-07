@@ -10,7 +10,9 @@ export default async function client(url: string, data: DataProps) {
   const { formData } = data;
   const method = data.method ?? (formData ? "POST" : "GET");
 
-  let requestUrl = `${appEnv.APP_URL}/${url}`;
+  const baseUrl =
+    typeof window === "undefined" ? appEnv.APP_URL : window.location.origin;
+  const requestUrlObj = new URL(url, baseUrl);
   const headers: Record<string, string> = { accept: "application/json" };
 
   const init: RequestInit = { method, headers };
@@ -23,10 +25,7 @@ export default async function client(url: string, data: DataProps) {
           qs.set(key, String(value));
         }
       }
-      const q = qs.toString();
-      if (q) {
-        requestUrl += requestUrl.includes("?") ? `&${q}` : `?${q}`;
-      }
+      requestUrlObj.search = qs.toString();
     }
   } else {
     headers["Content-Type"] = "application/json";
@@ -35,6 +34,6 @@ export default async function client(url: string, data: DataProps) {
     }
   }
 
-  const res = await fetch(requestUrl, init);
+  const res = await fetch(requestUrlObj.toString(), init);
   return res.json();
 }

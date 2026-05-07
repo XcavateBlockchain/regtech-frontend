@@ -11,6 +11,7 @@ import {
 } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { useCompany } from "@/hooks/use-company";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useSolBalance } from "@/hooks/use-sol-balance";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 
@@ -24,9 +25,10 @@ function truncate(addr: string) {
 
 export function WalletAccount(props: { onClose: () => void }) {
   const { address: solanaAddress, handleDisconnect } = useWalletKit();
+  const slug = useCompanySlug();
 
   const balance = useSolBalance(solanaAddress);
-  const { company } = useCompany(solanaAddress);
+  const { company } = useCompany(slug, solanaAddress);
   const swigAccountPda = company?.swigAddress ?? null;
   const swigWalletPda = company?.swigWalletAddress ?? null;
   const swigWalletBalance = useSolBalance(swigWalletPda);

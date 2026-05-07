@@ -4,6 +4,7 @@ import { FileText } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 
@@ -25,13 +26,14 @@ export function KpiStats({
   fileUrl?: string | null;
 }) {
   const { address } = useWalletKit();
+  const slug = useCompanySlug();
   const [data, setData] = useState<Analytics | null>(null);
 
   useEffect(() => {
-    if (!address) return;
+    if (!slug || !address) return;
     let cancelled = false;
     fetch(
-      `/api/company/modules/${encodeURIComponent(moduleId)}/analytics?walletAddress=${encodeURIComponent(address)}`,
+      `/api/company/${encodeURIComponent(slug)}/modules/${encodeURIComponent(moduleId)}/analytics?walletAddress=${encodeURIComponent(address)}`,
     )
       .then(async (res) => {
         if (!res.ok) return null;
@@ -47,7 +49,7 @@ export function KpiStats({
     return () => {
       cancelled = true;
     };
-  }, [address, moduleId]);
+  }, [slug, address, moduleId]);
 
   const passRate = data?.passRate;
   const failRate = data?.failRate;
