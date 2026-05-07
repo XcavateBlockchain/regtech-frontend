@@ -1,12 +1,12 @@
-import { useConnect, usePhantom, useSolana } from "@phantom/react-sdk";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ModalDescription, ModalHeader, ModalTitle } from "@/components/modal";
 import { Button } from "@/components/ui/button";
-import { useWalletKit } from "@/hooks/use-wallet-kit";
-import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
+import { FieldInput } from "@/components/ui/field-input";
+import Form, { useZodForm } from "@/components/ui/form";
 import { storageKeys, useAuthContext } from "@/providers/auth-provider";
+import { z } from "zod";
 
 export function LoginForm() {
   const { setActivePage } = useAuthContext();
@@ -16,47 +16,26 @@ export function LoginForm() {
 function SigninUser(props: { onBack: () => void }) {
   const router = useRouter();
   const { setOpen, setActivePage } = useAuthContext();
-  const { connect, isConnecting } = useConnect();
-  const { address, isConnected, open: openWalletModal } = useWalletKit();
-  const { solana } = useSolana();
-  const phantom = usePhantom();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit() {
+  const schema = z.object({
+    email: z.email("Invalid email address"),
+  });
+  const form = useZodForm({
+    schema,
+    defaultValues: { email: "" },
+  });
+
+  async function onSubmit(values: { email: string }) {
     setLoading(true);
     setError(null);
     try {
-      if (!isConnected || !address) {
-        throw new Error("Please connect your wallet to sign in");
-      }
-      if (!solana?.isConnected) {
-        throw new Error("Solana wallet is not connected");
-      }
-
-      const timestampIso = new Date().toISOString();
-      const message = buildPhantomAuthMessage({
-        purpose: "login",
-        resourceId: "login",
-        walletAddress: address,
-        timestampIso,
-      });
-      const signed = await solana.signMessage(message);
-      const signature =
-        typeof signed === "string"
-          ? signed
-          : "signature" in signed
-            ? String(signed.signature)
-            : String(signed);
-
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          walletAddress: address,
-          timestampIso,
-          message,
-          signature,
+          email: values.email,
         }),
       });
       const json = (await res.json()) as {
@@ -123,46 +102,27 @@ function SigninUser(props: { onBack: () => void }) {
         </div>
       ) : null}
 
-      <div className="space-y-3">
-        <Button
-          type="button"
-          className="w-full"
-          variant={isConnected ? "default" : "outline"}
-          onClick={
-            isConnected
-              ? onSubmit
-              : async () => {
-                  setError(null);
-                  try {
-                    if (phantom.isLoading) return;
-                    await connect({ provider: "google" });
-                  } catch (e) {
-                    // eslint-disable-next-line no-console
-                    console.error("[Phantom connect google failed]", e);
-                    openWalletModal();
-                    setError(
-                      e instanceof Error
-                        ? e.message
-                        : "Failed to connect wallet",
-                    );
-                  }
-                }
-          }
-          disabled={loading || isConnecting || phantom.isLoading}
-        >
-          {loading
-            ? "Signing in…"
-            : isConnected
-              ? "Sign in with connected wallet"
-              : isConnecting
-                ? "Connecting…"
-                : "Connect wallet (Google) to sign in"}
-        </Button>
-        <p className="text-center text-sm text-muted-foreground">
-          Don’t have an account? Use an invite link (employees) or a module link
-          (users) to create one.
-        </p>
-      </div>
+      <Form form={form} onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="space-y-3">
+          <FieldInput
+            {...form.register("email")}
+            label="Email"
+            placeholder="you@example.com"
+            error={form.formState.errors.email}
+            autoComplete="email"
+            type="email"
+            required
+            disabled={loading}
+          />
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in…" : "Sign in"}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            Don’t have an account? Use the sign up flow (organization owners),
+            an invite link (employees), or a module link (users).
+          </p>
+        </div>
+      </Form>
     </>
   );
 }

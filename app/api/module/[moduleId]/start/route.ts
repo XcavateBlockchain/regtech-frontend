@@ -288,7 +288,31 @@ export async function POST(
       enrollment: onChainEnrollmentAddress,
       attempt: attemptPda,
     });
-    await sendServerTransaction(attestorSigner, [startIx]);
+
+    // Idempotency: if a previous request started the on-chain attempt but crashed
+    // before we wrote the DB row, retrying would throw "AlreadyInitialized".
+    // Detect that case and continue by creating the missing DB attempt record.
+    const { value: attemptAccount } = await rpc
+      .getAccountInfo(
+        attemptPda as Parameters<typeof rpc.getAccountInfo>[0],
+        { encoding: "base64" },
+      )
+      .send();
+
+    const alreadyInitialized =
+      !!attemptAccount ||
+      (await (async () => {
+        try {
+          await sendServerTransaction(attestorSigner, [startIx]);
+          return false;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg.includes("AlreadyInitialized") || msg.includes("6023")) {
+            return true;
+          }
+          throw e;
+        }
+      })());
 
     const batches = module.assessment.batches;
     const randomBatch = batches[Math.floor(Math.random() * batches.length)];
@@ -300,16 +324,32 @@ export async function POST(
     }
 
     // ── Create attempt DB record ──────────────────────────────────────────────
-    const attempt = await prisma.assessmentAttempt.create({
-      data: {
-        assessmentId: module.assessment.id,
-        userId: isEmployee ? null : user.id,
-        employeeId,
-        attemptNumber,
-        onChainAttemptAddress: attemptPda,
-        batchId: randomBatch.id,
-      },
-    });
+    // If the on-chain attempt was already initialized, avoid duplicating DB rows.
+    const attempt =
+      alreadyInitialized
+        ? await prisma.assessmentAttempt.findFirst({
+            where: {
+              assessmentId: module.assessment.id,
+              submittedAt: null,
+              ...(isEmployee
+                ? { employeeId, onChainAttemptAddress: String(attemptPda) }
+                : { userId: user.id, onChainAttemptAddress: String(attemptPda) }),
+            },
+          })
+        : null;
+
+    const ensuredAttempt =
+      attempt ??
+      (await prisma.assessmentAttempt.create({
+        data: {
+          assessmentId: module.assessment.id,
+          userId: isEmployee ? null : user.id,
+          employeeId,
+          attemptNumber,
+          onChainAttemptAddress: String(attemptPda),
+          batchId: randomBatch.id,
+        },
+      }));
 
     const batch = await prisma.questionBatch.findUnique({
       where: { id: randomBatch.id },
@@ -334,7 +374,7 @@ export async function POST(
     }
     const questions = batch.questions;
 
-    return NextResponse.json({ attemptId: attempt.id, questions });
+    return NextResponse.json({ attemptId: ensuredAttempt.id, questions });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json(

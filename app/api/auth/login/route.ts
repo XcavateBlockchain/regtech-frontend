@@ -1,35 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { verifyPhantomAuthPayload } from "@/lib/phantom-auth";
 import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
-  walletAddress: z.string().min(32),
-  timestampIso: z.string().min(1),
-  message: z.string().min(1),
-  signature: z.string().min(1),
+  email: z.email(),
 });
 
-/**
- * Wallet-based login for learner / employee flows.
- * Client signs a purpose-bound message; server verifies signature and looks up user by walletAddress.
- */
 export async function POST(req: Request) {
   try {
     const json = await req.json();
-    const { walletAddress, timestampIso, message, signature } =
-      bodySchema.parse(json);
-
-    verifyPhantomAuthPayload({
-      purpose: "login",
-      resourceId: "login",
-      walletAddress,
-      timestampIso,
-      payload: { message, signature },
-    });
+    const { email } = bodySchema.parse(json);
 
     const user = await prisma.user.findUnique({
-      where: { walletAddress },
+      where: { email },
       select: {
         userId: true,
         role: true,
@@ -41,7 +24,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "No account for this wallet" },
+        { error: "No account for this email" },
         { status: 404 },
       );
     }

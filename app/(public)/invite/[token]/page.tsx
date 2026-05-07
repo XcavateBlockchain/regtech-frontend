@@ -1,14 +1,11 @@
 "use client";
 
-import { useConnect, usePhantom, useSolana } from "@phantom/react-sdk";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { FieldInput } from "@/components/ui/field-input";
 import Form, { useZodForm } from "@/components/ui/form";
-import { useWalletKit } from "@/hooks/use-wallet-kit";
-import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
 import { storageKeys } from "@/providers/auth-provider";
 
 type InvitePreview = {
@@ -23,10 +20,6 @@ export default function InviteClaimPage() {
   const params = useParams<{ token: string }>();
   const router = useRouter();
   const token = params.token;
-  const { connect, isConnecting } = useConnect();
-  const { address, isConnected, open: openWalletModal } = useWalletKit();
-  const { solana } = useSolana();
-  const phantom = usePhantom();
 
   const [invite, setInvite] = useState<InvitePreview | null>(null);
   const [loadingInvite, setLoadingInvite] = useState(true);
@@ -35,10 +28,14 @@ export default function InviteClaimPage() {
 
   const schema = z.object({
     name: z.string().min(1, "Name is required"),
+    walletAddress: z
+      .string()
+      .min(32, "Wallet address is required")
+      .max(64, "Wallet address is too long"),
   });
   const form = useZodForm({
     schema,
-    defaultValues: { name: "" },
+    defaultValues: { name: "", walletAddress: "" },
   });
 
   useEffect(() => {
@@ -71,33 +68,10 @@ export default function InviteClaimPage() {
     };
   }, [token]);
 
-  async function onSubmit(values: { name: string }) {
+  async function onSubmit(values: { name: string; walletAddress: string }) {
     setSubmitting(true);
     setError(null);
     try {
-      if (!isConnected || !address) {
-        throw new Error("Please connect your wallet to continue");
-      }
-      if (!solana?.isConnected) {
-        throw new Error("Solana wallet is not connected");
-      }
-
-      const timestampIso = new Date().toISOString();
-      const message = buildPhantomAuthMessage({
-        purpose: "invite-claim",
-        resourceId: token,
-        walletAddress: address,
-        timestampIso,
-      });
-
-      const signed = await solana.signMessage(message);
-      const signature =
-        typeof signed === "string"
-          ? signed
-          : "signature" in signed
-            ? String(signed.signature)
-            : String(signed);
-
       const res = await fetch(
         `/api/invite/${encodeURIComponent(token)}/claim`,
         {
@@ -105,10 +79,7 @@ export default function InviteClaimPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: values.name,
-            walletAddress: address,
-            timestampIso,
-            message,
-            signature,
+            walletAddress: values.walletAddress,
           }),
         },
       );
@@ -140,14 +111,7 @@ export default function InviteClaimPage() {
     }
   }
 
-  const blocked =
-    loadingInvite ||
-    !invite ||
-    invite.expired ||
-    invite.claimed ||
-    !isConnected ||
-    !address ||
-    submitting;
+  const blocked = loadingInvite || !invite || invite.expired || invite.claimed || submitting;
 
   return (
     <main className="mx-auto flex w-full max-w-[560px] flex-col gap-6 px-4 py-10 md:py-16">
@@ -187,45 +151,6 @@ export default function InviteClaimPage() {
       ) : null}
 
       <section className="rounded-xl border border-border bg-card p-4">
-        {!isConnected ? (
-          <div className="mb-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={async () => {
-                setError(null);
-                try {
-                  if (phantom.isLoading) return;
-                  await connect({ provider: "google" });
-                } catch (e) {
-                  // eslint-disable-next-line no-console
-                  console.error("[Phantom connect google failed]", e);
-                  openWalletModal();
-                  setError(
-                    e instanceof Error ? e.message : "Failed to connect wallet",
-                  );
-                }
-              }}
-              disabled={
-                loadingInvite ||
-                !invite ||
-                invite.expired ||
-                invite.claimed ||
-                isConnecting ||
-                phantom.isLoading
-              }
-            >
-              {isConnecting
-                ? "Connecting…"
-                : "Connect wallet (Google) to continue"}
-            </Button>
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              We’ll generate your wallet address automatically — no manual
-              wallet input.
-            </p>
-          </div>
-        ) : null}
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)}>
           <div className="space-y-3">
             <FieldInput label="Email" value={invite?.email ?? ""} disabled />
@@ -239,10 +164,12 @@ export default function InviteClaimPage() {
               disabled={blocked}
             />
             <FieldInput
+              {...form.register("walletAddress")}
               label="Wallet address"
-              value={address ?? ""}
-              placeholder="Connect wallet to generate an address"
-              disabled
+              placeholder="Your Solana wallet public key"
+              error={form.formState.errors.walletAddress}
+              required
+              disabled={blocked}
             />
           </div>
           <Button type="submit" className="mt-4 w-full" disabled={blocked}>

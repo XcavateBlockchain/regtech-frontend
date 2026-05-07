@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { verifyPhantomAuthPayload } from "@/lib/phantom-auth";
 import { prisma } from "@/lib/prisma";
 
 function newExternalUserId() {
@@ -14,9 +13,6 @@ const tokenSchema = z.object({
 const bodySchema = z.object({
   name: z.string().min(1),
   walletAddress: z.string().min(32),
-  timestampIso: z.string().min(1),
-  message: z.string().min(1),
-  signature: z.string().min(1),
 });
 
 export async function POST(
@@ -26,16 +22,7 @@ export async function POST(
   try {
     const { token } = tokenSchema.parse(await params);
     const json = await req.json();
-    const { name, walletAddress, timestampIso, message, signature } =
-      bodySchema.parse(json);
-
-    verifyPhantomAuthPayload({
-      purpose: "invite-claim",
-      resourceId: token,
-      walletAddress,
-      timestampIso,
-      payload: { message, signature },
-    });
+    const { name, walletAddress } = bodySchema.parse(json);
 
     const invite = await prisma.invite.findUnique({
       where: { token },
