@@ -1,6 +1,6 @@
 # Regtech Frontend
 
-Next.js 16 + Solana app for issuing and verifying training credentials. The frontend talks to an Anchor program (`Euw5TuM3zX1st2MXnYAz8MfhpetoAEnrf874QMED2FcC`) through a Codama-generated TypeScript client and signs on-chain operations through per-company Swig wallets.
+Next.js 16 + Solana app for issuing and verifying training credentials. The frontend talks to an [Anchor program](https://github.com/XcavateBlockchain/regtech-contracts) (`Smart Contracts`) through a Codama-generated TypeScript client and signs on-chain operations through per-company Swig wallets.
 
 For a deep dive on how the wallet/on-chain stack fits together, see [`notes/wallet-stack.md`](./notes/wallet-stack.md). For product-side roles and flows see [`DEMO_GUIDE.md`](./DEMO_GUIDE.md).
 
