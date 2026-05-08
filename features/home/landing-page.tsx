@@ -28,7 +28,7 @@ const steps: Step[] = [
     tone: "brand",
     title: "Investors learn",
     description:
-      "Investors complete each module for $1, working through the material at their own pace.",
+      "Investors complete each module for working through the material at their own pace.",
   },
   {
     label: "Step 3",
@@ -87,7 +87,7 @@ function Hero() {
 
       <p className="max-w-[420px] text-sm leading-6 text-[#545454]">
         Companies publish regulatory learning modules. Investors complete them
-        for $1 to gain verified access to exclusive investment opportunities.
+        to gain verified access to exclusive investment opportunities.
       </p>
 
       {user ? (
