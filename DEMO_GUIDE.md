@@ -123,3 +123,5 @@ Investors are:
 - granted shared access to specific modules only
 
 They interact with modules as external participants.
+
+![Dashboard Screenshot](./public/screen-shot.png)
