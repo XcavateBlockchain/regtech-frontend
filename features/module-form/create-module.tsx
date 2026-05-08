@@ -208,7 +208,7 @@ export default function CreateModuleFrom({
         throw new Error(json.error ?? "Publish failed");
       }
       toast.success("Module published", { id: tid });
-      router.push(`/company/${slug}/module/${id}`);
+      router.push(`/${slug}/module/${id}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Publish failed", {
         id: tid,

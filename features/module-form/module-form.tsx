@@ -28,6 +28,7 @@ export default function ModuleForm({ form }: IForm) {
       <FieldInput
         label="Name"
         placeholder="Module Name"
+        maxLength={80}
         {...form.register("title")}
         error={form.formState.errors.title}
       />

@@ -20,12 +20,12 @@ export default function CompanyNavHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const resolveHref = (href: string) => {
-    // Convert legacy company hrefs (e.g. "/company/modules") into slugged paths.
-    if (!href.startsWith("/company")) return href;
+    if (!href.startsWith("/")) return href;
     if (!slug) return href;
 
-    const rest = href.replace(/^\/company/, "");
-    return `/company/${slug}${rest}`;
+    // Company navigation is path-based: `/:slug/*`.
+    // `navItems` should use root-relative paths like `/modules`, `/team`, etc.
+    return href === "/" ? `/${slug}` : `/${slug}${href}`;
   };
 
   const isActive = (href: string) => pathname === resolveHref(href);

@@ -168,15 +168,54 @@ export default function ModulePage() {
       const json = (await res.json()) as {
         module?: ModuleData;
         enrollment?: Enrollment | null;
+        passedSummary?: null | {
+          scoreBps: number;
+          passedAtIso: string | null;
+          credential: null | {
+            id: string;
+            metadataUri: string;
+            asset: string | null;
+            onChainAddress: string;
+            txSignature: string;
+          };
+        };
         error?: string;
       };
       if (!res.ok || !json.module) return;
       setModuleData(json.module);
       setEnrollment(json.enrollment ?? null);
+
+      if (json.passedSummary && phase === "intro") {
+        const scoreBps = json.passedSummary.scoreBps ?? 0;
+        const submittedAtIso =
+          json.passedSummary.passedAtIso ?? new Date().toISOString();
+        setResult({
+          passed: true,
+          score: Math.round(scoreBps / 100),
+          scoreBps,
+          correctCount: 0,
+          totalCount: 0,
+          startedAt: submittedAtIso,
+          submittedAt: submittedAtIso,
+          credential: json.passedSummary.credential
+            ? {
+                id: json.passedSummary.credential.id,
+                metadataUri: json.passedSummary.credential.metadataUri,
+                asset: json.passedSummary.credential.asset,
+                onChainAddress: json.passedSummary.credential.onChainAddress,
+                txSignature: json.passedSummary.credential.txSignature,
+              }
+            : null,
+        });
+        setQuestions([]);
+        setAnswers({});
+        setAttemptId(null);
+        setPhase("result");
+      }
     } catch {
       // silently ignore — module data used for intro display only
     }
-  }, [moduleId, user?.walletAddress]);
+  }, [moduleId, phase, user?.walletAddress]);
 
   useEffect(() => {
     void handleLoadModule();
@@ -243,6 +282,7 @@ export default function ModulePage() {
         quizStartedAtMs={quizStartedAtMs}
         moduleId={moduleId}
         cooldownSeconds={resultCooldownSeconds}
+        walletAddress={user?.walletAddress ?? null}
         onRetry={() => {
           setPhase("intro");
           setAnswers({});
@@ -510,6 +550,7 @@ function ResultScreen({
   quizStartedAtMs,
   moduleId,
   cooldownSeconds,
+  walletAddress,
   onRetry,
   onDashboard,
 }: {
@@ -519,6 +560,7 @@ function ResultScreen({
   quizStartedAtMs: number | null;
   moduleId: string;
   cooldownSeconds: number;
+  walletAddress: string | null;
   onRetry: () => void;
   onDashboard: () => void;
 }) {
@@ -535,12 +577,15 @@ function ResultScreen({
     useCountdown(cooldownTargetMs);
   const retryBlocked = !passed && cooldownSeconds > 0 && !retryReady;
 
-  const walletAddress =
+  const credentialAddress =
     result.credential?.asset ?? result.credential?.onChainAddress ?? null;
   const cluster = process.env.NEXT_PUBLIC_SOLANA_CLUSTER ?? "devnet";
-  const explorerHref = walletAddress
-    ? `https://explorer.solana.com/address/${walletAddress}?cluster=${encodeURIComponent(cluster)}`
+  const explorerHref = credentialAddress
+    ? `https://explorer.solana.com/address/${credentialAddress}?cluster=${encodeURIComponent(cluster)}`
     : null;
+
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
 
   async function handleShare() {
     const url = `${window.location.origin}/module/${encodeURIComponent(moduleId)}`;
@@ -579,47 +624,49 @@ function ResultScreen({
           </p>
         </div>
 
-        <section className="mt-8 rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold text-foreground">
-            Your answers
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Review what you selected for each question.
-          </p>
+        {questions.length > 0 && result.totalCount > 0 ? (
+          <section className="mt-8 rounded-lg border border-border bg-card p-4">
+            <h2 className="text-sm font-semibold text-foreground">
+              Your answers
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Review what you selected for each question.
+            </p>
 
-          <div className="mt-4 max-h-[420px] overflow-auto pr-2">
-            <ol className="space-y-3">
-              {questions.map((q, idx) => {
-                const selectedIds = new Set(answers[q.id] ?? []);
-                const selected = q.options
-                  .filter((o) => selectedIds.has(o.id))
-                  .map((o) => o.text);
+            <div className="mt-4 max-h-[420px] overflow-auto pr-2">
+              <ol className="space-y-3">
+                {questions.map((q, idx) => {
+                  const selectedIds = new Set(answers[q.id] ?? []);
+                  const selected = q.options
+                    .filter((o) => selectedIds.has(o.id))
+                    .map((o) => o.text);
 
-                return (
-                  <li
-                    key={q.id}
-                    className="rounded-lg border border-border p-3"
-                  >
-                    <p className="text-sm font-medium text-foreground">
-                      {idx + 1}. {q.text}
-                    </p>
-                    {selected.length ? (
-                      <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
-                        {selected.map((t) => (
-                          <li key={t}>{t}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        No answer selected.
+                  return (
+                    <li
+                      key={q.id}
+                      className="rounded-lg border border-border p-3"
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        {idx + 1}. {q.text}
                       </p>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        </section>
+                      {selected.length ? (
+                        <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
+                          {selected.map((t) => (
+                            <li key={t}>{t}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          No answer selected.
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </section>
+        ) : null}
 
         {passed && result.credential ? (
           <section className="mt-6 rounded-lg border border-border bg-card p-4">
@@ -671,6 +718,83 @@ function ResultScreen({
           </section>
         ) : (
           <>
+            {passed ? (
+              <section className="mt-6 rounded-lg border border-border bg-card p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-semibold text-foreground">
+                      Credential
+                    </h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Not minted yet. Claim it to mint your credential NFT.
+                    </p>
+                    {claimError ? (
+                      <p className="mt-2 text-xs text-destructive">
+                        {claimError}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex gap-2 sm:justify-end">
+                    <Button
+                      type="button"
+                      className="bg-[#624781] text-white hover:bg-[#624781]/90"
+                      disabled={claiming || !walletAddress}
+                      onClick={async () => {
+                        if (!walletAddress) return;
+                        setClaiming(true);
+                        setClaimError(null);
+                        try {
+                          const res = await fetch(
+                            `/api/module/${encodeURIComponent(moduleId)}/claim-credential`,
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ walletAddress }),
+                            },
+                          );
+                          const json = (await res.json()) as {
+                            credential?: {
+                              id: string;
+                              metadataUri: string;
+                              asset: string | null;
+                              onChainAddress: string;
+                              txSignature: string;
+                            };
+                            error?: string;
+                          };
+                          if (!res.ok || !json.credential) {
+                            throw new Error(json.error ?? "Claim failed");
+                          }
+                          // Convert the view into the "credential issued" branch.
+                          (result as Result).credential = {
+                            id: json.credential.id,
+                            metadataUri: json.credential.metadataUri,
+                            asset: json.credential.asset,
+                            onChainAddress: json.credential.onChainAddress,
+                            txSignature: json.credential.txSignature,
+                          };
+                        } catch (e) {
+                          setClaimError(
+                            e instanceof Error ? e.message : "Claim failed",
+                          );
+                        } finally {
+                          setClaiming(false);
+                        }
+                      }}
+                    >
+                      {claiming ? "Claiming…" : "Claim credential"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleShare}
+                    >
+                      Share
+                    </Button>
+                  </div>
+                </div>
+              </section>
+            ) : null}
             {retryBlocked ? (
               <output className="mx-auto mt-6 block max-w-md rounded-[10px] border border-amber-300/40 bg-amber-50/60 px-3 py-2 text-center text-sm text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
                 You can retry this quiz in{" "}

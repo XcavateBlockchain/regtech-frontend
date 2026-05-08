@@ -7,10 +7,8 @@ import { useCompanySlug } from "@/hooks/use-company-slug";
 
 export function CompanyDashboardHeader() {
   const slug = useCompanySlug();
-  const createHref = slug
-    ? `/company/${slug}/module/create`
-    : "/company/module/create";
-  const employeeHref = slug ? `/company/${slug}/team` : "/company/team/";
+  const createHref = slug ? `/${slug}/module/create` : "/module/create";
+  const employeeHref = slug ? `/${slug}/team` : "/team";
 
   return (
     <div className="flex items-center justify-between">

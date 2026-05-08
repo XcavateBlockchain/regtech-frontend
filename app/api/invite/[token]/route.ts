@@ -15,6 +15,7 @@ export async function GET(
       where: { token },
       select: {
         email: true,
+        inviteeName: true,
         permission: true,
         expiresAt: true,
         claimedAt: true,
@@ -35,6 +36,7 @@ export async function GET(
         invite: {
           companyName: invite.company.name,
           email: invite.email,
+          inviteeName: invite.inviteeName,
           permission: invite.permission,
           expired,
           claimed,

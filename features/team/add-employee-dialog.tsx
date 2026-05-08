@@ -15,6 +15,7 @@ import Form, { useZodForm } from "@/components/ui/form";
 import { useCompany } from "@/hooks/use-company";
 import { useCompanySlug } from "@/hooks/use-company-slug";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
+import { getInviteClaimAbsoluteUrl } from "@/lib/invite-public-url";
 import { inviteCreateSchema } from "@/lib/validations/invite-schema";
 
 export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
@@ -27,17 +28,28 @@ export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   const form = useZodForm({
-    schema: inviteCreateSchema.pick({ email: true, permission: true }),
-    defaultValues: { email: "", permission: "REVIEWER" as const },
+    schema: inviteCreateSchema.pick({
+      email: true,
+      inviteeName: true,
+      permission: true,
+    }),
+    defaultValues: {
+      email: "",
+      inviteeName: "",
+      permission: "REVIEWER" as const,
+    },
   });
 
   const claimUrl = useMemo(() => {
     if (!createdToken) return null;
-    if (typeof window === "undefined") return `/invite/${createdToken}`;
-    return `${window.location.origin}/invite/${createdToken}`;
+    return getInviteClaimAbsoluteUrl(createdToken);
   }, [createdToken]);
 
-  async function onSubmit(values: { email: string; permission: string }) {
+  async function onSubmit(values: {
+    email: string;
+    inviteeName: string;
+    permission: string;
+  }) {
     if (!slug || !company || !address) return;
     setSubmitting(true);
     setError(null);
@@ -52,6 +64,7 @@ export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
             companyId: company.id,
             walletAddress: address,
             email: values.email,
+            inviteeName: values.inviteeName,
             permission: values.permission,
           }),
         },
@@ -79,7 +92,8 @@ export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
           <DialogHeader>
             <DialogTitle>Invite employee</DialogTitle>
             <DialogDescription>
-              Create a claim link for a new employee to join your company.
+              Add their name and email. They only sign in with Google on the
+              invite link to get a wallet and join.
             </DialogDescription>
           </DialogHeader>
 
@@ -91,6 +105,13 @@ export function AddEmployeeDialog({ onCreated }: { onCreated: () => void }) {
 
           <Form form={form} onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-3">
+              <FieldInput
+                {...form.register("inviteeName")}
+                label="Employee full name"
+                placeholder="Name shown in the product"
+                error={form.formState.errors.inviteeName}
+                required
+              />
               <FieldInput
                 {...form.register("email")}
                 label="Employee email"

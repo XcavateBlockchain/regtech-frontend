@@ -4,7 +4,13 @@ import { prisma } from "@/lib/prisma";
 
 const querySchema = z.object({
   walletAddress: z.string().min(32),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
+  limit: z.preprocess((v) => {
+    if (v == null) return undefined;
+    if (typeof v === "string" && v.trim() === "") return undefined;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return undefined;
+    return n;
+  }, z.number().int().min(1).max(100).optional()),
 });
 
 export async function GET(req: Request) {

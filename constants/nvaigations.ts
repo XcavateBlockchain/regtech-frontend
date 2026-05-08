@@ -5,8 +5,8 @@ type NavItem = {
 };
 
 export const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/company", disabled: false },
-  { label: "Modules", href: "/company/modules", disabled: false },
-  { label: "Employees", href: "/company/team", disabled: false },
-  { label: "Settings", href: "/company/settings", disabled: false },
+  { label: "Dashboard", href: "/", disabled: false },
+  { label: "Modules", href: "/modules", disabled: false },
+  { label: "Employees", href: "/team", disabled: false },
+  { label: "Settings", href: "/settings", disabled: false },
 ];

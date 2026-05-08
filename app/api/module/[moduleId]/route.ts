@@ -1,5 +1,10 @@
+import { type Address, createSolanaRpc } from "@solana/kit";
 import { NextResponse } from "next/server";
+import { appEnv } from "@/constants/app-env";
+import { fetchMaybeAttempt } from "@/generated/reg_tech";
 import { prisma } from "@/lib/prisma";
+import { uuidToBytes } from "@/lib/solana/admin";
+import { findAttemptPda } from "@/lib/solana/pda";
 
 export async function GET(
   req: Request,
@@ -43,6 +48,17 @@ export async function GET(
     }
 
     let enrollment = null;
+    let passedSummary: null | {
+      scoreBps: number;
+      passedAtIso: string | null;
+      credential: null | {
+        id: string;
+        metadataUri: string;
+        asset: string | null;
+        onChainAddress: string;
+        txSignature: string;
+      };
+    } = null;
     if (walletAddress) {
       const user = await prisma.user.findUnique({
         where: { walletAddress },
@@ -53,6 +69,64 @@ export async function GET(
         },
       });
       if (user) {
+        // Best-effort: if the on-chain Attempt PDA says "passed", surface it immediately.
+        // This prevents users from being asked to "Begin quiz" again after they already passed.
+        const moduleChain = await prisma.module.findUnique({
+          where: { id: moduleId },
+          select: {
+            moduleIdHash: true,
+            company: { select: { partnerId: true } },
+          },
+        });
+        if (moduleChain?.moduleIdHash && moduleChain.company?.partnerId) {
+          const partnerIdBytes = uuidToBytes(moduleChain.company.partnerId);
+          const [attemptPda] = await findAttemptPda(
+            walletAddress as Address,
+            partnerIdBytes,
+            moduleChain.moduleIdHash,
+          );
+
+          const rpc = createSolanaRpc(appEnv.SOLANA_RPC_URL);
+          const attemptAcc = await fetchMaybeAttempt(
+            rpc,
+            attemptPda as Address,
+          );
+          if (attemptAcc.exists && attemptAcc.data.passed) {
+            const scoreBps = attemptAcc.data.lastScoreBps ?? 0;
+            const passedAtIso =
+              attemptAcc.data.passedAt.__option === "Some"
+                ? new Date(
+                    Number(attemptAcc.data.passedAt.value) * 1000,
+                  ).toISOString()
+                : null;
+
+            const cred = await prisma.credential.findFirst({
+              where: { recipientId: user.id, moduleId },
+              select: {
+                id: true,
+                metadataUri: true,
+                credentialAsset: true,
+                onChainAddress: true,
+                txSignature: true,
+              },
+            });
+
+            passedSummary = {
+              scoreBps,
+              passedAtIso,
+              credential: cred
+                ? {
+                    id: cred.id,
+                    metadataUri: cred.metadataUri,
+                    asset: cred.credentialAsset ?? null,
+                    onChainAddress: cred.onChainAddress,
+                    txSignature: cred.txSignature,
+                  }
+                : null,
+            };
+          }
+        }
+
         if (user.role === "EMPLOYEE" && user.employment?.id) {
           const assignment = await prisma.moduleAssignment.findUnique({
             where: {
@@ -126,6 +200,15 @@ export async function GET(
             };
           }
         }
+
+        if (passedSummary && enrollment) {
+          enrollment = {
+            ...enrollment,
+            lastPassed: true,
+            lastSubmittedAtIso:
+              enrollment.lastSubmittedAtIso ?? passedSummary.passedAtIso,
+          };
+        }
       }
     }
 
@@ -151,6 +234,7 @@ export async function GET(
         },
       },
       enrollment,
+      passedSummary,
     });
   } catch (e) {
     console.error("[GET /api/module/:moduleId]", e);

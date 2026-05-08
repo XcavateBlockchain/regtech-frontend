@@ -10,6 +10,7 @@ import { useWalletKit } from "@/hooks/use-wallet-kit";
 type ApiInvite = {
   id: string;
   email: string;
+  inviteeName: string | null;
   permission: string;
   token: string;
   expiresAt: string;

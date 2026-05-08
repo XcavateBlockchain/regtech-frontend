@@ -2,19 +2,21 @@
 
 import { useConnect, usePhantom, useSolana } from "@phantom/react-sdk";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { FieldInput } from "@/components/ui/field-input";
 import Form, { useZodForm } from "@/components/ui/form";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
+import { setPhantomOauthResumePath } from "@/lib/phantom-oauth-return";
 import { toBase58Signature } from "@/lib/phantom-signature";
 import { storageKeys } from "@/providers/auth-provider";
 
 type InvitePreview = {
   companyName: string;
   email: string;
+  inviteeName: string | null;
   permission: string;
   expired: boolean;
   claimed: boolean;
@@ -34,9 +36,23 @@ export default function InviteClaimPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const schema = z.object({
-    name: z.string().min(1, "Name is required"),
-  });
+  const prefilledName = invite?.inviteeName?.trim() ?? "";
+
+  const schema = useMemo(
+    () =>
+      z.object({ name: z.string().max(200) }).superRefine((val, ctx) => {
+        const hasInvitee = !!invite?.inviteeName?.trim();
+        if (!hasInvitee && !val.name.trim()) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Name is required",
+            path: ["name"],
+          });
+        }
+      }),
+    [invite?.inviteeName],
+  );
+
   const form = useZodForm({
     schema,
     defaultValues: { name: "" },
@@ -72,7 +88,12 @@ export default function InviteClaimPage() {
     };
   }, [token]);
 
-  async function onSubmit(values: { name: string }) {
+  useEffect(() => {
+    const n = invite?.inviteeName?.trim() ?? "";
+    if (n) form.setValue("name", n);
+  }, [invite, form]);
+
+  async function onSubmit(values: { name?: string }) {
     setSubmitting(true);
     setError(null);
     try {
@@ -81,6 +102,15 @@ export default function InviteClaimPage() {
       }
       if (!solana?.isConnected) {
         throw new Error("Solana wallet is not connected");
+      }
+
+      const displayName = (
+        invite?.inviteeName?.trim() ||
+        values.name?.trim() ||
+        ""
+      ).trim();
+      if (!displayName) {
+        throw new Error("Name is required");
       }
 
       const timestampIso = new Date().toISOString();
@@ -94,18 +124,22 @@ export default function InviteClaimPage() {
       const signed = await solana.signMessage(message);
       const signature = toBase58Signature(signed);
 
+      const body: Record<string, string> = {
+        walletAddress: address,
+        timestampIso,
+        message,
+        signature,
+      };
+      if (!invite?.inviteeName?.trim()) {
+        body.name = displayName;
+      }
+
       const res = await fetch(
         `/api/invite/${encodeURIComponent(token)}/claim`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: values.name,
-            walletAddress: address,
-            timestampIso,
-            message,
-            signature,
-          }),
+          body: JSON.stringify(body),
         },
       );
       const json = (await res.json()) as {
@@ -158,6 +192,15 @@ export default function InviteClaimPage() {
           <p className="text-sm text-muted-foreground">
             Invited as <span className="font-medium">{invite.permission}</span>{" "}
             for <span className="font-medium">{invite.email}</span>
+            {prefilledName ? (
+              <>
+                . Your name on file:{" "}
+                <span className="font-medium text-foreground">
+                  {prefilledName}
+                </span>
+                .
+              </>
+            ) : null}
           </p>
         ) : null}
       </header>
@@ -193,6 +236,9 @@ export default function InviteClaimPage() {
                 setError(null);
                 try {
                   if (phantom.isLoading) return;
+                  setPhantomOauthResumePath(
+                    `/invite/${encodeURIComponent(token)}`,
+                  );
                   await connect({ provider: "google" });
                 } catch (e) {
                   // eslint-disable-next-line no-console
@@ -217,8 +263,8 @@ export default function InviteClaimPage() {
                 : "Connect wallet (Google) to continue"}
             </Button>
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              We’ll generate your wallet address automatically — no manual
-              wallet input.
+              Open this link using the URL your employer shared (canonical app
+              host). Uses one Google sign-in, then brings you back here.
             </p>
           </div>
         ) : null}
@@ -227,12 +273,16 @@ export default function InviteClaimPage() {
             <FieldInput label="Email" value={invite?.email ?? ""} disabled />
             <FieldInput
               {...form.register("name")}
-              label="Full name"
+              label={
+                prefilledName
+                  ? "Full name (from your invite)"
+                  : "Full name (you enter)"
+              }
               placeholder="Your name"
               error={form.formState.errors.name}
               autoComplete="name"
-              required
-              disabled={blocked}
+              required={!prefilledName}
+              disabled={blocked || !!prefilledName}
             />
             <FieldInput
               label="Wallet address"

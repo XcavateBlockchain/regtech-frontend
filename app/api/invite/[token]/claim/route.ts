@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@/generated/prisma/client";
 import { verifyPhantomAuthPayload } from "@/lib/phantom-auth";
 import { prisma } from "@/lib/prisma";
 
@@ -7,12 +8,24 @@ function newExternalUserId() {
   return `usr_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
 }
 
+/** Sentinel: thrown inside the tx, translated to a 409 by the outer handler. */
+class AlreadyEmployedError extends Error {
+  constructor(public sameCompany: boolean) {
+    super(
+      sameCompany
+        ? "You're already a member of this company."
+        : "This account is already an employee at another company.",
+    );
+    this.name = "AlreadyEmployedError";
+  }
+}
+
 const tokenSchema = z.object({
   token: z.string().min(8),
 });
 
 const bodySchema = z.object({
-  name: z.string().min(1),
+  name: z.string().max(200).optional(),
   walletAddress: z.string().min(32),
   timestampIso: z.string().min(1),
   message: z.string().min(1),
@@ -42,6 +55,7 @@ export async function POST(
       select: {
         id: true,
         email: true,
+        inviteeName: true,
         companyId: true,
         permission: true,
         expiresAt: true,
@@ -62,6 +76,18 @@ export async function POST(
     const now = new Date();
     if (invite.expiresAt.getTime() <= now.getTime()) {
       return NextResponse.json({ error: "Invite expired" }, { status: 410 });
+    }
+
+    const resolvedName = (
+      invite.inviteeName?.trim() ||
+      name?.trim() ||
+      ""
+    ).trim();
+    if (!resolvedName) {
+      return NextResponse.json(
+        { error: "Name is required to claim this invite" },
+        { status: 400 },
+      );
     }
 
     const existingByEmail = await prisma.user.findUnique({
@@ -97,41 +123,82 @@ export async function POST(
       );
     }
 
+    const existingUserId = existingByEmail?.id ?? existingByWallet?.id ?? null;
+    if (existingUserId) {
+      const existingEmployee = await prisma.employee.findUnique({
+        where: { userId: existingUserId },
+        select: { companyId: true },
+      });
+      if (existingEmployee) {
+        const sameCompany = existingEmployee.companyId === invite.companyId;
+        return NextResponse.json(
+          {
+            error: sameCompany
+              ? "You're already a member of this company."
+              : "This account is already an employee at another company.",
+          },
+          { status: 409 },
+        );
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const user = existingByEmail
         ? await tx.user.update({
             where: { id: existingByEmail.id },
-            data: { name, walletAddress, role: "EMPLOYEE" },
+            data: { name: resolvedName, walletAddress, role: "EMPLOYEE" },
             select: { id: true, userId: true },
           })
         : existingByWallet
           ? await tx.user.update({
               where: { id: existingByWallet.id },
-              data: { name, email: invite.email, role: "EMPLOYEE" },
+              data: {
+                name: resolvedName,
+                email: invite.email,
+                role: "EMPLOYEE",
+              },
               select: { id: true, userId: true },
             })
           : await tx.user.create({
               data: {
                 userId: newExternalUserId(),
                 walletAddress,
-                name,
+                name: resolvedName,
                 email: invite.email,
                 role: "EMPLOYEE",
               },
               select: { id: true, userId: true },
             });
 
-      const employee = await tx.employee.create({
-        data: {
-          userId: user.id,
-          companyId: invite.companyId,
-          permission: invite.permission,
-          inviteId: invite.id,
-          invitedAt: now,
-          invitedByUserId: invite.company.ownerId,
-        },
-        select: { id: true },
-      });
+      let employee: { id: string };
+      try {
+        employee = await tx.employee.create({
+          data: {
+            userId: user.id,
+            companyId: invite.companyId,
+            permission: invite.permission,
+            inviteId: invite.id,
+            invitedAt: now,
+            invitedByUserId: invite.company.ownerId,
+          },
+          select: { id: true },
+        });
+      } catch (e) {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === "P2002"
+        ) {
+          // Race: an Employee row was created between our pre-check and here.
+          const existing = await tx.employee.findUnique({
+            where: { userId: user.id },
+            select: { companyId: true },
+          });
+          throw new AlreadyEmployedError(
+            existing?.companyId === invite.companyId,
+          );
+        }
+        throw e;
+      }
 
       await tx.invite.update({
         where: { id: invite.id },
@@ -155,6 +222,9 @@ export async function POST(
         { error: "Invalid input", details: e.issues },
         { status: 400 },
       );
+    }
+    if (e instanceof AlreadyEmployedError) {
+      return NextResponse.json({ error: e.message }, { status: 409 });
     }
     console.error("[POST /api/invite/:token/claim]", e);
     return NextResponse.json(

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isReservedSlug } from "@/lib/validations/reserved-slugs";
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -34,6 +35,13 @@ export const authSchema = userSchema.extend({
         message:
           "Use lowercase letters, numbers, and single hyphens between words",
       },
+    )
+    .refine(
+      (s) => {
+        const t = s.trim();
+        return t === "" || !isReservedSlug(t);
+      },
+      { message: "This handle is reserved" },
     ),
   industry: z.enum(["Real Estate", "Marketplace", "Defi", "Other"]),
   description: z.string().max(2000),

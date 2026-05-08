@@ -139,7 +139,6 @@ export async function POST(req: Request) {
 
     // ── Mint credential NFT to employee's wallet (airdrop) ───────────────────
     const nftAddress = await mintCredentialNft(
-      company.collectionAddress as Address,
       userWallet,
       `${assignment.module.name} Credential`,
       metadataUri,

@@ -3,7 +3,11 @@
 import Image from "next/image";
 import { ModalDescription, ModalHeader, ModalTitle } from "@/components/modal";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
-import { useAuthContext } from "@/providers/auth-provider";
+import {
+  setStoredAuthIntent,
+  storageKeys,
+  useAuthContext,
+} from "@/providers/auth-provider";
 
 export function SigninOptions() {
   const { open: openWalletModal } = useWalletKit();
@@ -34,6 +38,10 @@ export function SigninOptions() {
           data-testid="email-or-socials-button"
           onClick={() => {
             setIntent("login");
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem(storageKeys.pendingAuthIntent, "login");
+            }
+            setStoredAuthIntent("general");
             setActivePage(1);
           }}
         >
@@ -91,6 +99,13 @@ export function SigninOptions() {
         className="bg-secondary hover:border-primary hover:text-white hover:bg-primary flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-150 hover:-translate-y-px"
         onClick={() => {
           setIntent("register-owner");
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(
+              storageKeys.pendingAuthIntent,
+              "register-owner",
+            );
+          }
+          setStoredAuthIntent("owner");
           openWalletModal();
         }}
       >

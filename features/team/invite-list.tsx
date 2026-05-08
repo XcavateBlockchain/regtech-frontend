@@ -1,10 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { getInviteClaimAbsoluteUrl } from "@/lib/invite-public-url";
 
 type InviteRow = {
   id: string;
   email: string;
+  inviteeName: string | null;
   permission: string;
   token: string;
   expiresAt: string;
@@ -43,6 +45,7 @@ export function InviteList({ invites }: { invites: InviteRow[] }) {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">
+                    {i.inviteeName ? `${i.inviteeName} · ` : ""}
                     {i.email}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
@@ -55,10 +58,7 @@ export function InviteList({ invites }: { invites: InviteRow[] }) {
                     variant="outline"
                     size="sm"
                     onClick={async () => {
-                      const url =
-                        typeof window !== "undefined"
-                          ? `${window.location.origin}/invite/${i.token}`
-                          : `/invite/${i.token}`;
+                      const url = getInviteClaimAbsoluteUrl(i.token);
                       try {
                         await navigator.clipboard.writeText(url);
                       } catch {

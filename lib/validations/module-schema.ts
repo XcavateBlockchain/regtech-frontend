@@ -23,11 +23,11 @@ export const TIME_OPTIONS = [
 ];
 
 export const LANGUAGE_OPTIONS = [
-  { value: "english", label: "English" },
-  { value: "spanish", label: "Spanish" },
-  { value: "french", label: "French" },
-  { value: "german", label: "German" },
-  { value: "chinese", label: "Chinese" },
+  { value: "en", label: "English" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "zh", label: "Chinese" },
 ];
 
 const MAX_IMAGE_BYTES = 50 * 1024 * 1024; // 50MB
@@ -53,7 +53,7 @@ const coreModuleObjectSchema = z.object({
   title: z
     .string()
     .min(3, "Title must be at least 3 characters")
-    .max(120, "Title must be 120 characters or fewer"),
+    .max(80, "Title must be 80 characters or fewer"),
   description: z
     .string()
     .min(3, "Title must be at least 3 characters")

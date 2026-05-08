@@ -11,7 +11,7 @@ export default async function CreateModule({
   return (
     <main className="flex flex-col px-6 py-6 gap-6">
       <Link
-        href={`/company/${slug}/modules`}
+        href={`/${slug}/modules`}
         className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-5" strokeWidth={1.75} />

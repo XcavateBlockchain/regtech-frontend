@@ -8,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// import { ModuleCardData } from "../modules/module-item";
 
 export function ModuleHeader({
   module,
+  slug,
 }: {
   module: {
     id: string;
@@ -19,7 +19,9 @@ export function ModuleHeader({
     status: string;
     description: string;
   };
+  slug: string | null;
 }) {
+  const editHref = slug ? `/${slug}/module/${module.id}/edit` : "/modules";
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex flex-col gap-3.5">
@@ -55,7 +57,7 @@ export function ModuleHeader({
         </Select>
 
         {module.status === "DRAFT" && (
-          <Link href={`/company/module/${module.id}/edit`}>
+          <Link href={editHref}>
             <Button>Edit module</Button>
           </Link>
         )}

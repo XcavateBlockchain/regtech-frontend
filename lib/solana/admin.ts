@@ -1,4 +1,4 @@
-import { createCollectionV1, createV2 } from "@metaplex-foundation/mpl-core";
+import { create, createCollectionV1 } from "@metaplex-foundation/mpl-core";
 import {
   createSignerFromKeypair,
   generateSigner,
@@ -37,7 +37,7 @@ import {
 import { appEnv } from "@/constants/app-env";
 import { REGTECH_PROGRAM_ADDRESS } from "@/generated/reg_tech";
 
-const { SOLANA_RPC_URL: RPC_URL } = appEnv;
+const { SOLANA_RPC_URL: RPC_URL, XCAVATE_GLOBAL_COLLECTION_ADDRESS } = appEnv;
 if (!RPC_URL) {
   throw new Error(
     "Missing NEXT_PUBLIC_SOLANA_RPC_URL (Solana RPC URL). Set it in .env.local to a working RPC endpoint.",
@@ -323,8 +323,9 @@ export async function getPartnerAdminAddress(
 // ─── mpl-core collection creation ────────────────────────────────────────────
 
 /**
- * Creates an mpl-core Collection.
- * updateAuthority must be the Partner PDA so the regtech program can verify ownership.
+ * Creates an mpl-core Collection stub for register_partner.
+ * updateAuthority must be the Partner PDA (regtech checks collection update authority).
+ * Credential NFTs are minted into XCAVATE_GLOBAL_COLLECTION_ADDRESS instead.
  * Admin pays for the account.
  */
 export async function createCredentialCollection(
@@ -351,12 +352,10 @@ export async function createCredentialCollection(
 }
 
 /**
- * Mints a new mpl-core asset into the company's credential collection.
- * Admin keypair signs (it is the collection updateAuthority).
+ * Mints a new mpl-core asset into the global credential collection (admin update authority).
  * Returns the new asset address.
  */
 export async function mintCredentialNft(
-  collectionAddress: Address,
   recipientWallet: Address,
   name: string,
   metadataUri: string,
@@ -368,11 +367,17 @@ export async function mintCredentialNft(
   umi.use(keypairIdentity(createSignerFromKeypair(umi, umiKeypair)));
 
   const assetSigner = generateSigner(umi);
+  const collectionPk = umiPublicKey(XCAVATE_GLOBAL_COLLECTION_ADDRESS);
+  const recipientPk = umiPublicKey(recipientWallet);
 
-  await createV2(umi, {
+  await create(umi, {
     asset: assetSigner,
-    collection: umiPublicKey(collectionAddress),
-    owner: umiPublicKey(recipientWallet),
+    collection: {
+      publicKey: collectionPk,
+      oracles: [],
+      lifecycleHooks: [],
+    },
+    owner: recipientPk,
     name,
     uri: metadataUri,
   }).sendAndConfirm(umi, { confirm: { commitment: "confirmed" } });

@@ -6,7 +6,11 @@ import {
   usePhantom,
 } from "@phantom/react-sdk";
 import * as React from "react";
-import { storageKeys, useAuthContext } from "@/providers/auth-provider";
+import {
+  clearPendingAuthIntent,
+  storageKeys,
+  useAuthContext,
+} from "@/providers/auth-provider";
 import { useWalletContext } from "@/providers/wallet-provider";
 
 const MODAL_CLOSE_DURATION = 320;
@@ -57,6 +61,7 @@ export function useWalletKit() {
   }
 
   function handleDisconnect() {
+    clearPendingAuthIntent();
     setAuthOpen(false);
     // Wait for the close animation before tearing down the session so the
     // modal doesn't visibly snap to "Connect Wallet" mid-fade.
@@ -66,6 +71,8 @@ export function useWalletKit() {
       localStorage.removeItem(storageKeys.role);
       localStorage.removeItem(storageKeys.user);
       localStorage.removeItem(storageKeys.company);
+      localStorage.removeItem(storageKeys.employee);
+      localStorage.removeItem("WALLET_ADDRESS");
     }, MODAL_CLOSE_DURATION);
   }
   return {
