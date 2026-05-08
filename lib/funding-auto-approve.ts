@@ -6,7 +6,14 @@ export const AUTO_FUND_LAMPORTS = 500_000_000n; // 0.5 SOL
 
 export function startOfTodayUtc(now = new Date()): Date {
   return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0),
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0,
+      0,
+      0,
+    ),
   );
 }
 
@@ -25,4 +32,3 @@ export async function shouldAutoApproveFundingRequest(input: {
 
   return existingApprovedToday === null;
 }
-

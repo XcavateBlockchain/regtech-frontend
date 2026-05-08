@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { appEnv } from "@/constants/app-env";
 import { FundingRequestStatus } from "@/generated/prisma/enums";
 import { findPartnerPda } from "@/generated/reg_tech";
-import { appEnv } from "@/constants/app-env";
 import {
   AUTO_FUND_LAMPORTS,
   shouldAutoApproveFundingRequest,
@@ -71,7 +71,9 @@ export async function POST(req: Request) {
       try {
         const lamportsToFund = AUTO_FUND_LAMPORTS;
         const partnerIdBytes = uuidToBytes(company.partnerId);
-        const [partnerPda] = await findPartnerPda({ partnerId: partnerIdBytes });
+        const [partnerPda] = await findPartnerPda({
+          partnerId: partnerIdBytes,
+        });
         const txHash = await fundAddressFromAdmin(partnerPda, lamportsToFund);
 
         const record = await prisma.fundingRequest.create({
