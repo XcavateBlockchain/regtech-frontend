@@ -163,7 +163,7 @@ export function EnrolledModulesList({
       </ul>
 
       <Dialog open={answersOpen} onOpenChange={setAnswersOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Last attempt answers</DialogTitle>
             <DialogDescription>
@@ -171,46 +171,48 @@ export function EnrolledModulesList({
             </DialogDescription>
           </DialogHeader>
 
-          {answersLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : answersError ? (
-            <p className="text-sm text-destructive">{answersError}</p>
-          ) : !answers ? (
-            <p className="text-sm text-muted-foreground">
-              No submitted attempt found for this module yet.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="text-xs text-muted-foreground">
-                Score: {fmtPctFromBps(answers.scoreBps)} · Result:{" "}
-                {answers.passed == null
-                  ? "—"
-                  : answers.passed
-                    ? "Pass"
-                    : "Fail"}
-              </div>
-              <ol className="space-y-3">
-                {answers.questions.map((q, idx) => (
-                  <li key={q.questionId} className="rounded-lg border p-3">
-                    <p className="text-sm font-medium text-foreground">
-                      {idx + 1}. {q.text}
-                    </p>
-                    {q.selectedOptions.length ? (
-                      <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
-                        {q.selectedOptions.map((o) => (
-                          <li key={o.optionId}>{o.text}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        No answer selected.
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            {answersLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : answersError ? (
+              <p className="text-sm text-destructive">{answersError}</p>
+            ) : !answers ? (
+              <p className="text-sm text-muted-foreground">
+                No submitted attempt found for this module yet.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-xs text-muted-foreground">
+                  Score: {fmtPctFromBps(answers.scoreBps)} · Result:{" "}
+                  {answers.passed == null
+                    ? "—"
+                    : answers.passed
+                      ? "Pass"
+                      : "Fail"}
+                </div>
+                <ol className="space-y-3">
+                  {answers.questions.map((q, idx) => (
+                    <li key={q.questionId} className="rounded-lg border p-3">
+                      <p className="text-sm font-medium text-foreground">
+                        {idx + 1}. {q.text}
                       </p>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
+                      {q.selectedOptions.length ? (
+                        <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
+                          {q.selectedOptions.map((o) => (
+                            <li key={o.optionId}>{o.text}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          No answer selected.
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>

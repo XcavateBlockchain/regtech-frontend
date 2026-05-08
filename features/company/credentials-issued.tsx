@@ -40,15 +40,20 @@ export function CredentialsIssued() {
   const slug = useCompanySlug();
   const [rows, setRows] = useState<ApiCredential[]>([]);
   const [loading, setLoading] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   const cluster = process.env.NEXT_PUBLIC_SOLANA_CLUSTER ?? "devnet";
 
   useEffect(() => {
-    if (!slug || !address) return;
+    setWalletAddress(address ?? localStorage.getItem("WALLET_ADDRESS"));
+  }, [address]);
+
+  useEffect(() => {
+    if (!slug || !walletAddress) return;
     let cancelled = false;
     setLoading(true);
     fetch(
-      `/api/company/${encodeURIComponent(slug)}/credentials?walletAddress=${encodeURIComponent(address)}`,
+      `/api/company/${encodeURIComponent(slug)}/credentials?walletAddress=${encodeURIComponent(walletAddress)}`,
     )
       .then(async (res) => {
         if (!res.ok) return null;
@@ -67,7 +72,7 @@ export function CredentialsIssued() {
     return () => {
       cancelled = true;
     };
-  }, [slug, address]);
+  }, [slug, walletAddress]);
 
   const display = useMemo(() => rows, [rows]);
 

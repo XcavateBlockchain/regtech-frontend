@@ -9,6 +9,7 @@ import { FieldInput } from "@/components/ui/field-input";
 import Form, { useZodForm } from "@/components/ui/form";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
+import { setPhantomOauthResumePath } from "@/lib/phantom-oauth-return";
 import { toBase58Signature } from "@/lib/phantom-signature";
 import { storageKeys } from "@/providers/auth-provider";
 
@@ -180,6 +181,9 @@ export default function ModuleJoinPage() {
                 setError(null);
                 try {
                   if (phantom.isLoading) return;
+                  setPhantomOauthResumePath(
+                    `/m/${encodeURIComponent(shareToken)}/join`,
+                  );
                   await connect({ provider: "google" });
                 } catch (e) {
                   // Fallback: open the modal if direct connect fails.

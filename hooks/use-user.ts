@@ -5,6 +5,13 @@ import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { storageKeys, useAuthContext } from "@/providers/auth-provider";
 import { useWalletContext } from "@/providers/wallet-provider";
 
+function clearStoredSession() {
+  localStorage.removeItem(storageKeys.role);
+  localStorage.removeItem(storageKeys.user);
+  localStorage.removeItem(storageKeys.company);
+  localStorage.removeItem(storageKeys.employee);
+}
+
 export type UserData = {
   userId: string;
   role: string;
@@ -71,10 +78,12 @@ export function useUser(): UseUserReturn {
         if (cancelled) return;
         if (!data) {
           setUser(null);
+          clearStoredSession();
           return;
         }
         if (address && data.walletAddress !== address) {
           setUser(null);
+          clearStoredSession();
           return;
         }
         setUser(data);

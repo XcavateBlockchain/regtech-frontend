@@ -17,8 +17,10 @@ export async function GET(req: Request) {
       userId: true,
       role: true,
       walletAddress: true,
-      company: { select: { id: true } },
-      employment: { select: { companyId: true } },
+      company: { select: { id: true, slug: true } },
+      employment: {
+        select: { companyId: true, company: { select: { slug: true } } },
+      },
     },
   });
 
@@ -33,10 +35,18 @@ export async function GET(req: Request) {
         ? (user.employment?.companyId ?? null)
         : null;
 
+  const companySlug =
+    user.role === "OWNER"
+      ? (user.company?.slug ?? null)
+      : user.role === "EMPLOYEE"
+        ? (user.employment?.company?.slug ?? null)
+        : null;
+
   return NextResponse.json({
     userId: user.userId,
     role: user.role,
     companyId,
+    companySlug,
     walletAddress: user.walletAddress,
   });
 }

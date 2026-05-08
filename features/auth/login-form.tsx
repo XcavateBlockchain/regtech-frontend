@@ -1,22 +1,33 @@
 import { useConnect, usePhantom, useSolana } from "@phantom/react-sdk";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ModalDescription, ModalHeader, ModalTitle } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { buildPhantomAuthMessage } from "@/lib/phantom-auth-message";
 import { toBase58Signature } from "@/lib/phantom-signature";
-import { storageKeys, useAuthContext } from "@/providers/auth-provider";
+import {
+  clearPendingAuthIntent,
+  clearStoredAuthIntent,
+  storageKeys,
+  useAuthContext,
+} from "@/providers/auth-provider";
 
 export function LoginForm() {
   const { setActivePage } = useAuthContext();
-  return <SigninUser onBack={() => setActivePage(0)} />;
+  return (
+    <SigninUser
+      onBack={() => {
+        clearStoredAuthIntent();
+        clearPendingAuthIntent();
+        setActivePage(0);
+      }}
+    />
+  );
 }
 
 function SigninUser(props: { onBack: () => void }) {
-  const router = useRouter();
-  const { setOpen, setActivePage, setAccountLoading } = useAuthContext();
+  const { setAccountLoading } = useAuthContext();
   const { connect, isConnecting } = useConnect();
   const { address, isConnected, open: openWalletModal } = useWalletKit();
   const { solana } = useSolana();
@@ -59,6 +70,7 @@ function SigninUser(props: { onBack: () => void }) {
         userId?: string;
         role?: "OWNER" | "EMPLOYEE" | "USER";
         companyId?: string | null;
+        companySlug?: string | null;
         walletAddress?: string;
         error?: string;
       };
@@ -74,17 +86,28 @@ function SigninUser(props: { onBack: () => void }) {
         localStorage.removeItem(storageKeys.company);
       }
       localStorage.removeItem(storageKeys.employee);
+      clearPendingAuthIntent();
+      clearStoredAuthIntent();
 
       // Stop any provider-driven account loading flow from re-opening the modal.
       setAccountLoading(false);
-      setOpen(false);
-      setActivePage(0);
 
-      if (json.role === "OWNER") {
-        router.push("/company");
-      } else {
-        router.push("/dashboard");
+      const path =
+        json.role === "OWNER"
+          ? json.companySlug
+            ? `/${json.companySlug}`
+            : null
+          : "/dashboard";
+
+      if (json.role === "OWNER" && !path) {
+        throw new Error(
+          "No company handle on file for this owner account. Contact support.",
+        );
       }
+
+      // Full navigation avoids losing the transition when the auth Dialog unmounts
+      // this component right after setOpen(false).
+      window.location.assign(path ?? "/dashboard");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -133,6 +156,12 @@ function SigninUser(props: { onBack: () => void }) {
                   setError(null);
                   try {
                     if (phantom.isLoading) return;
+                    if (typeof window !== "undefined") {
+                      sessionStorage.setItem(
+                        storageKeys.pendingAuthIntent,
+                        "login",
+                      );
+                    }
                     await connect({ provider: "google" });
                   } catch (e) {
                     // eslint-disable-next-line no-console

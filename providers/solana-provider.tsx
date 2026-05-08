@@ -26,15 +26,69 @@ if (typeof window !== "undefined" && !APP_ID) {
   );
 }
 
-function getPhantomRedirectUrl(): string {
-  if (typeof window === "undefined") return "";
-  const configuredBase = (appEnv.APP_URL ?? "").trim().replace(/\/$/, "");
+function stripLeadingWww(hostname: string): string {
+  return hostname.startsWith("www.") ? hostname.slice(4) : hostname;
+}
+
+/** True when currentHost is a single DNS label left of base apex (tenant subdomain). */
+function isTenantSubdomain(
+  currentHostname: string,
+  baseHostname: string,
+): boolean {
+  const cur = stripLeadingWww(currentHostname);
+  const base = stripLeadingWww(baseHostname);
+  return cur !== base && cur.endsWith(`.${base}`);
+}
+
+/**
+ * Phantom Portal requires each OAuth redirect URL to be allowlisted. Tenant hosts
+ * (e.g. slug.localhost, acme.example.com) must not use their own `/auth/callback`
+ * unless each is added in the portal — use the canonical `NEXT_PUBLIC_APP_URL` origin instead.
+ */
+function getPhantomRedirectOrigin(configuredBase: string): string {
+  if (typeof window === "undefined") {
+    try {
+      return configuredBase
+        ? new URL(
+            /^https?:\/\//.test(configuredBase)
+              ? configuredBase
+              : `https://${configuredBase}`,
+          ).origin
+        : "";
+    } catch {
+      return configuredBase || "";
+    }
+  }
+
   const currentOrigin = window.location.origin.replace(/\/$/, "");
-  const origin =
-    configuredBase && configuredBase === currentOrigin
-      ? configuredBase
-      : currentOrigin;
-  return `${origin}/auth/callback`;
+  if (!configuredBase) return currentOrigin;
+
+  try {
+    const baseUrl = new URL(
+      /^https?:\/\//.test(configuredBase)
+        ? configuredBase
+        : `https://${configuredBase}`,
+    );
+    const curUrl = new URL(currentOrigin);
+
+    if (baseUrl.origin === curUrl.origin) {
+      return baseUrl.origin;
+    }
+
+    if (isTenantSubdomain(curUrl.hostname, baseUrl.hostname)) {
+      return baseUrl.origin;
+    }
+  } catch {
+    return currentOrigin;
+  }
+
+  return currentOrigin;
+}
+
+function getPhantomRedirectUrl(): string {
+  const configuredBase = (appEnv.APP_URL ?? "").trim().replace(/\/$/, "");
+  const origin = getPhantomRedirectOrigin(configuredBase).replace(/\/$/, "");
+  return origin ? `${origin}/auth/callback` : "";
 }
 
 export default function SolanaWalletProvider({ children }: PropsWithChildren) {

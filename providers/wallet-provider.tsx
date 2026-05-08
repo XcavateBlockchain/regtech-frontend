@@ -35,6 +35,7 @@ const storageKeys = {
   role: "ROLE",
   user: "USER_ID",
   company: "COMPANY_ID",
+  authIntent: "AUTH_INTENT",
 };
 
 export default function WalletProvider(props: { children: React.ReactNode }) {
@@ -50,7 +51,6 @@ export default function WalletProvider(props: { children: React.ReactNode }) {
       if (!user) {
         const timeout = setTimeout(() => {
           setAccountLoading(true);
-          localStorage.setItem(storageKeys.role, "OWNER");
         }, 320);
 
         return () => clearTimeout(timeout);
@@ -62,14 +62,19 @@ export default function WalletProvider(props: { children: React.ReactNode }) {
     if (accountLoading && address) {
       let ignore = false;
       const checkUser = async () => {
-        const role = localStorage.getItem(storageKeys.role);
+        const authIntent = localStorage.getItem(storageKeys.authIntent);
         const user = await getUserByWallet(address ?? "");
         if (ignore) return;
-        if (!user && role === "OWNER") {
+        if (!user && authIntent === "owner") {
           setCompanyModalOpen(true);
           setAccountLoading(false);
           return;
         }
+        if (!user) {
+          setAccountLoading(false);
+          return;
+        }
+        localStorage.setItem("WALLET_ADDRESS", address);
         localStorage.setItem(storageKeys.role, user?.role ?? "");
         localStorage.setItem(storageKeys.user, user?.userId ?? "");
         localStorage.setItem(storageKeys.company, user?.companyId ?? "");

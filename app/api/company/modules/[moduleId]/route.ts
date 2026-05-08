@@ -7,7 +7,7 @@ import { s3 } from "@/lib/s3";
 
 const dataSchema = z.object({
   mode: z.enum(["manual", "ai"]).optional(),
-  title: z.string().min(3).max(120).optional(),
+  title: z.string().min(3).max(80).optional(),
   description: z.string().min(3).max(500).optional(),
   category: z.enum(["securities", "aml", "kyc", "defi", "tax"]).optional(),
   completionTime: z.enum(["15", "30", "45", "60", "90"]).optional(),

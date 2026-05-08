@@ -13,7 +13,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { cn } from "@/lib/utils";
 import { type AuthValues, authSchema } from "@/lib/validations/auth-schema";
-import { storageKeys, useAuthContext } from "@/providers/auth-provider";
+import {
+  clearPendingAuthIntent,
+  clearStoredAuthIntent,
+  storageKeys,
+  useAuthContext,
+} from "@/providers/auth-provider";
 
 type Step = 0 | 1 | 2;
 
@@ -83,12 +88,14 @@ export function CreateCompanyForm() {
         companyId: string;
       };
 
+      clearPendingAuthIntent();
+      clearStoredAuthIntent();
       setOpen(false);
       setActivePage(0);
       localStorage.setItem(storageKeys.role, "OWNER");
       localStorage.setItem(storageKeys.user, userId);
       localStorage.setItem(storageKeys.company, companyId);
-      router.push("/company");
+      router.push(`/${encodeURIComponent(values.companySlug)}`);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Something went wrong. Try again.",

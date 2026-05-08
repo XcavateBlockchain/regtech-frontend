@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
-import { isAdminWalletClient } from "./is-admin-client";
 
 type FundingRequestRow = {
   id: string;
@@ -43,10 +42,8 @@ export function FundingRequestsList() {
   );
   const [actingId, setActingId] = useState<string | null>(null);
 
-  const authorized = isAdminWalletClient(address);
-
   const refresh = useCallback(async () => {
-    if (!address || !authorized) return;
+    if (!address) return;
     setLoading(true);
     setError(null);
     try {
@@ -65,7 +62,7 @@ export function FundingRequestsList() {
     } finally {
       setLoading(false);
     }
-  }, [address, authorized]);
+  }, [address]);
 
   useEffect(() => {
     refresh();
@@ -128,16 +125,6 @@ export function FundingRequestsList() {
       <Card className="px-6 py-8">
         <p className="text-sm text-muted-foreground">
           Connect your Phantom wallet to review funding requests.
-        </p>
-      </Card>
-    );
-  }
-
-  if (!authorized) {
-    return (
-      <Card className="px-6 py-8">
-        <p className="text-sm font-medium text-destructive">
-          Not authorized — your wallet is not in the admin allowlist.
         </p>
       </Card>
     );

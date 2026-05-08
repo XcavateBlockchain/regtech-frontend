@@ -34,8 +34,13 @@ export async function POST(req: Request) {
         userId: true,
         role: true,
         walletAddress: true,
-        company: { select: { id: true } },
-        employment: { select: { companyId: true } },
+        company: { select: { id: true, slug: true } },
+        employment: {
+          select: {
+            companyId: true,
+            company: { select: { slug: true } },
+          },
+        },
       },
     });
 
@@ -53,10 +58,27 @@ export async function POST(req: Request) {
           ? (user.employment?.companyId ?? null)
           : null;
 
+    let companySlug =
+      user.role === "OWNER"
+        ? (user.company?.slug ?? null)
+        : user.role === "EMPLOYEE"
+          ? (user.employment?.company?.slug ?? null)
+          : null;
+
+    // Fallback if relation shape ever misses slug but companyId is known.
+    if (!companySlug && companyId) {
+      const row = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { slug: true },
+      });
+      companySlug = row?.slug ?? null;
+    }
+
     return NextResponse.json({
       userId: user.userId,
       role: user.role,
       companyId,
+      companySlug,
       walletAddress: user.walletAddress,
     });
   } catch (e) {

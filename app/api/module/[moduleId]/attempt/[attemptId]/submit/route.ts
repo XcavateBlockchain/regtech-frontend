@@ -1,10 +1,11 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { type Address, isAddress } from "@solana/kit";
+import { type Address, createSolanaRpc, isAddress } from "@solana/kit";
 import { createNoopSigner } from "@solana/signers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appEnv } from "@/constants/app-env";
 import {
+  fetchAttempt,
   findPartnerPda,
   getClaimCredentialInstructionAsync,
   getSubmitAttemptInstructionAsync,
@@ -52,7 +53,12 @@ export async function POST(
     // ── Load user ────────────────────────────────────────────────────────────
     const user = await prisma.user.findUnique({
       where: { walletAddress },
-      select: { id: true, role: true, employment: { select: { id: true } } },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        employment: { select: { id: true } },
+      },
     });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
@@ -166,7 +172,220 @@ export async function POST(
       attempt: attempt.onChainAttemptAddress as Address,
       scoreBps,
     });
-    await sendServerTransaction(attestorSigner, [submitIx]);
+    try {
+      await sendServerTransaction(attestorSigner, [submitIx]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      const logs =
+        typeof e === "object" &&
+        e !== null &&
+        "context" in e &&
+        typeof (e as { context?: unknown }).context === "object" &&
+        (e as { context?: unknown }).context !== null &&
+        "logs" in (e as { context: Record<string, unknown> }).context
+          ? (((e as { context: { logs?: unknown } }).context.logs ?? null) as
+              | null
+              | string[])
+          : null;
+      const alreadyPassed =
+        /AlreadyPassed/i.test(msg) ||
+        (Array.isArray(logs) && logs.some((l) => /AlreadyPassed/i.test(l)));
+
+      if (alreadyPassed) {
+        const now = new Date();
+
+        // If the credential was already minted/recorded, return it (and mark DB complete).
+        const existingCredential = await prisma.credential.findFirst({
+          where: { recipientId: userId, moduleId },
+          select: {
+            id: true,
+            metadataUri: true,
+            credentialAsset: true,
+            onChainAddress: true,
+            txSignature: true,
+            scoreBps: true,
+          },
+        });
+
+        // Mark this attempt as finished so the UI can stop resuming it.
+        await prisma.assessmentAttempt.update({
+          where: { id: attemptId },
+          data: {
+            submittedAt: now,
+            passed: true,
+            // Score is already committed on-chain from a previous passing attempt.
+            // Keep these nullable to avoid inventing a score.
+            score: null,
+            onChainScoreBps: null,
+          },
+        });
+
+        if (isEmployee) {
+          await prisma.moduleAssignment.update({
+            where: { moduleId_employeeId: { moduleId, employeeId } },
+            data: {
+              status: "COMPLETED",
+              completedAt: now,
+              ...(existingCredential
+                ? { credentialId: existingCredential.id }
+                : {}),
+            },
+          });
+        } else {
+          await prisma.moduleEnrollment.update({
+            where: { moduleId_userId: { moduleId, userId } },
+            data: {
+              status: "COMPLETED",
+              completedAt: now,
+              ...(existingCredential
+                ? { credentialId: existingCredential.id }
+                : {}),
+            },
+          });
+        }
+
+        if (existingCredential) {
+          const scoreBps = existingCredential.scoreBps ?? 0;
+          const score = Math.round(scoreBps / 100);
+          return NextResponse.json({
+            passed: true,
+            score,
+            scoreBps,
+            correctCount: 0,
+            totalCount: 0,
+            startedAt: attempt.startedAt.toISOString(),
+            submittedAt: now.toISOString(),
+            credential: {
+              id: existingCredential.id,
+              metadataUri: existingCredential.metadataUri,
+              asset: existingCredential.credentialAsset,
+              onChainAddress: existingCredential.onChainAddress,
+              txSignature: existingCredential.txSignature,
+            },
+          });
+        }
+
+        // No DB credential yet — best effort backfill using the on-chain Attempt state.
+        if (company.collectionAddress) {
+          const enrollmentAddress = await resolveEnrollmentAddress();
+          if (enrollmentAddress) {
+            const rpc = createSolanaRpc(appEnv.SOLANA_RPC_URL);
+            const attemptAccount = await fetchAttempt(
+              rpc,
+              attempt.onChainAttemptAddress as Address,
+            );
+            const scoreBps = attemptAccount.data.lastScoreBps ?? 0;
+
+            const [credentialPda] = await findCredentialPda(
+              walletAddress as Address,
+              partnerIdBytes,
+              module.moduleIdHash,
+            );
+
+            const metadataKey = `credentials/${module.moduleIdHash}/${userId}.json`;
+            const metadataBody = JSON.stringify({
+              name: module.name,
+              description: `Credential for ${module.name}`,
+              batchLabel: attempt.batch?.label ?? "—",
+              scoreBps,
+              issuedAt: now.toISOString(),
+            });
+            await s3.send(
+              new PutObjectCommand({
+                Bucket: appEnv.AWS_S3_BUCKET_NAME,
+                Key: metadataKey,
+                Body: metadataBody,
+                ContentType: "application/json",
+              }),
+            );
+            const metadataUri = `https://${appEnv.AWS_S3_BUCKET_NAME}.s3.${appEnv.XCAV_AWS_REGION}.amazonaws.com/${metadataKey}`;
+
+            const partnerAdminWallet = await getPartnerAdminAddress(
+              company.swigAddress as Address,
+            );
+            const claimIx = await getClaimCredentialInstructionAsync({
+              partnerAdmin: createNoopSigner(partnerAdminWallet),
+              partner: partnerPda,
+              module: modulePda,
+              enrollment: enrollmentAddress as Address,
+              attempt: attempt.onChainAttemptAddress as Address,
+              credential: credentialPda,
+              metadataUri,
+            });
+
+            // Claim can be idempotent-ish depending on on-chain state; treat failures as non-fatal.
+            let txHash = "";
+            try {
+              txHash = await executeViaSwigDelegate(
+                company.swigAddress as Address,
+                claimIx as never,
+              );
+            } catch {
+              // ignore
+            }
+
+            const asset = await mintCredentialNft(
+              walletAddress as Address,
+              module.name,
+              metadataUri,
+            );
+
+            const credential = await prisma.credential.create({
+              data: {
+                recipientId: userId,
+                issuingCompanyId: company.id,
+                issuedByUserId: company.ownerId,
+                moduleId,
+                onChainPartnerId: company.partnerId,
+                moduleIdHash: module.moduleIdHash,
+                credentialType: module.credentialType,
+                metadataUri,
+                scoreBps,
+                onChainAddress: credentialPda,
+                txSignature: txHash || "UNKNOWN",
+                credentialAsset: String(asset),
+              },
+            });
+
+            if (isEmployee) {
+              await prisma.moduleAssignment.update({
+                where: { moduleId_employeeId: { moduleId, employeeId } },
+                data: { credentialId: credential.id },
+              });
+            } else {
+              await prisma.moduleEnrollment.update({
+                where: { moduleId_userId: { moduleId, userId } },
+                data: { credentialId: credential.id },
+              });
+            }
+
+            return NextResponse.json({
+              passed: true,
+              score: Math.round(scoreBps / 100),
+              scoreBps,
+              correctCount: 0,
+              totalCount: 0,
+              startedAt: attempt.startedAt.toISOString(),
+              submittedAt: now.toISOString(),
+              credential: {
+                id: credential.id,
+                metadataUri,
+                asset: String(asset),
+                onChainAddress: String(credentialPda),
+                txSignature: txHash || "UNKNOWN",
+              },
+            });
+          }
+        }
+
+        return NextResponse.json(
+          { error: "You have already passed this module." },
+          { status: 409 },
+        );
+      }
+
+      throw e;
+    }
 
     // ── Update attempt record ─────────────────────────────────────────────────
     await prisma.assessmentAttempt.update({
@@ -204,7 +423,7 @@ export async function POST(
       return enrollment?.onChainEnrollmentAddress ?? null;
     }
 
-    if (passed && company.collectionAddress) {
+    if (passed) {
       const enrollmentAddress = await resolveEnrollmentAddress();
       if (enrollmentAddress) {
         const [credentialPda] = await findCredentialPda(
@@ -214,12 +433,29 @@ export async function POST(
         );
 
         const metadataKey = `credentials/${module.moduleIdHash}/${userId}.json`;
+        const scorePercent = Math.round(scoreBps) / 100;
+        const issuedAt = new Date().toISOString();
         const metadataBody = JSON.stringify({
           name: module.name,
           description: `Credential for ${module.name}`,
-          batchLabel: attempt.batch.label,
+          image: module.thumbnailUrl,
+          recipientName: user.name,
           scoreBps,
-          issuedAt: new Date().toISOString(),
+          scorePercent,
+          moduleId,
+          moduleIdHash: module.moduleIdHash,
+          batchLabel: attempt.batch.label,
+          issuedAt,
+          attributes: [
+            { trait_type: "Recipient", value: user.name },
+            { trait_type: "Score (bps)", value: scoreBps },
+            { trait_type: "Score (%)", value: scorePercent },
+            { trait_type: "Module", value: module.name },
+            { trait_type: "Module ID", value: moduleId },
+            { trait_type: "Module Hash", value: module.moduleIdHash },
+            { trait_type: "Batch", value: attempt.batch.label },
+            { trait_type: "Issued At", value: issuedAt },
+          ],
         });
         await s3.send(
           new PutObjectCommand({
@@ -249,7 +485,6 @@ export async function POST(
         );
 
         const asset = await mintCredentialNft(
-          company.collectionAddress as Address,
           walletAddress as Address,
           module.name,
           metadataUri,

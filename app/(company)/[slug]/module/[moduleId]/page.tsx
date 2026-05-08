@@ -20,7 +20,7 @@ export default async function ModuleDetailsPage({
 }: {
   params: Promise<{ slug: string; moduleId: string }>;
 }) {
-  const { moduleId } = await params;
+  const { slug, moduleId } = await params;
   const module = await prisma.module.findUnique({
     where: { id: moduleId },
     select: {
@@ -135,6 +135,7 @@ export default async function ModuleDetailsPage({
       </div>
 
       <ModuleHeader
+        slug={slug}
         module={{
           id: module.id,
           title: module.name,

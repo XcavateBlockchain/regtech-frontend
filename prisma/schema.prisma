@@ -177,7 +177,7 @@ model FundingRequest {
 model Employee {
   id        String  @id @default(cuid())
   userId    String  @unique // @unique prevents dual-company membership
-  companyId String  @unique
+  companyId String
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -210,6 +210,7 @@ model Invite {
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   email      String
+  inviteeName String? @map("invitee_name")
   role       String             @default("member")
   permission EmployeePermission @default(REVIEWER)
 

@@ -285,15 +285,24 @@ export async function POST(
     );
 
     const attestorSigner = await getAdminSigner();
-    const startIx = await getStartAttemptInstructionAsync({
-      attestor: attestorSigner,
-      user: walletAddress as Address,
-      partner: partnerPda,
-      module: modulePda,
-      enrollment: onChainEnrollmentAddress,
-      attempt: attemptPda,
-    });
-    await sendServerTransaction(attestorSigner, [startIx]);
+    // `Attempt` is a singleton PDA (user + partner_id + module_id_hash). The program
+    // initializes it once. Subsequent quiz starts must not re-run `StartAttempt`.
+    const { value: attemptAccount } = await rpc
+      .getAccountInfo(attemptPda as Parameters<typeof rpc.getAccountInfo>[0], {
+        encoding: "base64",
+      })
+      .send();
+    if (!attemptAccount) {
+      const startIx = await getStartAttemptInstructionAsync({
+        attestor: attestorSigner,
+        user: walletAddress as Address,
+        partner: partnerPda,
+        module: modulePda,
+        enrollment: onChainEnrollmentAddress,
+        attempt: attemptPda,
+      });
+      await sendServerTransaction(attestorSigner, [startIx]);
+    }
 
     const batches = module.assessment.batches;
     const randomBatch = batches[Math.floor(Math.random() * batches.length)];

@@ -1,6 +1,11 @@
 export const appEnv = {
   // Server admin keypair: regtech admin + swig delegate + attestor.
   XCAVATE_ADMIN_PRIVATE_KEY: process.env.XCAVATE_ADMIN_PRIVATE_KEY as string,
+  /** Base58 mpl-core collection for credential NFTs (admin is update authority). */
+  XCAVATE_GLOBAL_COLLECTION_ADDRESS: process.env
+    .XCAVATE_GLOBAL_COLLECTION_ADDRESS as string,
+  /** Base58 pubkey that may approve funding requests (single admin authority). */
+  XCAVATE_ADMIN_PUBLIC_KEY: process.env.XCAVATE_ADMIN_PUBLIC_KEY as string,
   INITIAL_SWIG_FUND_LAMPORTS: process.env.INITIAL_SWIG_FUND_LAMPORTS as string,
 
   PHANTOM_APP_ID: process.env.NEXT_PUBLIC_PHANTOM_APP_ID as string,
@@ -15,8 +20,15 @@ export const appEnv = {
   AWS_S3_BUCKET_NAME: process.env.XCAV_AWS_S3_BUCKET_NAME as string,
   UPLOADED_IMAGE: process.env.NEXT_PUBLIC_UPLOADED_IMAGE as string,
   APP_URL: process.env.NEXT_PUBLIC_APP_URL as string,
-  /** Comma-separated Solana pubkeys that may approve/reject funding requests (same as NEXT_PUBLIC_*). */
-  XCAVATE_ADMIN_WALLET_ADDRESSES: process.env
-    .NEXT_PUBLIC_XCAVATE_ADMIN_WALLET_ADDRESSES as string,
   GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
 };
+
+// Server-only: client bundles import appEnv but non-NEXT_PUBLIC vars are not available in the browser.
+if (
+  typeof window === "undefined" &&
+  !appEnv.XCAVATE_GLOBAL_COLLECTION_ADDRESS?.trim()
+) {
+  throw new Error(
+    "Missing XCAVATE_GLOBAL_COLLECTION_ADDRESS. Run scripts/init-global-collection.ts once, then set the printed address in .env.local.",
+  );
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,13 +11,36 @@ import {
 } from "@/components/ui/popover";
 import { useUser } from "@/hooks/use-user";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
+import { isReservedSlug } from "@/lib/validations/reserved-slugs";
+import { setStoredAuthIntent, storageKeys } from "@/providers/auth-provider";
 
 export function ProfileButton() {
+  const pathname = usePathname();
   const { user, loading, openAuthModal } = useUser();
-  const { handleDisconnect } = useWalletKit();
+  const { handleDisconnect, open: openWalletModal } = useWalletKit();
   const [open, setOpen] = useState(false);
   if (!loading && !user) {
-    return <Button onClick={openAuthModal}>Sign in</Button>;
+    const onSignIn = () => {
+      const firstSegment = pathname.split("/")[1] ?? "";
+      const isCompanyContext =
+        firstSegment !== "" && !isReservedSlug(firstSegment);
+
+      if (isCompanyContext) {
+        setStoredAuthIntent("owner");
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(
+            storageKeys.pendingAuthIntent,
+            "register-owner",
+          );
+        }
+        openWalletModal();
+        return;
+      }
+
+      openAuthModal();
+    };
+
+    return <Button onClick={onSignIn}>Sign in</Button>;
   }
 
   const orgName =

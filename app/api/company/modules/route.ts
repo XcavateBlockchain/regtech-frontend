@@ -9,6 +9,7 @@ import {
   secFrameworkBatches,
 } from "@/constants/regulatory-batches";
 import type { ModuleType } from "@/generated/prisma/client";
+import { buildModuleCode } from "@/lib/module-code";
 import { prisma } from "@/lib/prisma";
 import { s3 } from "@/lib/s3";
 
@@ -35,7 +36,7 @@ function validateEqualBatchPoints(
 
 const dataSchema = z.object({
   mode: z.enum(["manual", "ai"]),
-  title: z.string().min(3).max(120),
+  title: z.string().min(3).max(80),
   description: z.string().min(3).max(500),
   category: z.enum(["securities", "aml", "kyc", "defi", "tax"]),
   completionTime: z.enum(["15", "30", "45", "60", "90"]),
@@ -267,11 +268,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const slug = data.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    const moduleCode = `${slug}-${crypto.randomUUID().slice(0, 8)}`;
+    const moduleCode = buildModuleCode(data.title);
     const moduleIdHash = createHash("sha256").update(moduleCode).digest("hex");
 
     const ext = thumbnail.name.split(".").pop() ?? "jpg";

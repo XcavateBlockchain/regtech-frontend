@@ -15,9 +15,7 @@ import { useCompanySlug } from "@/hooks/use-company-slug";
 
 export function Header({ total }: { total: number }) {
   const slug = useCompanySlug();
-  const createHref = slug
-    ? `/company/${slug}/module/create`
-    : "/company/module/create";
+  const createHref = slug ? `/${slug}/module/create` : "/module/create";
   // The Figma shows "12 active modules . 847 total enrolments" —
   // hard-coded enrolment count since the sample data doesn't carry it.
   return (

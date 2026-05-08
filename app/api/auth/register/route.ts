@@ -16,6 +16,7 @@ import {
   sendServerTransaction,
   uuidToBytes,
 } from "@/lib/solana/admin";
+import { isReservedSlug } from "@/lib/validations/reserved-slugs";
 
 const registerSchema = z.object({
   walletAddress: z.string().min(32),
@@ -46,6 +47,13 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const data = registerSchema.parse(body);
+
+    if (isReservedSlug(data.companySlug)) {
+      return NextResponse.json(
+        { error: "Company URL is reserved" },
+        { status: 400 },
+      );
+    }
 
     // Check for duplicates
     const [existingWallet, existingEmail, existingSlug] = await Promise.all([

@@ -40,6 +40,7 @@ export async function GET(
       select: {
         id: true,
         email: true,
+        inviteeName: true,
         permission: true,
         token: true,
         expiresAt: true,
@@ -92,12 +93,17 @@ export async function POST(
     }
 
     const existingEmployee = await prisma.employee.findFirst({
-      where: { companyId: data.companyId, user: { email: data.email } },
-      select: { id: true },
+      where: { user: { email: data.email } },
+      select: { id: true, companyId: true },
     });
     if (existingEmployee) {
+      const sameCompany = existingEmployee.companyId === data.companyId;
       return NextResponse.json(
-        { error: "This email is already an employee in your company" },
+        {
+          error: sameCompany
+            ? "This email is already an employee in your company"
+            : "This email is already an employee at another company",
+        },
         { status: 409 },
       );
     }
@@ -107,6 +113,7 @@ export async function POST(
       data: {
         companyId: data.companyId,
         email: data.email,
+        inviteeName: data.inviteeName,
         permission: data.permission,
         expiresAt,
       },

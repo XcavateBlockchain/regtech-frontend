@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useCompanySlug } from "@/hooks/use-company-slug";
 import { cn } from "@/lib/utils";
 
 /* ---------------------------------------------------------------
@@ -60,6 +61,14 @@ export type ModuleCardData = {
 export function ModuleItem(props: ModuleCardData) {
   const { slug, title, category, coverImageUrl } = props;
   const [shareOpen, setShareOpen] = useState(false);
+  const companySlug = useCompanySlug();
+
+  const moduleHref = companySlug
+    ? `/${companySlug}/module/${slug}`
+    : "/modules";
+  const moduleEditHref = companySlug
+    ? `/${companySlug}/module/${slug}/edit`
+    : "/modules";
 
   const shareUrl = useMemo(() => {
     if (props.mode !== "stats") return null;
@@ -97,7 +106,7 @@ export function ModuleItem(props: ModuleCardData) {
     <article className="flex flex-col overflow-hidden rounded-md border border-border bg-card transition-shadow hover:shadow-md">
       {/* Cover */}
       <Link
-        href={`/company/module/${slug}`}
+        href={moduleHref}
         className="relative h-[188px] block"
         style={
           coverImageUrl
@@ -130,7 +139,7 @@ export function ModuleItem(props: ModuleCardData) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col gap-3.5 px-3 py-4">
-        <Link href={`/company/module/${slug}`} className="hover:underline">
+        <Link href={moduleHref} className="hover:underline">
           <h3 className="text-sm font-semibold leading-6">{title}</h3>
         </Link>
 
@@ -139,7 +148,7 @@ export function ModuleItem(props: ModuleCardData) {
             variant="outline"
             nativeButton={false}
             className="border-[#4b27c8] text-[#4b27c8] hover:bg-[#4b27c8]/5 hover:text-[#4b27c8]"
-            render={<Link href={`/company/module/${slug}/edit`}>Edit</Link>}
+            render={<Link href={moduleEditHref}>Edit</Link>}
           />
         ) : (
           <StatsGrid stats={props.stats} />

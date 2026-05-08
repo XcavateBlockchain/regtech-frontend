@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { useDisconnect } from "@phantom/react-sdk";
+import { usePathname } from "next/navigation";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { Modal, ModalContent } from "@/components/modal";
 import { CreateCompanyForm } from "@/features/auth/create-company-from";
 import { LoginForm } from "@/features/auth/login-form";
@@ -34,7 +42,46 @@ export const storageKeys = {
   user: "USER_ID",
   company: "COMPANY_ID",
   employee: "EMPLOYEE_ID",
+  /** Explicit UI choice: general vs owner sign-in flow. */
+  authIntent: "AUTH_INTENT",
+  /** Survives Phantom OAuth full-page redirect (session tab scope). */
+  pendingAuthIntent: "PENDING_AUTH_INTENT",
+  /**
+   * Pathname-only (e.g. `/invite/token`) stored before Google OAuth — read on `/auth/callback`.
+   * Must stay same-origin as `NEXT_PUBLIC_APP_URL` invite links.
+   */
+  postPhantomReturnPath: "REGTECH_POST_PHANTOM_PATH",
 };
+
+export type StoredAuthIntent = "general" | "owner";
+
+export function clearPendingAuthIntent() {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(storageKeys.pendingAuthIntent);
+}
+
+export function setStoredAuthIntent(intent: StoredAuthIntent) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(storageKeys.authIntent, intent);
+}
+
+export function getStoredAuthIntent(): StoredAuthIntent | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(storageKeys.authIntent);
+  return raw === "general" || raw === "owner" ? raw : null;
+}
+
+export function clearStoredAuthIntent() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(storageKeys.authIntent);
+}
+
+function shouldDeferWalletProfileModal(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (pathname.startsWith("/invite")) return true;
+  if (pathname.startsWith("/auth/")) return true;
+  return /^\/m\/[^/]+\/join/.test(pathname);
+}
 
 const AuthContext = createContext<{
   open: boolean;
@@ -57,13 +104,25 @@ const AuthContext = createContext<{
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [activePage, setActivePage] = useState<AuthPage>(0);
   const [intent, setIntent] = useState<AuthIntent>("login");
+  const { disconnect } = useDisconnect();
   const { isConnected, address } = useWalletKit();
   const [accountLoading, setAccountLoading] = useState(false);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = sessionStorage.getItem(storageKeys.pendingAuthIntent);
+    if (raw === "login" || raw === "register-owner") {
+      setIntent(raw);
+    }
+  }, []);
 
   useEffect(() => {
+    if (shouldDeferWalletProfileModal(pathname)) return;
     if (isConnected && address) {
       const user = localStorage.getItem(storageKeys.user);
       if (!user) {
@@ -74,30 +133,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => clearTimeout(timeout);
       }
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, pathname]);
 
   useEffect(() => {
     if (accountLoading && address) {
       let ignore = false;
       setOpen(true);
       const checkUser = async () => {
-        const user = await getUserByWallet(address ?? "");
-        console.log(user);
+        const sleep = (ms: number) =>
+          new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+        // Phantom can report a connected account slightly before the backend/user lookup
+        // succeeds (especially right after OAuth callback). Retry briefly to avoid false 404s.
+        let user = await getUserByWallet(address ?? "");
+        if (!user) {
+          await sleep(250);
+          user = await getUserByWallet(address ?? "");
+        }
+        if (!user) {
+          await sleep(500);
+          user = await getUserByWallet(address ?? "");
+        }
+        const storedIntent = getStoredAuthIntent();
         if (ignore) return;
         if (!user) {
-          if (intent === "register-owner") {
+          if (storedIntent === "general") {
+            setBannerError(
+              "No account found for this wallet. General accounts are created via invite links (employees) or module links (users).",
+            );
+            clearStoredAuthIntent();
+            clearPendingAuthIntent();
+            localStorage.removeItem(storageKeys.role);
+            localStorage.removeItem(storageKeys.user);
+            localStorage.removeItem(storageKeys.company);
+            localStorage.removeItem(storageKeys.employee);
+            void disconnect().catch(() => undefined);
+            setAccountLoading(false);
+            setActivePage(0);
+            return;
+          }
+
+          setBannerError(null);
+          if (storedIntent === "owner" || intent === "register-owner") {
             setActivePage(2);
+          } else {
+            setActivePage(1);
           }
           setAccountLoading(false);
           return;
         }
-        localStorage.setItem(storageKeys.role, user?.role ?? "");
-        localStorage.setItem(storageKeys.user, user?.userId ?? "");
-        localStorage.setItem(storageKeys.company, user?.companyId ?? "");
-        // If a user exists, close the auth modal (edge-case: accountLoading flow
-        // can open it while a sign-in is in progress).
-        setOpen(false);
-        setActivePage(0);
+        setBannerError(null);
+        if (storedIntent === "owner" && user?.role && user.role !== "OWNER") {
+          setBannerError(
+            `This wallet is registered as a ${user.role.toLowerCase()} account. Please disconnect and sign in with your company owner wallet.`,
+          );
+          clearStoredAuthIntent();
+          localStorage.removeItem(storageKeys.role);
+          localStorage.removeItem(storageKeys.user);
+          localStorage.removeItem(storageKeys.company);
+          localStorage.removeItem(storageKeys.employee);
+          void disconnect().catch(() => undefined);
+          setAccountLoading(false);
+          setActivePage(0);
+          return;
+        }
+
+        // User exists for this wallet. Require signature-based sign-in via LoginForm
+        // (POST /api/auth/login) before persisting USER_ID/ROLE/COMPANY_ID.
+        setActivePage(1);
         setAccountLoading(false);
       };
       checkUser();
@@ -105,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ignore = true;
       };
     }
-  }, [accountLoading, address, intent]);
+  }, [accountLoading, address, disconnect, intent]);
 
   const pages: Record<AuthPage, React.ReactNode> = {
     0: <SigninOptions />,
@@ -137,6 +240,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           showCloseButton={false}
           className="md:max-w-[min(400px,calc(100vw-32px))] gap-6 sm:rounded-[20px] border-0 p-4 shadow-none"
         >
+          {bannerError ? (
+            <div
+              role="alert"
+              className="rounded-[10px] border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
+              {bannerError}
+            </div>
+          ) : null}
           {pages[activePage] === 2 ? null : (
             <button
               type="button"

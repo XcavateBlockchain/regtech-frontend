@@ -19,15 +19,26 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: { userId },
-      select: { id: true },
+      select: { id: true, role: true },
     });
     if (!user) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    const employee =
+      user.role === "EMPLOYEE"
+        ? await prisma.employee.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+          })
+        : null;
+
     const attempt = await prisma.assessmentAttempt.findFirst({
       where: {
-        userId: user.id,
+        OR: [
+          { userId: user.id },
+          ...(employee?.id ? [{ employeeId: employee.id }] : []),
+        ],
         submittedAt: { not: null },
         assessment: { moduleId },
       },
