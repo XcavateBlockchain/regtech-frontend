@@ -6,32 +6,24 @@ For a deep dive on how the wallet/on-chain stack fits together, see [`notes/wall
 
 ## Stack
 
-| Layer | Package(s) | Where it lives |
-|---|---|---|
-| Anchor IDL | n/a (artifact) | [`anchor/idl/regtech.json`](./anchor/idl/regtech.json) |
-| Codama-generated client | `codama`, `@codama/renderers-js` | Config: [`codama.json`](./codama.json) → output: [`generated/reg_tech/`](./generated/reg_tech) |
-| Solana Kit + React Hooks | `@solana/kit`, `@solana/react-hooks`, `@solana/signers`, `@solana/transactions` | RPC singleton + action hooks: [`hooks/use-contract.ts`](./hooks/use-contract.ts) |
-| Phantom wallet (user) | `@phantom/react-sdk`, `@phantom/browser-sdk` | Provider: [`providers/solana-provider.tsx`](./providers/solana-provider.tsx); wallet façade: [`hooks/use-wallet-kit.ts`](./hooks/use-wallet-kit.ts) |
-| Swig (company vault) | `@swig-wallet/kit` | Server signing: [`lib/solana/admin.ts`](./lib/solana/admin.ts) |
-| Metaplex (NFT credentials) | `@metaplex-foundation/mpl-core`, `@metaplex-foundation/umi`, `@metaplex-foundation/umi-bundle-defaults`, `@metaplex-foundation/umi-uploader-aws` | Server-side mint/collection: [`lib/solana/admin.ts`](./lib/solana/admin.ts); metadata upload: [`lib/ipfs-upload.ts`](./lib/ipfs-upload.ts) |
-
-Credential asset (NFT) | An mpl-core asset minted into the global collection and transferred to the recipient wallet (e.g. an employee who completes a module). | `mintCredentialNft` in [`lib/solana/admin.ts`](./lib/solana/admin.ts) |
-| Metadata storage | Off-chain JSON/images uploaded to S3 via `@metaplex-foundation/umi-uploader-aws`. | [`lib/ipfs-upload.ts`](./lib/ipfs-upload.ts) |
+| Layer |
+|---|---|
+| Anchor IDL |
+| Codama-generated client
+| Solana Kit + React Hooks |
+| Phantom wallet (user) |
+| Swig (company vault) |
+| Metaplex (NFT credentials) |
+Credential asset (NFT) | An mpl-core asset minted into the global collection and transferred to the recipient wallet (e.g. an employee who completes a module).
 
 
 ## Prerequisites
 
 - [Bun](https://bun.sh) ≥ 1.x (lockfile is `bun.lock`)
 - Postgres database (set `DATABASE_URL`)
-- Phantom App ID — create at <https://phantom.com/portal> and allowlist `${NEXT_PUBLIC_APP_URL}/auth/callback`
+- Phantom App ID — create at <https://phantom.com/portal> and allowlist 
 - Solana RPC URL (devnet by default)
-- A Solana keypair for the admin/attestor/Swig delegate. Generate with:
 
-  ```bash
-  solana-keygen new --no-bip39-passphrase -o ./admin.json
-  ```
-
-  Then put the JSON byte array into `XCAVATE_ADMIN_PRIVATE_KEY` and the base58 pubkey into `XCAVATE_ADMIN_PUBLIC_KEY`.
 
 ## Setup
 
@@ -45,13 +37,6 @@ cp .env.example .env.local
 
 # 3. Apply DB schema
 bunx prisma migrate dev
-
-# 4. (One-time, before first registration) Create the global mpl-core credential collection
-bun run scripts/init-global-collection.ts
-# Copy the printed address into XCAVATE_GLOBAL_COLLECTION_ADDRESS in .env.local
-
-# 5. (One-time, on a fresh program) Initialize program config
-bun run scripts/init-program.ts
 ```
 
 Required env vars (see [`.env.example`](./.env.example) for the full list):
@@ -82,21 +67,4 @@ bun run lint
 bun run typecheck
 bun run format
 bun run format:fix
-```
-
-## Layout
-
-```
-anchor/idl/regtech.json     # Anchor IDL artifact — codegen input
-codama.json                 # Codama config
-generated/reg_tech/         # Codama-generated TypeScript client (do not edit)
-generated/prisma/           # Prisma client
-providers/                  # React providers (Phantom, wallet modal, auth)
-hooks/use-contract.ts       # RPC + program action hooks
-hooks/use-wallet-kit.ts     # Phantom wallet façade
-lib/solana/                 # Server-side admin signer, Swig delegate, PDAs
-app/api/                    # Next.js route handlers (server-signed program calls)
-features/                   # Feature folders (auth, company, modules, wallet, ...)
-notes/wallet-stack.md       # Deep dive: Phantom + Swig + Codama + Solana Kit
-DEMO_GUIDE.md               # Product-side roles and flows
 ```

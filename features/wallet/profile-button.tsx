@@ -43,16 +43,13 @@ export function ProfileButton() {
     return <Button onClick={onSignIn}>Sign in</Button>;
   }
 
-  const orgName =
-    user?.company?.name ?? user?.employment?.company?.name ?? "Dashboard";
+  const orgName = user?.name;
   const roleLabel =
     user?.role === "OWNER"
       ? "Owner"
       : user?.role === "EMPLOYEE"
         ? "Employee"
-        : user?.role === "USER"
-          ? "User"
-          : "";
+        : "";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -66,14 +63,14 @@ export function ProfileButton() {
           </Avatar>
 
           <div className="flex items-start justify-center flex-col">
-            <p className="text-sm font-medium">{orgName}</p>
+            <p className="text-sm font-medium capitalize">{orgName}</p>
             <p className="text-xs text-muted-foreground capitalize -mt-0.5">
-              {user?.name ?? user?.email} {roleLabel ? roleLabel : null}
+              {roleLabel ? roleLabel : null}
             </p>
           </div>
         </div>
       </PopoverTrigger>
-      <PopoverContent className={"p-4 mt-3 w-80"}>
+      <PopoverContent className={"p-4 mt-2 "}>
         <div className="h-10 px-3 items-start flex font-medium text-base">
           {user?.email}
         </div>

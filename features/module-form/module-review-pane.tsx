@@ -155,8 +155,8 @@ export default function ModuleReviewPane({
 
         <div className="rounded-lg border border-foreground/90 bg-foreground/4 px-2.5 py-1.5">
           <p className="text-xs font-light leading-6 text-foreground">
-            Publishing will make this module visible to all investors on
-            regtech. A small platform fee (5%) applies to each enrolment.
+            Publishing will make this module visible to all customers on
+            RegtechX. A small platform fee (5%) applies to each enrolment.
           </p>
         </div>
 
@@ -165,7 +165,7 @@ export default function ModuleReviewPane({
             className={
               quizWarning.tone === "danger"
                 ? "block rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-                : "block rounded-lg border border-amber-300/40 bg-amber-50/60 px-3 py-2 text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200"
+                : "block rounded-lg border border-amber-200 bg-amber-50 text-amber-900 px-3 py-2 text-xs"
             }
           >
             <p className="font-semibold">{quizWarning.title}</p>

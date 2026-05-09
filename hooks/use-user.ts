@@ -21,7 +21,7 @@ export type UserData = {
   name: string;
   email: string;
   avatarUrl: string | null;
-  company: { id: string; name: string } | null;
+  company: { id: string; name: string; slug: string } | null;
   employment: {
     id: string;
     companyId: string;

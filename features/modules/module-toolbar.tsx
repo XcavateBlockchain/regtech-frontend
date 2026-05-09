@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,12 +13,48 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCompanySlug } from "@/hooks/use-company-slug";
+import { useWalletKit } from "@/hooks/use-wallet-kit";
 
 export function Header({ total }: { total: number }) {
   const slug = useCompanySlug();
+  const { address } = useWalletKit();
   const createHref = slug ? `/${slug}/module/create` : "/module/create";
-  // The Figma shows "12 active modules . 847 total enrolments" —
-  // hard-coded enrolment count since the sample data doesn't carry it.
+  const [totalEnrolments, setTotalEnrolments] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!slug || !address) {
+      setTotalEnrolments(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(
+      `/api/company/${encodeURIComponent(slug)}/stats?walletAddress=${encodeURIComponent(address)}`,
+    )
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<{ totalEnrolments: number }>;
+      })
+      .then((data) => {
+        if (!cancelled && data)
+          setTotalEnrolments(
+            typeof data.totalEnrolments === "number"
+              ? data.totalEnrolments
+              : null,
+          );
+        else if (!cancelled) setTotalEnrolments(null);
+      })
+      .catch(() => {
+        if (!cancelled) setTotalEnrolments(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, address]);
+
+  const enrolmentsLabel =
+    totalEnrolments === null ? "—" : String(totalEnrolments);
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-col gap-1">
@@ -25,7 +62,7 @@ export function Header({ total }: { total: number }) {
           Your Modules
         </h1>
         <p className="text-base text-muted-foreground">
-          {total} active modules · 847 total enrolments
+          {total} active modules · {enrolmentsLabel} total enrolments
         </p>
       </div>
       <Button
