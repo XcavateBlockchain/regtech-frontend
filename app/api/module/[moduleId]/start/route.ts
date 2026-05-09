@@ -8,6 +8,7 @@ import {
   getEnrollUserInstructionAsync,
   getStartAttemptInstructionAsync,
 } from "@/generated/reg_tech";
+import { REGTECH_ERROR__QUIZ_QUOTA_EXHAUSTED } from "@/generated/reg_tech/errors/regtech";
 import { prisma } from "@/lib/prisma";
 import {
   executeViaSwigDelegate,
@@ -25,6 +26,17 @@ import {
 const bodySchema = z.object({
   walletAddress: z.string().min(32),
 });
+
+/** Walk SolanaError / cause chain for Anchor custom program `code` (e.g. 6021). */
+function regtechCustomInstructionCode(e: unknown): number | undefined {
+  let cur: unknown = e;
+  for (let i = 0; i < 6 && cur != null; i++) {
+    const ctx = (cur as { context?: { code?: number } }).context;
+    if (typeof ctx?.code === "number") return ctx.code;
+    cur = (cur as { cause?: unknown }).cause;
+  }
+  return undefined;
+}
 
 export async function POST(
   req: Request,
@@ -361,6 +373,18 @@ export async function POST(
         { status: 400 },
       );
     }
+
+    const anchorCode = regtechCustomInstructionCode(e);
+    if (anchorCode === REGTECH_ERROR__QUIZ_QUOTA_EXHAUSTED) {
+      return NextResponse.json(
+        {
+          error:
+            "Your organization has no quiz attempts left for this module. Ask your company admin to add quiz quota, then try again.",
+        },
+        { status: 403 },
+      );
+    }
+
     console.error("[POST /api/module/:moduleId/start]", e);
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Internal server error" },
