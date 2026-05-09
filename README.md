@@ -13,8 +13,11 @@ For a deep dive on how the wallet/on-chain stack fits together, see [`notes/wall
 | Solana Kit + React Hooks | `@solana/kit`, `@solana/react-hooks`, `@solana/signers`, `@solana/transactions` | RPC singleton + action hooks: [`hooks/use-contract.ts`](./hooks/use-contract.ts) |
 | Phantom wallet (user) | `@phantom/react-sdk`, `@phantom/browser-sdk` | Provider: [`providers/solana-provider.tsx`](./providers/solana-provider.tsx); wallet façade: [`hooks/use-wallet-kit.ts`](./hooks/use-wallet-kit.ts) |
 | Swig (company vault) | `@swig-wallet/kit` | Server signing: [`lib/solana/admin.ts`](./lib/solana/admin.ts) |
+| Metaplex (NFT credentials) | `@metaplex-foundation/mpl-core`, `@metaplex-foundation/umi`, `@metaplex-foundation/umi-bundle-defaults`, `@metaplex-foundation/umi-uploader-aws` | Server-side mint/collection: [`lib/solana/admin.ts`](./lib/solana/admin.ts); metadata upload: [`lib/ipfs-upload.ts`](./lib/ipfs-upload.ts) |
 
-Other notable pieces: Prisma (`prisma/`, generated at `generated/prisma/`), Metaplex mpl-core for credential NFTs, AWS S3 for uploads.
+Credential asset (NFT) | An mpl-core asset minted into the global collection and transferred to the recipient wallet (e.g. an employee who completes a module). | `mintCredentialNft` in [`lib/solana/admin.ts`](./lib/solana/admin.ts) |
+| Metadata storage | Off-chain JSON/images uploaded to S3 via `@metaplex-foundation/umi-uploader-aws`. | [`lib/ipfs-upload.ts`](./lib/ipfs-upload.ts) |
+
 
 ## Prerequisites
 
