@@ -3,7 +3,7 @@ import { type Address, createSolanaRpc, isAddress } from "@solana/kit";
 import { createNoopSigner } from "@solana/signers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { appEnv } from "@/constants/app-env";
+import { appEnv, CREDENTIAL_NFT_METADATA_SYMBOL } from "@/constants/app-env";
 import {
   fetchAttempt,
   findPartnerPda,
@@ -285,6 +285,7 @@ export async function POST(
             const metadataKey = `credentials/${module.moduleIdHash}/${userId}.json`;
             const metadataBody = JSON.stringify({
               name: module.name,
+              symbol: CREDENTIAL_NFT_METADATA_SYMBOL,
               description: `Credential for ${module.name}`,
               batchLabel: attempt.batch?.label ?? "—",
               scoreBps,
@@ -437,6 +438,7 @@ export async function POST(
         const issuedAt = new Date().toISOString();
         const metadataBody = JSON.stringify({
           name: module.name,
+          symbol: `${CREDENTIAL_NFT_METADATA_SYMBOL.toLocaleUpperCase()}-${module.company.name.toUpperCase()}`,
           description: `Credential for ${module.name}`,
           image: module.thumbnailUrl,
           recipientName: user.name,

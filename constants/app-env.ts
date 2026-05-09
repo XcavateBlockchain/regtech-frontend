@@ -1,3 +1,9 @@
+/**
+ * Metaplex-style metadata `symbol` for credential NFT JSON (off-chain URI).
+ * Short ticker shown in wallets; keep ≤10 chars for broad compatibility.
+ */
+export const CREDENTIAL_NFT_METADATA_SYMBOL = "RegtechX";
+
 export const appEnv = {
   // Server admin keypair: regtech admin + swig delegate + attestor.
   XCAVATE_ADMIN_PRIVATE_KEY: process.env.XCAVATE_ADMIN_PRIVATE_KEY as string,

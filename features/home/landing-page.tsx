@@ -21,21 +21,21 @@ const steps: Step[] = [
     tone: "info",
     title: "Companies publish",
     description:
-      "Organizations create regulatory learning modules with rich content and compliance quizzes.",
+      "Organisations upload regulatory learning modules from verified sources  that are targeting specific knowledge to be demonstrated.",
   },
   {
     label: "Step 2",
     tone: "brand",
-    title: "Investors learn",
+    title: "Audited learn",
     description:
-      "Investors complete each module for working through the material at their own pace.",
+      "Employees / customers complete each module taking a AI generated personalised quiz at the end to establish level of understanding.",
   },
   {
     label: "Step 3",
     tone: "success",
-    title: "Access unlocked",
+    title: "Impact unlocked",
     description:
-      "On passing the quiz, investors receive verified access to exclusive investment opportunities.",
+      "On successfully passing the module(s), companies demonstrate employees and customers have verifiable regulatory compliant knowledge.",
   },
 ];
 
@@ -76,22 +76,21 @@ function Hero() {
         <span className="rounded-[10px] bg-primary/10 px-2 py-0.5 text-xs leading-normal text-primary">
           Regulatory Compliance Reimagined
         </span>
-        <h1 className="text-[#545454] text-[32px] font-extrabold leading-tight">
-          {/* Learn compliance.
-          <br />
-          Unlock opportunities. */}
-          On-chain Regulatory Technology <br /> credential built on Solana using{" "}
-          <br /> Anchor.
+        <h1 className="text-[#545454] text-[50px] font-extrabold leading-tight">
+          Verifiable digital asset regulated learning
         </h1>
       </div>
 
       <p className="max-w-[420px] text-sm leading-6 text-[#545454]">
-        Companies publish regulatory learning modules. Investors complete them
-        to gain verified access to exclusive investment opportunities.
+        Real-time verifiable proof of learning on any digital asset or
+        regulatory framework. Reducing the risk for companies while improving
+        the outcome for employees and customers
       </p>
 
       {user ? (
-        <Link href="/dashboard">
+        <Link
+          href={user.role === "OWNER" ? `/${user.company?.slug}` : "/dashboard"}
+        >
           <Button>Dashboard</Button>
         </Link>
       ) : (

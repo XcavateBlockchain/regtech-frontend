@@ -2,7 +2,8 @@
 
 import type { useWalletConnection } from "@solana/react-hooks";
 import * as React from "react";
-import { Modal, ModalContent } from "@/components/modal";
+// import { Modal, ModalContent } from "@/components/modal";
+import { PopMenu } from "@/components/pop-drawer";
 import { WalletAccount } from "@/features/wallet/wallet-accout";
 import { useWalletKit } from "@/hooks/use-wallet-kit";
 import { getUserByWallet } from "@/lib/actions/user";
@@ -20,6 +21,8 @@ const WalletContext = React.createContext<{
   setCompanyModal: React.Dispatch<React.SetStateAction<boolean>>;
   userModal: boolean;
   setUserModal: React.Dispatch<React.SetStateAction<boolean>>;
+  /** Anchor for controlled desktop popover (no in-tree trigger). */
+  walletMenuAnchorRef: React.RefObject<HTMLButtonElement | null>;
 }>({
   open: false,
   setOpen: () => false,
@@ -29,6 +32,7 @@ const WalletContext = React.createContext<{
   setCompanyModal: () => false,
   userModal: false,
   setUserModal: () => false,
+  walletMenuAnchorRef: { current: null },
 });
 
 const storageKeys = {
@@ -43,6 +47,7 @@ export default function WalletProvider(props: { children: React.ReactNode }) {
   const [accountLoading, setAccountLoading] = React.useState(false);
   const [companyModalOpen, setCompanyModalOpen] = React.useState(false);
   const [userModalOpen, setUserModalOpen] = React.useState(false);
+  const walletMenuAnchorRef = React.useRef<HTMLButtonElement | null>(null);
   const { isConnected, address } = useWalletKit();
 
   React.useEffect(() => {
@@ -98,14 +103,13 @@ export default function WalletProvider(props: { children: React.ReactNode }) {
         setCompanyModal: setCompanyModalOpen,
         userModal: userModalOpen,
         setUserModal: setUserModalOpen,
+        walletMenuAnchorRef,
       }}
     >
       {props.children}
-      <Modal open={open} onOpenChange={setOpen}>
-        <ModalContent>
-          <WalletAccount onClose={() => setOpen(false)} />
-        </ModalContent>
-      </Modal>
+      <PopMenu open={open} onOpenChange={setOpen}>
+        <WalletAccount />
+      </PopMenu>
     </WalletContext.Provider>
   );
 }

@@ -796,7 +796,7 @@ function ResultScreen({
               </section>
             ) : null}
             {retryBlocked ? (
-              <output className="mx-auto mt-6 block max-w-md rounded-[10px] border border-amber-300/40 bg-amber-50/60 px-3 py-2 text-center text-sm text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+              <output className="mx-auto mt-6 block max-w-md rounded-[10px] border border-amber-200 bg-amber-50 text-amber-900 px-3 py-2 text-center text-sm">
                 You can retry this quiz in{" "}
                 <strong>{formatHmS(retryRemainingMs)}</strong>.
               </output>

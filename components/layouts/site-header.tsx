@@ -35,15 +35,6 @@ export default function CompanyNavHeader() {
       <div className="flex items-center justify-between h-14 gap-4 md:h-16 md:gap-6">
         {/* Logo + Nav */}
         <div className="flex items-center gap-4 md:gap-8">
-          {/* <Link href="/">
-            <Image
-              src={"/app_logo.svg"}
-              alt="Regtech"
-              width={180}
-              height={32}
-              className="w-[180px] h-[50px]"
-            />
-          </Link> */}
           <Link href="/">
             <span className="font-mono text-[28px] font-bold leading-6 tracking-[-0.143em] text-primary">
               {slug}
@@ -58,7 +49,7 @@ export default function CompanyNavHeader() {
                     <span
                       data-active={isActive(item.href)}
                       className={cn(
-                        "text-sm leading-normal font-normal text-foreground py-5 border-y-2 border-transparent hover:border-b-primary data-[active=true]:border-b-primary data-[active=true]:text-primary",
+                        "text-sm leading-normal capitalize font-normal text-foreground py-5 border-y-2 border-transparent hover:border-b-primary data-[active=true]:border-b-primary data-[active=true]:text-primary",
                       )}
                     >
                       {item.label}
