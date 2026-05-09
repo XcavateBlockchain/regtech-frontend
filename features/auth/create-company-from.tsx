@@ -214,7 +214,8 @@ export function CreateCompanyForm() {
               {...form.register("companySlug")}
               error={form.formState.errors.companySlug}
               label="Company URL"
-              placeholder=""
+              placeholder="e.g (acme-compliance)"
+              tooltip="This will be used to access your company's admin account"
               addOn={
                 <span className="text-muted-foreground text-sm">
                   regtech.com
@@ -265,7 +266,7 @@ export function CreateCompanyForm() {
               {/** biome-ignore lint/performance/noImgElement: <\> */}
               <img
                 src={"/main_logo.svg"}
-                alt="Regtech"
+                alt="Regtechx"
                 className="size-full overflow-hidden animate-pulse rounded-2xl"
               />
             </div>
