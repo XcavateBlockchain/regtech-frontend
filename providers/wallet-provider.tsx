@@ -108,7 +108,7 @@ export default function WalletProvider(props: { children: React.ReactNode }) {
     >
       {props.children}
       <PopMenu open={open} onOpenChange={setOpen}>
-        <WalletAccount onClose={() => setOpen(false)} />
+        <WalletAccount />
       </PopMenu>
     </WalletContext.Provider>
   );
