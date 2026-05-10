@@ -31,6 +31,11 @@ export function SigninOptions() {
           Choose how you'd like to continue
         </ModalDescription>
       </ModalHeader>
+      <div className="flex items-center gap-3 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+        <span className="text-foreground font-medium text-xs">
+          To access customer or employee account
+        </span>
+      </div>
       <div className="w-full">
         <button
           type="button"
@@ -90,7 +95,7 @@ export function SigninOptions() {
 
       <div className="flex items-center gap-3 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
         <span className="text-foreground font-medium text-xs">
-          For <span className="font-bold">organization</span> only
+          To access company admin account
         </span>
       </div>
       <button
